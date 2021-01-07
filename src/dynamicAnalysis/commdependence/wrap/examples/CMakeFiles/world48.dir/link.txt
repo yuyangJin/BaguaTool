@@ -1,0 +1,2 @@
+/usr/bin/ar qc libworld48.a  CMakeFiles/world48.dir/world48.C.o
+/usr/bin/ranlib libworld48.a

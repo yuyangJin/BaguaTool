@@ -1,0 +1,1796 @@
+Runtime environment: 
+The number of processes is 2, and the number of threads per process is 1.
+Machine: gorgon0, Date: Fri Nov  6 14:17:14 2020
+
+Warning at ../../../../../3.0.2/include/JStandardTagAndInitialize.C:70
+WARNING MESSAGE: 
+HierarchyTimeIntegrator_StandardTagAndInitialize:constructor 
+no input database specified - NO METHOD IS SPECIFIED TO TAG 
+CELLS FOR REFINEMENT so no tagging is performed.
+Warning at ../../../../../3.0.2/include/HierarchyTimeIntegrator.C:1986
+WARNING MESSAGE: 
+HierarchyTimeIntegrator:  Key data `dt_max_reduction_ratio' not found in input.Default values used.  See class header for details.
+Warning at ../../../../../3.0.2/include/HierarchyTimeIntegrator.C:1996
+WARNING MESSAGE: 
+HierarchyTimeIntegrator:  Key data `remap_interval' not found in input.Default values used.  See class header for details.
+Warning at ../../../../../3.0.2/include/HierarchyTimeIntegrator.C:2024
+WARNING MESSAGE: 
+HierarchyTimeIntegrator:  Key data `remap_tag_buffer' not found in input.  Default values used.  See class header for details.
+Warning at ../../../../../3.0.2/include/HierarchyTimeIntegrator.C:2069
+WARNING MESSAGE: 
+HierarchyTimeIntegrator:  Key data `regrid_tag_buffer' not found in input.  Default values used.  See class header for details.
+ --- d_load_balancing_threshold 0.95
+Warning at ../../../../../3.0.2/include/JLoadBalancer.C:988
+WARNING MESSAGE: 
+computeDomainDependentProcessorLayout(): could not 
+construct valid processor array - calling 
+computeDomainIndependentProcessorLayout() 
+
+ProcessSurface/ProcessVolume= 0.265625
+TotalSurface/TotalVolume= 0.265625
+
+Check input data and variables before simulation:
+Input database...
+input_db {
+   Main {
+      log_file_name               = "LinAdvSL-linadv_2d.log" // input used
+      log_all_nodes               = FALSE                   // input used
+      javis_dump_interval         = 100                     // input used
+      javis_dump_dirname          = "javis_linadv2d"        // input used
+      javis_number_procs_per_file = 1                       // input used
+      restart_dump_interval       = 1000                    // input used
+      restart_dump_dirname        = "restart_linadv2d"      // input used
+   }
+   CartesianGeometry {
+      domain_boxes       = [(0,0),(63,127)]                 // input used
+      x_lo               = 0, 0                             // input used
+      x_up               = 10, 2                            // input used
+      periodic_dimension = 0, 1                             // input used
+      number_clones      = 0                                // from default
+   }
+   LinAdv {
+      constant_x_velocity = 0.1                             // input used
+   }
+   HierarchyTimeIntegrator {
+      start_time                 = 0                        // input used
+      end_time                   = 700                      // input used
+      max_integrator_steps       = 100                      // input used
+      max_dt                     = 1                        // input used
+      grow_dt                    = 1.2                      // input used
+      regrid_interval            = 2                        // input used
+      use_nonuniform_workload    = FALSE                    // input used
+      load_balancing_threshold   = 0.95                     // input used
+      print_balance_efficiency   = FALSE                    // input used
+      load_balance_interval      = 0                        // from default
+      tightly_coupled_federation = FALSE                    // from default
+      GriddingAlgorithm {
+         max_levels                            = 1          // input used
+         use_two_level_partitioning            = FALSE      // from default
+         proper_nesting_buffer                 = 1          // input not used
+         efficiency_tolerance                  = 0.8        // input not used
+         combine_efficiency                    = 0.8        // input not used
+         barrier_before_clustering             = FALSE      // input not used
+         sort_boxes_after_clustering           = FALSE      // input not used
+         extend_tags_to_bdry                   = FALSE      // input not used
+         use_new_alg                           = TRUE       // input not used
+         allow_patches_smaller_than_ghostwidth = FALSE      // input not used
+         largest_patch_size {
+            level_0 = 16, 16                                // input used
+         }
+         smallest_patch_size {
+            level_0 = 16, 16                                // input used
+         }
+      }
+   }
+   TimerManager {
+      timer_list           = "apps::main::*", "algs::*::*"  // input used
+      print_summed         = TRUE                           // input used
+      print_max            = TRUE                           // input used
+      print_exclusive      = FALSE                          // from default
+      print_total          = TRUE                           // from default
+      print_processor      = TRUE                           // from default
+      print_user           = FALSE                          // from default
+      print_sys            = FALSE                          // from default
+      print_wall           = TRUE                           // from default
+      print_percentage     = TRUE                           // from default
+      print_concurrent     = FALSE                          // from default
+      print_timer_overhead = FALSE                          // from default
+      print_threshold      = 0.25                           // from default
+   }
+}
+
+Variable database...
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Printing hier::VariableDatabase<DIM> information...
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Variable Contexts registered with database:
+Context id = 0 : Context name = CURRENT
+Context id = 1 : Context name = NEW
+Context id = 2 : Context name = SCRATCH
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Variables registered with database:
+Variable instance = 0
+   Variable name = uval
+   Variable type = N6JASMIN4pdat12CellVariableILi2EdEE
+Variable instance = 1
+   Variable name = flux
+   Variable type = N6JASMIN4pdat12SideVariableILi2EdEE
+Variable instance = 2
+   internal JASMIN variable
+Variable instance = 3
+   internal JASMIN variable
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Variable-Context pairs mapping to Patch Data Indices in database:
+Variable name = uval
+   context id = 0, name = CURRENT :  patch data id = 0
+   context id = 1, name = NEW :  patch data id = 1
+   context id = 2, name = SCRATCH :  patch data id = 3
+Variable name = flux
+   context id = 0 UNDEFINED for this variable
+   context id = 1, name = NEW :  patch data id = 2
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Mapping from Patch Data Indices to Variables:
+Patch data id = 0 -- data factory name = uval##CURRENT
+Patch data id = 1 -- data factory name = uval##NEW
+Patch data id = 2 -- data factory name = flux##NEW
+Patch data id = 3 -- data factory name = uval##SCRATCH
+Patch data id = 4 -- internal JASMIN patch data
+Patch data id = 5 -- internal JASMIN patch data
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Printing contents of patch descriptor for comparison to database...
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Printing PatchDescriptor<DIM> state ...
+this = 0x21fa000
+d_max_number_registered_components = 6
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Patch Data Index=0
+   Patch Data Factory Name = uval##CURRENT
+   Patch Data Factory = N6JASMIN4pdat16JCellDataFactoryILi2EdEE
+Patch Data Index=1
+   Patch Data Factory Name = uval##NEW
+   Patch Data Factory = N6JASMIN4pdat16JCellDataFactoryILi2EdEE
+Patch Data Index=2
+   Patch Data Factory Name = flux##NEW
+   Patch Data Factory = N6JASMIN4pdat16JSideDataFactoryILi2EdEE
+Patch Data Index=3
+   Patch Data Factory Name = uval##SCRATCH
+   Patch Data Factory = N6JASMIN4pdat16JCellDataFactoryILi2EdEE
+Patch Data Index=4
+   Patch Data Factory Name = GriddingAlgorithm__tag-interior##JASMIN-Internal-Variable
+   Patch Data Factory = N6JASMIN4pdat16JCellDataFactoryILi2EiEE
+Patch Data Index=5
+   Patch Data Factory Name = GriddingAlgorithm__tag-buffer##JASMIN-Internal-Variable
+   Patch Data Factory = N6JASMIN4pdat16JCellDataFactoryILi2EiEE
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 0
+Simulation time is 0
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 0
+Dt = 1, Simulation time is 1
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 1
+Simulation time is 1
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 1
+Dt = 1, Simulation time is 2
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 2
+Simulation time is 2
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 2
+Dt = 1, Simulation time is 3
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 3
+Simulation time is 3
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 3
+Dt = 1, Simulation time is 4
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 4
+Simulation time is 4
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 4
+Dt = 1, Simulation time is 5
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 5
+Simulation time is 5
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 5
+Dt = 1, Simulation time is 6
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 6
+Simulation time is 6
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 6
+Dt = 1, Simulation time is 7
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 7
+Simulation time is 7
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 7
+Dt = 1, Simulation time is 8
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 8
+Simulation time is 8
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 8
+Dt = 1, Simulation time is 9
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 9
+Simulation time is 9
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 9
+Dt = 1, Simulation time is 10
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 10
+Simulation time is 10
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 10
+Dt = 1, Simulation time is 11
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 11
+Simulation time is 11
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 11
+Dt = 1, Simulation time is 12
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 12
+Simulation time is 12
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 12
+Dt = 1, Simulation time is 13
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 13
+Simulation time is 13
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 13
+Dt = 1, Simulation time is 14
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 14
+Simulation time is 14
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 14
+Dt = 1, Simulation time is 15
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 15
+Simulation time is 15
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 15
+Dt = 1, Simulation time is 16
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 16
+Simulation time is 16
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 16
+Dt = 1, Simulation time is 17
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 17
+Simulation time is 17
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 17
+Dt = 1, Simulation time is 18
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 18
+Simulation time is 18
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 18
+Dt = 1, Simulation time is 19
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 19
+Simulation time is 19
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 19
+Dt = 1, Simulation time is 20
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 20
+Simulation time is 20
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 20
+Dt = 1, Simulation time is 21
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 21
+Simulation time is 21
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 21
+Dt = 1, Simulation time is 22
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 22
+Simulation time is 22
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 22
+Dt = 1, Simulation time is 23
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 23
+Simulation time is 23
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 23
+Dt = 1, Simulation time is 24
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 24
+Simulation time is 24
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 24
+Dt = 1, Simulation time is 25
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 25
+Simulation time is 25
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 25
+Dt = 1, Simulation time is 26
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 26
+Simulation time is 26
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 26
+Dt = 1, Simulation time is 27
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 27
+Simulation time is 27
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 27
+Dt = 1, Simulation time is 28
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 28
+Simulation time is 28
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 28
+Dt = 1, Simulation time is 29
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 29
+Simulation time is 29
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 29
+Dt = 1, Simulation time is 30
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 30
+Simulation time is 30
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 30
+Dt = 1, Simulation time is 31
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 31
+Simulation time is 31
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 31
+Dt = 1, Simulation time is 32
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 32
+Simulation time is 32
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 32
+Dt = 1, Simulation time is 33
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 33
+Simulation time is 33
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 33
+Dt = 1, Simulation time is 34
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 34
+Simulation time is 34
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 34
+Dt = 1, Simulation time is 35
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 35
+Simulation time is 35
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 35
+Dt = 1, Simulation time is 36
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 36
+Simulation time is 36
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 36
+Dt = 1, Simulation time is 37
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 37
+Simulation time is 37
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 37
+Dt = 1, Simulation time is 38
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 38
+Simulation time is 38
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 38
+Dt = 1, Simulation time is 39
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 39
+Simulation time is 39
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 39
+Dt = 1, Simulation time is 40
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 40
+Simulation time is 40
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 40
+Dt = 1, Simulation time is 41
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 41
+Simulation time is 41
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 41
+Dt = 1, Simulation time is 42
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 42
+Simulation time is 42
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 42
+Dt = 1, Simulation time is 43
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 43
+Simulation time is 43
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 43
+Dt = 1, Simulation time is 44
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 44
+Simulation time is 44
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 44
+Dt = 1, Simulation time is 45
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 45
+Simulation time is 45
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 45
+Dt = 1, Simulation time is 46
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 46
+Simulation time is 46
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 46
+Dt = 1, Simulation time is 47
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 47
+Simulation time is 47
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 47
+Dt = 1, Simulation time is 48
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 48
+Simulation time is 48
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 48
+Dt = 1, Simulation time is 49
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 49
+Simulation time is 49
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 49
+Dt = 1, Simulation time is 50
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 50
+Simulation time is 50
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 50
+Dt = 1, Simulation time is 51
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 51
+Simulation time is 51
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 51
+Dt = 1, Simulation time is 52
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 52
+Simulation time is 52
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 52
+Dt = 1, Simulation time is 53
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 53
+Simulation time is 53
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 53
+Dt = 1, Simulation time is 54
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 54
+Simulation time is 54
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 54
+Dt = 1, Simulation time is 55
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 55
+Simulation time is 55
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 55
+Dt = 1, Simulation time is 56
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 56
+Simulation time is 56
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 56
+Dt = 1, Simulation time is 57
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 57
+Simulation time is 57
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 57
+Dt = 1, Simulation time is 58
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 58
+Simulation time is 58
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 58
+Dt = 1, Simulation time is 59
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 59
+Simulation time is 59
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 59
+Dt = 1, Simulation time is 60
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 60
+Simulation time is 60
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 60
+Dt = 1, Simulation time is 61
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 61
+Simulation time is 61
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 61
+Dt = 1, Simulation time is 62
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 62
+Simulation time is 62
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 62
+Dt = 1, Simulation time is 63
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 63
+Simulation time is 63
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 63
+Dt = 1, Simulation time is 64
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 64
+Simulation time is 64
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 64
+Dt = 1, Simulation time is 65
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 65
+Simulation time is 65
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 65
+Dt = 1, Simulation time is 66
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 66
+Simulation time is 66
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 66
+Dt = 1, Simulation time is 67
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 67
+Simulation time is 67
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 67
+Dt = 1, Simulation time is 68
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 68
+Simulation time is 68
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 68
+Dt = 1, Simulation time is 69
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 69
+Simulation time is 69
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 69
+Dt = 1, Simulation time is 70
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 70
+Simulation time is 70
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 70
+Dt = 1, Simulation time is 71
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 71
+Simulation time is 71
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 71
+Dt = 1, Simulation time is 72
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 72
+Simulation time is 72
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 72
+Dt = 1, Simulation time is 73
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 73
+Simulation time is 73
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 73
+Dt = 1, Simulation time is 74
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 74
+Simulation time is 74
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 74
+Dt = 1, Simulation time is 75
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 75
+Simulation time is 75
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 75
+Dt = 1, Simulation time is 76
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 76
+Simulation time is 76
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 76
+Dt = 1, Simulation time is 77
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 77
+Simulation time is 77
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 77
+Dt = 1, Simulation time is 78
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 78
+Simulation time is 78
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 78
+Dt = 1, Simulation time is 79
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 79
+Simulation time is 79
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 79
+Dt = 1, Simulation time is 80
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 80
+Simulation time is 80
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 80
+Dt = 1, Simulation time is 81
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 81
+Simulation time is 81
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 81
+Dt = 1, Simulation time is 82
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 82
+Simulation time is 82
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 82
+Dt = 1, Simulation time is 83
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 83
+Simulation time is 83
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 83
+Dt = 1, Simulation time is 84
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 84
+Simulation time is 84
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 84
+Dt = 1, Simulation time is 85
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 85
+Simulation time is 85
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 85
+Dt = 1, Simulation time is 86
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 86
+Simulation time is 86
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 86
+Dt = 1, Simulation time is 87
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 87
+Simulation time is 87
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 87
+Dt = 1, Simulation time is 88
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 88
+Simulation time is 88
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 88
+Dt = 1, Simulation time is 89
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 89
+Simulation time is 89
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 89
+Dt = 1, Simulation time is 90
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 90
+Simulation time is 90
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 90
+Dt = 1, Simulation time is 91
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 91
+Simulation time is 91
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 91
+Dt = 1, Simulation time is 92
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 92
+Simulation time is 92
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 92
+Dt = 1, Simulation time is 93
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 93
+Simulation time is 93
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 93
+Dt = 1, Simulation time is 94
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 94
+Simulation time is 94
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 94
+Dt = 1, Simulation time is 95
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 95
+Simulation time is 95
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 95
+Dt = 1, Simulation time is 96
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 96
+Simulation time is 96
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 96
+Dt = 1, Simulation time is 97
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 97
+Simulation time is 97
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 97
+Dt = 1, Simulation time is 98
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 98
+Simulation time is 98
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 98
+Dt = 1, Simulation time is 99
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At begining of timestep # 99
+Simulation time is 99
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++
+At end of timestep # 99
+Dt = 1, Simulation time is 100
+++++++++++++++++++++++++++++++++++++++++++++
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+TOTAL 
+WALLCLOCK TIME
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Timer Name                                             Proc: 0          Summed           Max              Proc             
+algs::HierarchyTimeIntegrator::advanceHierarchy()      0.0292494 (33%)  0.071388 (40%)   0.0421386 (47%)  1              
+algs::HierarchyTimeIntegrator::std_advance_level       0.0271986 (30%)  0.06779 (38%)    0.0405915 (46%)  1              
+apps::main::write_javis_data                           0.0286319 (32%)  0.0583477 (33%)  0.0297158 (33%)  1              
+algs::NumericalComponent::total                        0.0222709 (25%)  0.0395136 (22%)  0.0222709 (25%)  0              
+algs::DtComponent::total                               0.00175452 (1%)  0.0227566 (12%)  0.0210021 (23%)  1              
+algs::DtComponent::fillData()                          0.000706434 (0%)  0.0209472 (11%)  0.0202408 (22%)  1              
+algs::NumericalComponent::fillData()                   0.010869 (12%)   0.0191979 (10%)  0.010869 (12%)   0              
+algs::HierarchyTimeIntegrator::initializeHierarchy()   0.0107071 (12%)  0.0213432 (12%)  0.0107071 (12%)  0              
+algs::NumericalComponent::computing()_0                0.00964427 (10%)  0.0170586 (9%)   0.00964427 (10%)  0              
+algs::InitializeComponent::total                       0.00943708 (10%)  0.0187032 (10%)  0.00943708 (10%)  0              
+algs::InitializeComponent::computing()                 0.00936913 (10%)  0.0185661 (10%)  0.00936913 (10%)  0              
+algs::MemoryComponent::total                           0.00288653 (3%)  0.00520182 (2%)  0.00288653 (3%)  0              
+algs::CopyComponent::total                             0.00144696 (1%)  0.00250077 (1%)  0.00144696 (1%)  0              
+algs::NumericalComponent::regrid()                     0.000656128 (0%)  0.00131702 (0%)  0.000660896 (0%)  1              
+algs::DtComponent::computing()                         0.000579119 (0%)  0.000985384 (0%)  0.000579119 (0%)  0              
+TOTAL RUN TIME:                                        0.088012 (100%)  0.17606 (100%)   0.088048 (100%)  
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+

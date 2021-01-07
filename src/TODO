@@ -1,0 +1,21 @@
+Todo 
+1. [staticAnalysis/psg-addr.cpp] 
+    Address space of loop is not [firstblock -> start(), lastblock -> last()], because there may be an interval.
+    For example, loop_4.2 in conj_grad_ in NPB-CG:
+     "43 -1 1 6 4199816 4200764 loop_4.2
+      44 -1 0 0 4200064 4200089 loop_4.2.1
+      45 1 1 0 4199899 4199907 mpi_irecv_
+      46 1 2 0 4199973 4199981 mpi_send_
+      47 1 3 0 4199994 4200002 mpi_wait_
+      48 -5 4 1 4200741 4200749 timer_start_
+      13 -4 0 1 4217024 4217077 timer_start_
+      14 1 0 0 4217046 4217054 mpi_wtime_
+      49 -5 5 1 4200765 4200773 timer_stop_
+      16 -4 0 1 4217088 4217159 timer_stop_
+      17 1 0 0 4217107 4217115 mpi_wtime_"
+  
+2. [Baguatool/psg.py]
+    Graph contraction: Merge same path for ADDR node
+
+3. [Baguatool/psg.py]
+    PSG layout

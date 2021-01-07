@@ -1,5 +1,0 @@
-#!/bin/bash
-staticDir="/mnt/home/jinyuyang/ScalAna/src_2020/static"
-binName=$1
-$staticDir/PSG $binName
-$staticDir/parsepsg.sh $binName

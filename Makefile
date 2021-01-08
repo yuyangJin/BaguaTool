@@ -34,7 +34,8 @@ libdynco:
 libcommdep:
 	python $(BAGUA_DIR)/src/dynamicAnalysis/sampling/wrap/wrap.py -f $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDependence_v1.1.w -o $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDependence.cpp
 	$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@.so $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDependence.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lunwind
-	g++ -g -std=c++11 $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDepDetect.cpp -o $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDependence_v1.1.w -o $(BAGUA_DIR)/bin/commDepDetect
+	g++ -g -std=c++11 $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDepDetect.cpp -o $(BAGUA_DIR)/bin/commDepDetect
+	g++ -g -std=c++11 $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDepDetectApproxi.cpp -o $(BAGUA_DIR)/bin/commDepDetectApproxi
 	
 asm:
 	g++ -g -std=c++11  -o $(BAGUA_DIR)/bin/instruction_psg_counter $(BAGUA_DIR)/src/staticAnalysis/instruction_counter/instruction_psg.cpp -L${DYNINST_DIR}/lib -I${DYNINST_DIR}/include -ldyninstAPI -ldyninstAPI_RT -linstructionAPI -lboost_system -lsymLite -ldynDwarf -ldynElf -lcommon -lelf -ldw

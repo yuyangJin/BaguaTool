@@ -137,5 +137,8 @@ class PPG(object):
 
     def show(self, save_fig = ""):
         #printGraph(self.main_root,0)
-        output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, output_file = save_fig + ".ppg")
+        if save_fig == "":
+            output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges)
+        else:    
+            output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, output_file = save_fig + ".ppg")
         output.done()

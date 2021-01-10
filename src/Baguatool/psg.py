@@ -297,7 +297,10 @@ class PSG(object):
         global uniqId
         uniqId = 0
         #printGraph(self.main_root,0)
-        output = GraphvizOutput(self.psg_file, self.main_root, nodes = self.nodes, edges = self.edges, total_sample_count = self.total_sampling_count, total_comm_time = self.total_comm_time, output_file = save_fig + ".psg")
+        if save_fig == "":
+            output = GraphvizOutput(self.psg_file, self.main_root, nodes = self.nodes, edges = self.edges, total_sample_count = self.total_sampling_count, total_comm_time = self.total_comm_time)
+        else:
+            output = GraphvizOutput(self.psg_file, self.main_root, nodes = self.nodes, edges = self.edges, total_sample_count = self.total_sampling_count, total_comm_time = self.total_comm_time, output_file = save_fig + ".psg")
         output.done()
 
     def save(self, save_file=""):

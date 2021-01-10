@@ -14,14 +14,14 @@ from node import *
 (COMPUTING, COMBINE, CALL_INDIRECT, CALL_REC, CALL, FUNCTION, COMPOUND, BRANCH, LOOP) = (i for i in range(-9, 0, 1))
 
 class GraphvizOutput(Output):
-    def __init__(self, psg_file, root_node, nodes = {}, edges = {}, edge_list = [], total_sample_count = 100000 , total_comm_time = 100000, output_file = "", **kwargs):
+    def __init__(self, file_name, root_node, nodes = {}, edges = {}, edge_list = [], total_sample_count = 100000 , total_comm_time = 100000, output_file = "", **kwargs):
         self.tool = 'dot'
         #self.tool = 'circo'
         #self.tool = 'neato'
         if output_file == "":
-            #self.output_files = [psg_file + '.png', psg_file + '.pdf']
+            #self.output_files = [file_name + '.png', file_name + '.pdf']
             #self.output_types = ['png', 'pdf']
-            self.output_files = [psg_file + '.pdf']
+            self.output_files = [file_name + '.pdf']
             self.output_types = ['pdf']
         else:
             #self.output_files = [output_file + '.png', output_file + '.pdf']

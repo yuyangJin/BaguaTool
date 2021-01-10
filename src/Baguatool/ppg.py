@@ -51,14 +51,14 @@ class PPG(object):
         for child in node.children:
             self.buildPPG(child, pid)
 
-        if node.type_name == "LOOP":
-            loop_end_pnode = PNode(unique_id, node, -10, pid)
-            unique_id += 1
-            loop_end_pnode.performance_percentage = 0
-            loop_end_pnode.loop_pair_node = loop_start_pnode
-            loop_start_pnode.loop_pair_node = loop_end_pnode
-            pnode.children.append(loop_end_pnode)
-            pnode = loop_end_pnode
+        # if node.type_name == "LOOP":
+        #     loop_end_pnode = PNode(unique_id, node, -10, pid)
+        #     unique_id += 1
+        #     loop_end_pnode.performance_percentage = 0
+        #     loop_end_pnode.loop_pair_node = loop_start_pnode
+        #     loop_start_pnode.loop_pair_node = loop_end_pnode
+        #     pnode.children.append(loop_end_pnode)
+        #     pnode = loop_end_pnode
         
     def transferPSGCommDepToPPGCommDep(self, pnode):
         if pnode.type_name == "MPI" and len(pnode.comm_dep) > 0:
@@ -135,7 +135,7 @@ class PPG(object):
         # mark group_flag as true for problrmatic node in the list
         self.BFS(self.main_root, self.markProblematicNodeInList)
 
-    def show(self):
+    def show(self, save_fig = ""):
         #printGraph(self.main_root,0)
-        output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges)
+        output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, output_file = save_fig + ".ppg")
         output.done()

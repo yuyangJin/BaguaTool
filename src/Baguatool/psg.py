@@ -4,6 +4,7 @@ import collections
 import json
 import random
 import sys
+from functools import reduce
 
 uniqId = 0
 percentage_sum = 0.0
@@ -276,7 +277,8 @@ class PSG(object):
         markRemoveFlagOnGrpah(self.main_root)
         graphContraction(self.main_root)
         if len(preserved_func_list) != 0:
-            markRemoveFlagOnGrpahForUser(self.main_root, preserved_func_list)
+            # markRemoveFlagOnGrpahForUser(self.main_root, preserved_func_list)
+            markPreservedSubgraph(self.main_root, preserved_func_list, False)
             graphContractionForUser(self.main_root)
 
     # Build a ECM Model with asemble instruction data for each vertex
@@ -905,6 +907,26 @@ def graphContraction(node):
             graphContraction(child)
             i += 1
 
+def markPreservedSubgraph(node, preserved_func_list, father_has_preserved_func):
+    # 如果一个node自己包含preserved_func_list的内容，则其本身及其所有子节点都被保留
+    # 如果一个node需要被保留，则其父节点都需要被保留
+    if node.user_trimmed:
+        return not node.user_removed
+    node.user_trimmed = True
+
+
+    find_func = False
+    for func in preserved_func_list:
+        if node.name.find(func) != -1:
+            find_func = True
+            break
+    reserved = find_func or father_has_preserved_func
+    child_reserved = False
+    for child in node.children:
+        child_reserved |= markPreservedSubgraph(child, preserved_func_list, reserved)
+
+    node.user_removed = not (reserved or child_reserved)
+    return reserved or child_reserved
 
 def markRemoveFlagOnGrpahForUser(node, preserved_func_list):
     # Return true if this node should not be removed

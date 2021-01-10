@@ -56,9 +56,9 @@ vector<CDE*> comm_dep_edge;
 void readMPIInfo(string file_name, int pid){
   coll_info_pointer[pid] = 0;
   p2p_info_pointer[pid] = 0;
-  ifstream inputStream(file_name, ios::in);
-	if (!inputStream.good()) {
-		cout << "Failed to open MPID file\n";
+  ifstream inputStream(file_name.c_str(), ios_base::in);
+  if (!inputStream.good()) {
+		cout << "Failed to open "<<file_name.c_str()<<" file\n";
 		return;
 	}
   size_t pos = 0;
@@ -144,9 +144,9 @@ void readMPIInfo(string file_name, int pid){
 }
 
 void readTraceInfo(string file_name, int pid){
-  ifstream inputStream(file_name, ios::in);
+  ifstream inputStream(file_name.c_str(), ios_base::in);
   if (!inputStream.good()) {
-		cout << "Failed to open MPIT file\n";
+		cout << "Failed to open "<<file_name.c_str()<<" file\n";
 		return;
 	}
   size_t pos = 0;
@@ -245,7 +245,7 @@ void commOpMatch(int pid){
   }
 }
 
-void commOpMatchWithMPIInfo(int pid){
+void commOpMatchWithMPIInfo(int pid, ofstream& fout){
   vector<PIS*> :: iterator iter;
   for(iter = p2p_info[pid].begin(); iter != p2p_info[pid].end(); ++iter){
     char type = ( *iter ) -> type;
@@ -292,9 +292,10 @@ void commOpMatchWithMPIInfo(int pid){
             comm_dep_edge.push_back(one_comm_dep_edge);
 
 #ifdef DEBUG
-            cout << dest_type << " | "<< dest_callpath << " | " << dest_pid << ", ";
-            cout << src_type << " | " << src_callpath << " | " << src_pid << ", ";
-            cout << exe_time << endl;
+            fout << dest_type << " | "<< dest_callpath << " | " << dest_pid << ", ";
+            fout << src_type << " | " << src_callpath << " | " << src_pid << ", ";
+            fout << exe_time << endl;
+            fout.flush();
 #endif
             
             
@@ -320,8 +321,8 @@ int main(int argc, char* argv[]){
   p2p_info_pointer.resize(nprocs);
 
   for (int pid = 0; pid < nprocs; pid++){
-    readMPIInfo(string("MPID") + to_string(pid) + string(".TXT"), pid);
-    //readTraceInfo(string("MPIT") + to_string(pid) + string(".TXT"), pid);
+    readMPIInfo(string("./MPID") + to_string(pid) + string(".TXT"), pid);
+    //readTraceInfo(string("./MPIT") + to_string(pid) + string(".TXT"), pid);
   }
   // cout << p2p_info[0].size() << endl;
   // for (int i = 0; i < p2p_info[0].size(); i ++){
@@ -344,7 +345,8 @@ int main(int argc, char* argv[]){
   // }
   // cout << endl;
 
+  ofstream outputStream(argv[2], ios_base::out);
   for (int pid = 0; pid < nprocs; pid++){
-    commOpMatchWithMPIInfo(pid);
+    commOpMatchWithMPIInfo(pid, outputStream);
   }
 }

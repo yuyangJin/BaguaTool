@@ -71,7 +71,7 @@ class Output(object):
 
         if node.performance_percentage:
             parts += [
-                'Samping Count: {0.performance_percentage}',
+                'Percentage: {0.performance_percentage}',
             ]
         # if node.comm_time[0]:
         #     parts += [

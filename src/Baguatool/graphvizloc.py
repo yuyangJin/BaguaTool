@@ -14,7 +14,7 @@ from node import *
 (COMPUTING, COMBINE, CALL_INDIRECT, CALL_REC, CALL, FUNCTION, COMPOUND, BRANCH, LOOP) = (i for i in range(-9, 0, 1))
 
 class GraphvizOutput(Output):
-    def __init__(self, file_name, root_node, nodes = {}, edges = {}, edge_list = [], total_sample_count = 100000 , total_comm_time = 100000, output_file = "", **kwargs):
+    def __init__(self, file_name, root_node, nodes = {}, edges = {}, edge_list = [], group_list = [], total_sample_count = 100000 , total_comm_time = 100000, output_file = "", **kwargs):
         self.tool = 'dot'
         #self.tool = 'circo'
         #self.tool = 'neato'
@@ -35,6 +35,7 @@ class GraphvizOutput(Output):
         self.input_edges = edges
         self.edges = []
         self.edge_list = edge_list
+        self.group_list = group_list
         self.input_nodes = nodes
         self.nodes = []
         self.groups = []
@@ -111,7 +112,7 @@ class GraphvizOutput(Output):
     def done(self):
         source = self.generate()
 
-        print(self.percentage_sum)
+        #print(self.percentage_sum)
         #self.debug(source)
 
         fd, temp_name = tempfile.mkstemp()
@@ -375,13 +376,21 @@ class GraphvizOutput(Output):
                 self.edges.append(self.edge(k, child, attr))
         
     def generateEdgeFromEdgeList(self):
-        print(self.edge_list)
+        #print(self.edge_list)
         for edge_ in self.edge_list:
-            attr = {
-                'color': self.edge_color_func(edge_[2]).rgba_web(),
-                'label': self.edge_label_func(str(edge_[2])),
-                'penwidth':self.edge_penwidth_func((math.log(edge_[2], 10)) * 2 - 1 ),
-            }
+            #if edge_[0] in self.group_list or edge_[1] in self.group_list:
+            if edge_[2] > 1e4 :
+                attr = {
+                    'color': self.edge_color_func(edge_[2]).rgba_web(),
+                    'label': self.edge_label_func(str(edge_[2])),
+                    'penwidth':self.edge_penwidth_func((math.log(edge_[2], 10)) * 2 - 7 ),
+                }
+            else:
+                attr = {
+                    'color': self.edge_color_func(edge_[2]).rgba_web(),
+                    'label': self.edge_label_func(str(edge_[2])),
+                    'penwidth':self.edge_penwidth_func(1),
+                }
             # if child.removed == False:
             #     self.edges.append(self.edge(node.unique_id, child.unique_id, attr))
             #     self.generateNodesEdgesGroups(child)

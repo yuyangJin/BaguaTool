@@ -121,18 +121,20 @@ class GraphvizOutput(Output):
         for i in range(len(self.output_types)):
             output_type = self.output_types[i]
             output_file = self.output_files[i]
-            cmd = '"{0}" -T {1} -o {2} {3}'.format(
+            cmd = '"{0}" -v -T {1} -o {2} {3}'.format(
                 self.tool, output_type, output_file, temp_name
             )
 
             self.verbose('Executing: {0}'.format(cmd))
             proc = sub.Popen(cmd, stdout=sub.PIPE, stderr=sub.PIPE, shell=True)
-            ret, output = proc.communicate()
-            if ret:
+            stdout, stderr = proc.communicate()
+            exit_code = proc.wait()
+            #print(stdout, output, exit_code)
+            if exit_code:
                 os.unlink(temp_name)
                 raise PyCallGraphException(
                     'The command "%(cmd)s" failed with error '
-                    'code %(ret)i.' % locals())
+                    'stdout: %(stdout)s stderr: %(stderr)s code %(ret)i.' % locals())
         #    finally:
         os.unlink(temp_name)
 

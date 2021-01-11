@@ -1,5 +1,5 @@
 from node import *
-from graphviz import *
+from graphvizloc import *
 import sys
 
 pnode = None

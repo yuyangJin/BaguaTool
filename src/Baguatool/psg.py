@@ -1,10 +1,12 @@
 from node import *
-from graphviz import *
+
 import collections
 import json
 import random
 import sys
 from functools import reduce
+import os
+from graphvizloc import *
 
 uniqId = 0
 percentage_sum = 0.0

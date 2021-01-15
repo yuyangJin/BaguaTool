@@ -13,5 +13,5 @@ do
 done
 
 export DYNINSTAPI_RT_LIB=/home/jinyuyang/workspace/build/dyninst-10.1.0/lib/libdyninstAPI_RT.so
-export BAGUA_DIR=/home/jinyuyang/workspace/BaguaTool                                                                                                                                                                                      
+export BAGUA_DIR=/home/zhongrunxin/BaguaTool                                                                                                                                                                                      
 export DYNINST_DIR=/mnt/home/jinyuyang/build/dyninst-10.1.0     

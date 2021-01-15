@@ -1,6 +1,6 @@
 import sys
-sys.path.append(r"/home/zhongrunxin/BaguaTool/src/Baguatool")
-import os
+proj_dir = os.environ['BAGUA_DIR']
+sys.path.append(proj_dir + r"/src/Baguatool")
 import json
 import baguatool as bgt
 

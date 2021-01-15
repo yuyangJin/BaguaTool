@@ -1,10 +1,12 @@
 from node import *
-from graphviz import *
+
 import collections
 import json
 import random
 import sys
 from functools import reduce
+import os
+from graphvizloc import *
 
 uniqId = 0
 percentage_sum = 0.0
@@ -24,7 +26,7 @@ class PSG(object):
         self.main_root = None
         self.funcs_num = 0
         self.roots_of_all_functions = []
-        self.total_sampling_count = 0
+        self.total_sampling_count = []
         self.total_comm_time = 0
         self.perf_data_config = {}
         self.perf_data_config_file = ""
@@ -80,14 +82,14 @@ class PSG(object):
             # This loop is for traversing all processes in performance data
             for i in range(len(perf_data.data[j])):
                 total_sampling_count = 0
-                real_toal_sampling_count = 0
+                real_total_sampling_count = 0
                 # This loop is for traversing all [call stack, sampling count] lines of one process's performance data
                 for callstack_line in perf_data.data[j][i]:
                     callstack = callstack_line[0]
                     cur_sampling_count = int(callstack_line[1])
                     #if cur_sampling_count <= 1:
                     #    continue
-                    real_toal_sampling_count += cur_sampling_count
+                    real_total_sampling_count += cur_sampling_count
                     if len(callstack) != 0:
                         callstack.pop()
                         # Invoke "getNodeWithCallstack" to embed one [call stack, sampling count] line to corresponding vertex
@@ -104,10 +106,11 @@ class PSG(object):
                             #print(callstack, cur_sampling_count, "not found")
                         # Record total sampling count
                         total_sampling_count += cur_sampling_count
-                self.total_sampling_count = total_sampling_count
-                #print(total_sampling_count, real_toal_sampling_count)
-                updatePercentageOfNode(self.main_root, total_sampling_count)
-                #print(percentage_sum)
+                # only count for TOT_CYC
+                if j == 0:
+                    self.total_sampling_count.append(total_sampling_count)
+                    #print(total_sampling_count, real_total_sampling_count)
+                    
                 if os.path.exists(perf_data.perf_data_dir + "LDMAP" + str(0) + ".TXT"):
                     self.BFS(self.main_root, updateNameofAddrNode, perf_data.ldmap[i])
                 else:
@@ -115,8 +118,12 @@ class PSG(object):
                     self.BFS(self.main_root, updateNameofAddrNodeNonLib, self.binary_name)
             
             self.BFS(self.main_root, appendFeatureDataToPerfData, perf_data.dyn_features[j])
+            if j == 0:
+                #print(self.total_sampling_count)
+                self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
             #appendFeatureDataToPerfData(self.main_root, perf_data.dyn_features[j], self.main_root.appended_feature_data_to_perf_data)
             self.BFS(self.main_root, clearSamplingCount)
+        
         self.BFS(self.main_root, appendPerfDataToAllData, perf_data.dir_suffix)
         #appendPerfDataToAllData(self.main_root, perf_data.dir_suffix, self.main_root.appended_feature_data_to_perf_data)
         
@@ -270,8 +277,13 @@ class PSG(object):
 
     def asembleInstructionDataEmbedding(self, asm_data, node):
         self.BFS(node, recursiveAsembleDataEmbedding, asm_data)
+        self.BFS(node, noneFunc)
 
     def contraction(self, preserved_func_list=[]):
+        #self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
+        #clear contracted flag
+        self.BFS(self.main_root, clearContractionFlag)
+
         mergeSameAddrFuncNode(self.main_root)
         
         markRemoveFlagOnGrpah(self.main_root)
@@ -297,7 +309,10 @@ class PSG(object):
         global uniqId
         uniqId = 0
         #printGraph(self.main_root,0)
-        output = GraphvizOutput(self.psg_file, self.main_root, nodes = self.nodes, edges = self.edges, total_sample_count = self.total_sampling_count, total_comm_time = self.total_comm_time, output_file = save_fig)
+        if save_fig == "":
+            output = GraphvizOutput(self.psg_file, self.main_root, nodes = self.nodes, edges = self.edges, total_sample_count = self.total_sampling_count[0], total_comm_time = self.total_comm_time)
+        else:
+            output = GraphvizOutput(self.psg_file, self.main_root, nodes = self.nodes, edges = self.edges, total_sample_count = self.total_sampling_count[0], total_comm_time = self.total_comm_time, output_file = save_fig + ".psg")
         output.done()
 
     def save(self, save_file=""):
@@ -383,7 +398,7 @@ def generatePSGWithNodesEdges(uid, edges, nodes):
     args = getNodeArgs(uid, edges, nodes)
     node = Node(*args)
 
-    print(args)
+    #print(args)
     # TODO: recursive call    
     if edges.keys().__contains__(uid):
         for i in range(len(edges[uid])):
@@ -441,7 +456,7 @@ def getNodeWithSoAddr(node, pop_addr, ldmap):
         if solib_name == None:
             node_name = "Unknown Addr"
         else:
-            print(hex(query_addr), solib_name)
+            #print(hex(query_addr), solib_name)
             addr2func_cmd = "addr2line -e " + solib_name + " -fC " + str(query_addr) + " | head -n 1"
             tmp = os.popen(addr2func_cmd)
             node_name = tmp.read()
@@ -737,15 +752,22 @@ def getTreeRootWithAddr(pop_addr, roots_of_all_functions):
 
 
 def updatePercentageOfNode(node, total_sampling_count):
-    global percentage_sum
-    if node.has_calculated_performance:
-        return
-    node.has_calculated_performance = True
+    #global percentage_sum
+
+    average_percentage = 0.0
+    for i in range(len(node.performance_data["TOT_CYC"])):
+        tmp = float(node.performance_data["TOT_CYC"][i]) / float(total_sampling_count[i])
+        average_percentage += tmp
+        node.all_procs_percentage.append(tmp)
+    average_percentage /= len(node.performance_data["TOT_CYC"])
+
+    #print(node.performance_data["TOT_CYC"], total_sampling_count)
     
-    node.performance_percentage = round(node.sampling_count[0] / total_sampling_count, 5)
-    percentage_sum += node.performance_percentage
-    for child in node.children:
-        updatePercentageOfNode(child, total_sampling_count)
+    node.performance_percentage = round(average_percentage, 5)
+    #if abs(node.performance_percentage) > 0:
+        #print(node.unique_id, node.performance_percentage)
+    #percentage_sum += node.performance_percentage
+
 
 # def updatePercentageOfNode(node, pid, total_sampling_count):
 #     global percentage_sum
@@ -817,7 +839,7 @@ def updateNameofAddrNode(node, ldmap):
                 addr2func_cmd = "addr2line -e " + solib_name + " -fC " + hex(base_addr) + " | head -n 1"
                 tmp = os.popen(addr2func_cmd)
                 node_name = tmp.read().strip().split('(')[0]
-                print(hex(base_addr), solib_name, node_name)
+                #print(hex(base_addr), solib_name, node_name)
             queried_so_addr_func_map[addr] = node_name
             node.name = node_name
         node.type = -8
@@ -839,7 +861,7 @@ def updateNameofAddrNodeNonLib(node, binary_name):
                 addr2func_cmd = "addr2line -e " + binary_name +  " -fC " + hex(addr) + " | head -n 1"
                 tmp = os.popen(addr2func_cmd)
                 node_name = tmp.read().strip().split('(')[0]
-                print(hex(addr), binary_name, node_name)
+                #print(hex(addr), binary_name, node_name)
                 queried_so_addr_func_map[addr] = node_name
                 node.name = node_name
                 node.type = -8
@@ -1013,3 +1035,13 @@ def getEntryAddr(node):
 def sortPSG(node):
     if len(node.children) > 1:
         node.children.sort(key = getEntryAddr)
+
+
+# do nothing
+def noneFunc(node):
+    return 
+
+def clearContractionFlag(node):
+    node.trimmed = False
+    node.removed = False
+    node.contracted = False

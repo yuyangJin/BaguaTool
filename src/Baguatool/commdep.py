@@ -1,3 +1,5 @@
+import os
+
 class commDep(object):
     def __init__(self, dynamic_data_dir, binary_name, dir_suffix, nprocs):
         self.dynamic_data_dir = dynamic_data_dir

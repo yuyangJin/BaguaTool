@@ -41,6 +41,7 @@ class Node(object):
         #self.sumTime = sumTime
         self.sampling_count = [0]
         self.performance_percentage = performance_percentage
+        self.all_procs_percentage = []
         self.performance_data = performance_data
         self.all_data = {}
         self.has_calculated_performance = False
@@ -86,6 +87,7 @@ class PNode(object):
                  unique_id,
                  node,
                  node_type,
+                 total_sampling_count,
                  pid
                  ):
         self.unique_id = unique_id
@@ -100,25 +102,33 @@ class PNode(object):
         else:
             perf_data = [0]
         
-        if pid == 0:
-            self.all_procs_perf_data = copy.deepcopy(perf_data)
+
 
         if len(perf_data) > pid:
             self.sampling_count = perf_data[pid]
         else:
             self.sampling_count = 0
+
+        if pid == 0:
+            #self.all_procs_perf_data = copy.deepcopy(perf_data)
+            self.all_procs_perf_data = perf_data
+
         if len(node.comm_time) > pid:
             self.comm_time = node.comm_time[pid]
         else:
             self.comm_time = 0
 
-        # TODO: this version is not accurate 
-        if pid == 0:
-            self.performance_percentage = node.performance_percentage
-        elif perf_data[0] == 0:
-            self.performance_percentage = 0.0
-        else:
-            self.performance_percentage = node.performance_percentage * self.sampling_count / perf_data[0]
+        # # TODO: this version is not accurate 
+        # if pid == 0:
+        #     self.performance_percentage = node.performance_percentage
+        # elif perf_data[0] == 0:
+        #     self.performance_percentage = 0.0
+        # else:
+        #     self.performance_percentage = node.performance_percentage * self.sampling_count / perf_data[0]
+
+        self.all_procs_percentage = node.all_procs_percentage
+
+        self.performance_percentage = self.sampling_count / total_sampling_count[pid]
 
         self.children = []
 

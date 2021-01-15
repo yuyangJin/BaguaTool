@@ -223,6 +223,14 @@ class Baguatool(object):
         return perf_data
  
     def getCommDepData(self, dir_suffix, nprocs):
+        cd_enter_cmd = "cd " + "./" + self.output_dir + "/dynamic_data/" + dir_suffix 
+        comm_dep_edge_analysis_cmd = "$BAGUA_DIR/bin/commDepDetectApproxi " + str(nprocs) + " " + self.binary_name.strip().split('/')[-1] + ".cdp"
+        cd_back_cmd = "cd - "
+        print(cd_enter_cmd, comm_dep_edge_analysis_cmd, cd_back_cmd)
+        print(cd_enter_cmd, os.system(cd_enter_cmd))
+        print(comm_dep_edge_analysis_cmd, os.system(comm_dep_edge_analysis_cmd))
+        print(cd_back_cmd, os.system(cd_back_cmd))
+
         comm_dep_data = commDep("./" + self.output_dir + "/dynamic_data/", self.binary_name.strip().split('/')[-1], dir_suffix, nprocs)
         return comm_dep_data
 

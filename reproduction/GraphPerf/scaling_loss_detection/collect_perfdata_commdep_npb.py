@@ -25,13 +25,14 @@ analysis.setStaticAnalysisFeature(features=["psg"])
 # set dynamic analysis mode as "sampling" / "instrumentation"  
 # "sampling_freq" is sampling times per second
 analysis.setDynamicAnalysisMode("sampling", sampling_freq=100)
+#analysis.setDynamicAnalysisMode("commdep")
 
 #nps = [1, 2, 4, 8]
 #for np in nps:
 # set commands for execution 
 # # set suffix of output file for performance recording
 #np = 8
-analysis.setExecutionCommand(cmd = "srun -N 8 -n " + np + " ./" + prog + ".C." + np , output_file_suffix = "_np-" + np )
+analysis.setExecutionCommand(cmd = "srun -N 6 -n " + np + " ./" + prog + ".C." + np , output_file_suffix = "_np-" + np )
 
 # set 
 analysis.setOutputDir(output_dir = "NPB-so-baguatool-data/" + prog.upper())
@@ -40,27 +41,7 @@ analysis.setOutputDir(output_dir = "NPB-so-baguatool-data/" + prog.upper())
 # including static and dynamic parts
 analysis.startAnalysis()
 
-# OFFLINE PERFORMANCE ANALYSIS
-# get program structure graph
-psg = analysis.getProgramStructureGraph()
+analysis.setAnalysisMode("dynamic")
+analysis.setDynamicAnalysisMode("commdep")
 
-# get performance data
-#np = 8
-perf_data = analysis.getPerformanceData(dir_suffix = "_np-" + np, nprocs = int(np), dyn_features = ["TOT_CYC"]) #, "LD_INS", "ST_INS", "L1_DCM"])
-#perf_data.show()
-psg.performanceDataEmbedding(perf_data)
-
-# get communication data
-#comm_dep = analysis.getCommDepData(dir_suffix = "_np-" + np, nprocs = int(np))
-#psg.commDepEmbedding(comm_dep)
-
-# graph contraction
-psg.contraction()
-
-psg.show(save_fig = "./" + prog + ".C." + np)
-
-#ppg = analysis.transferToProgramPerformanceGraph(psg, nprocs = int(np))
-
-#ppg.markProblematicNode(prob_threshold = 1.1)
-
-#ppg.show()
+analysis.startAnalysis()

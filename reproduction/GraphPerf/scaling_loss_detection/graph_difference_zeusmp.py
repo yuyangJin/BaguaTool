@@ -1,57 +1,66 @@
 import sys
 sys.path.append(r"/home/jinyuyang/workspace/BaguaTool/src/Baguatool")
-
+import os
+import json
 import baguatool as bgt
+
+np_1 = sys.argv[1]
+np_2 = sys.argv[2]
 
 analysis = bgt.Baguatool()
 
-prog = sys.argv[1]
-#np = sys.argv[2]
-
+# SETUP
+# set analysis mode as "static" / "dynamic" / "static+dynamic"
 analysis.setAnalysisMode("static+dynamic")
 
-np = str(32)
+np = np_1
 # set static analysis mode as "binary" (binary analysis) / "src" (source code analysis)
-analysis.setStaticAnalysisMode(mode="binary", binary="./" + prog + ".C." + np)
-# set 
-analysis.setOutputDir(output_dir = "NPB-so-baguatool-data/" + prog.upper())
+analysis.setStaticAnalysisMode(mode="binary", binary="./zeusmp.x") 
 
-# OFFLINE PERFORMANCE ANALYSIS
-# get program structure graph
-psg_32 = analysis.getProgramStructureGraph()
+# set
+analysis.setOutputDir(output_dir="zeusmp-baguatool-data")
+
+# # OFFLINE PERFORMANCE ANALYSIS
+# # get program structure graph
+psg_1 = analysis.getProgramStructureGraph()
+
 
 # get performance data
-#np = 8
-perf_data = analysis.getPerformanceData(dir_suffix = "_np-" + np, nprocs = int(np), dyn_features = ["TOT_CYC"]) #, "LD_INS", "ST_INS", "L1_DCM"])
-#perf_data.show()
-psg_32.performanceDataEmbedding(perf_data)
+features = ["TOT_CYC"] #, "LD_INS", "ST_INS", "L1_DCM", "TOT_INS"]#, "L2_DCM"]
 
+perf_data = analysis.getPerformanceData( dir_suffix = "_np" + np, nprocs = int(np), dyn_features = features)
+psg_1.performanceDataEmbedding(perf_data)
+
+comm_dep = analysis.getCommDepData(dir_suffix = "_np" + np, nprocs = int(np))
+psg_1.commDepEmbedding(comm_dep)
 
 # graph contraction
-psg_32.contraction()
-psg_32.convertToGraph()
-psg_32.save(save_file="./" + prog + ".C." + np)
-psg_32.show(save_fig="./" + prog + ".C." + np)
+psg_1.contraction()
+psg_1.convertToGraph()
+psg_1.save(save_file="./zeusmp_" + np)
+#psg_1.show(save_fig="./zeusmp_" + np)
 
+# set
+np = np_2
+analysis.setOutputDir(output_dir="zeusmp-baguatool-data")
 
-np = str(8)
-
-analysis.setStaticAnalysisMode(mode="binary", binary="./" + prog + ".C." + np)
-analysis.setOutputDir(output_dir="NPB-so-baguatool-data/" + prog.upper())
-
-psg_8 = analysis.getProgramStructureGraph()
+psg_2 = analysis.getProgramStructureGraph()
 
 # get performance data
-#np = 8
-perf_data = analysis.getPerformanceData(dir_suffix = "_np-" + np, nprocs = int(np), dyn_features = ["TOT_CYC"]) #, "LD_INS", "ST_INS", "L1_DCM"])
-#perf_data.show()
-psg_8.performanceDataEmbedding(perf_data)
-# graph contraction
-psg_8.contraction()
-psg_8.convertToGraph()
-psg_8.save(save_file="./" + prog + ".C." + np)
-psg_8.show(save_fig="./" + prog + ".C." + np)
+features = ["TOT_CYC"] #, "LD_INS", "ST_INS", "L1_DCM", "TOT_INS"]#, "L2_DCM"]
 
+perf_data = analysis.getPerformanceData( dir_suffix = "_np" + np, nprocs = int(np), dyn_features = features)
+psg_2.performanceDataEmbedding(perf_data)
+
+comm_dep = analysis.getCommDepData(dir_suffix = "_np" + np, nprocs = int(np))
+psg_2.commDepEmbedding(comm_dep)
+
+# graph contraction
+psg_2.contraction()
+
+psg_2.convertToGraph()
+psg_2.save(save_file="./zeusmp_"+np)
+#psg_2.show(save_fig="./zeusmp_"+np)
 
 
 visited = [] # List to keep track of visited nodes.
@@ -97,29 +106,29 @@ def maxinum_common_subgraph(psg_1, psg_2):
     
     #print(psg1_psg2_map)
 
-maxinum_common_subgraph(psg_32, psg_8)
+maxinum_common_subgraph(psg_1, psg_2)
 
 def graph_difference(node, psg_2):
     if psg1_psg2_map.keys().__contains__(node.unique_id):
         node_2_id = psg1_psg2_map[node.unique_id]
         if node.performance_percentage > 0:
             print(node.unique_id, node.performance_percentage, psg_2.nodes[node_2_id][2])
+            avg_tot_sampling_count = sum(psg_2.total_sampling_count) / len(psg_2.total_sampling_count)
+            avg_sampling_count = psg_2.nodes[node_2_id][2] * avg_tot_sampling_count
+            for i in range(len(node.performance_data["TOT_CYC"])):
+                node.performance_data["TOT_CYC"][i] -= avg_sampling_count
             node.performance_percentage -= psg_2.nodes[node_2_id][2]
 
 
-psg_32.BFS(psg_32.main_root, graph_difference, psg_8)
+psg_1.BFS(psg_1.main_root, graph_difference, psg_2)
 
-psg_32.convertToGraph()
-psg_32.save(save_file="./" + prog + ".C.32-" + prog + ".C.8")
-#psg_32.show(save_fig="./" + prog + ".C.32-" + prog + ".C.8")
+psg_1.convertToGraph()
+psg_1.save(save_file="./zeusmp."+np_1 +"-zeusmp."+np_2)
+psg_1.show(save_fig="./zeusmp."+np_1 +"-zeusmp."+np_2)
+
+np = np_1
 
 # get communication data
-#comm_dep = analysis.getCommDepData(dir_suffix = "_np-" + np, nprocs = int(np))
-#psg.commDepEmbedding(comm_dep)
-
-
-#ppg = analysis.transferToProgramPerformanceGraph(psg, nprocs = int(np))
-
-#ppg.markProblematicNode(prob_threshold = 1.1)
-
-#ppg.show()
+ppg_3 = analysis.transferToProgramPerformanceGraph(psg_1, nprocs = int(np))
+ppg_3.markProblematicNode(prob_threshold = 0.01)
+ppg_3.show(save_fig="./zeusmp."+np_1 +"-zeusmp."+np_2)

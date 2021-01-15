@@ -1,5 +1,5 @@
 from node import *
-from graphviz import *
+from graphvizloc import *
 import sys
 
 pnode = None
@@ -12,7 +12,7 @@ class PPG(object):
         self.psg = psg
         self.ppg_file = psg.psg_file[:-2] + "p" + psg.psg_file[-1]
         psg_root = psg.main_root
-        self.main_root = PNode(unique_id, psg_root, psg_root.type, 0)
+        self.main_root = PNode(unique_id, psg_root, psg_root.type, self.psg.total_sampling_count, 0)
         unique_id += 1
         
         self.psg_node_to_ppg_node_map = dict()
@@ -37,7 +37,7 @@ class PPG(object):
         global unique_id
 
         if node != self.psg.main_root:
-            new_pnode = PNode(unique_id, node, node.type, pid)
+            new_pnode = PNode(unique_id, node, node.type, self.psg.total_sampling_count, pid)
             unique_id += 1
             pnode.children.append(new_pnode)
             pnode = new_pnode
@@ -51,14 +51,14 @@ class PPG(object):
         for child in node.children:
             self.buildPPG(child, pid)
 
-        if node.type_name == "LOOP":
-            loop_end_pnode = PNode(unique_id, node, -10, pid)
-            unique_id += 1
-            loop_end_pnode.performance_percentage = 0
-            loop_end_pnode.loop_pair_node = loop_start_pnode
-            loop_start_pnode.loop_pair_node = loop_end_pnode
-            pnode.children.append(loop_end_pnode)
-            pnode = loop_end_pnode
+        # if node.type_name == "LOOP":
+        #     loop_end_pnode = PNode(unique_id, node, -10, pid)
+        #     unique_id += 1
+        #     loop_end_pnode.performance_percentage = 0
+        #     loop_end_pnode.loop_pair_node = loop_start_pnode
+        #     loop_start_pnode.loop_pair_node = loop_end_pnode
+        #     pnode.children.append(loop_end_pnode)
+        #     pnode = loop_end_pnode
         
     def transferPSGCommDepToPPGCommDep(self, pnode):
         if pnode.type_name == "MPI" and len(pnode.comm_dep) > 0:
@@ -89,6 +89,8 @@ class PPG(object):
     def addInterProcessCommDepEdge(self):
         # add comm_dep to list
         self.BFS(self.main_root.children[0], self.transferPSGCommDepToPPGCommDep)
+        self.BFS(self.main_root.children[0], noneFunc)
+
         #print(self.comm_dep_edges)
         # add comm_dep to each ppg node
         self.BFS(self.main_root, self.addCommDepInList)
@@ -110,16 +112,49 @@ class PPG(object):
             self.doBFS(std_flag, child, func, *args, **kwargs)
 
     def listProblematicNode(self, pnode, prob_threshold):
-        #print(pnode.unique_id)
-        if pnode.type_name != "LOOP_END" and len(pnode.all_procs_perf_data) > 1 and pnode.performance_percentage > 0.001:
-            perf_data = pnode.all_procs_perf_data
+        print(pnode.unique_id)
+        if pnode.type_name != "LOOP_END" and len(pnode.all_procs_percentage) > 1:
+            perf_data = pnode.all_procs_percentage
+            #perf_data = pnode.sampling_count
+            
+            ''' normalization '''
+            
+            min_perf_data = min(perf_data)
+            range_of_perf_data = max(perf_data) - min_perf_data
+            if range_of_perf_data == 0:
+                return
+
+            normolized_perf_data = []
+            for i in range(len(perf_data)):
+                normolized_perf_data.append((perf_data[i] - min_perf_data) / range_of_perf_data)
+
+            
+
+            # avg_perf = sum(normolized_perf_data) / len(normolized_perf_data)
+            # #print(pnode.unique_id, perf_data, avg_perf)
+            # for pid in range(len(normolized_perf_data)):
+            #     if avg_perf == 0:
+            #         if normolized_perf_data[pid] > 0:
+            #             #print(pid)
+            #             self.problematic_nodes.append(self.num_node_per_column * pid + pnode.unique_id)
+            #     else:
+            #         if normolized_perf_data[pid] / avg_perf > prob_threshold:
+            #             #print(pid)
+            #             self.problematic_nodes.append(self.num_node_per_column * pid + pnode.unique_id)
+            #             #print(self.num_node_per_column * pid + unique_id)
+
+
+            '''None normalization'''
             avg_perf = sum(perf_data) / len(perf_data)
+            print(pnode.unique_id, perf_data, avg_perf)
             for pid in range(len(perf_data)):
                 if avg_perf == 0:
-                    if perf_data[pid] > 0:
+                    if perf_data[pid] > prob_threshold:
+                        print(pid)
                         self.problematic_nodes.append(self.num_node_per_column * pid + pnode.unique_id)
                 else:
-                    if perf_data[pid] / avg_perf > prob_threshold:
+                    if perf_data[pid] - avg_perf > prob_threshold:
+                        print(pid)
                         self.problematic_nodes.append(self.num_node_per_column * pid + pnode.unique_id)
                         #print(self.num_node_per_column * pid + unique_id)
                 
@@ -128,14 +163,24 @@ class PPG(object):
             pnode.group_flag = True
             #print("set " + str(pnode.unique_id) + "'s group_flag as True")
 
+
+
     def markProblematicNode(self, prob_threshold = 100):
         # traverse PSG to list problematic node 
         self.BFS(self.main_root.children[0], self.listProblematicNode, prob_threshold)
+        self.BFS(self.main_root.children[0], noneFunc)
 
         # mark group_flag as true for problrmatic node in the list
         self.BFS(self.main_root, self.markProblematicNodeInList)
 
-    def show(self):
+    def show(self, save_fig = ""):
         #printGraph(self.main_root,0)
-        output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges)
+        if save_fig == "":
+            output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, group_list=self.problematic_nodes)
+        else:    
+            output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, group_list=self.problematic_nodes, output_file = save_fig + ".ppg")
         output.done()
+
+# do nothing
+def noneFunc(node):
+    return 

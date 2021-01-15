@@ -1,5 +1,5 @@
 import sys
-sys.path.append(r"/home/jinyuyang/workspace/BaguaTool/src/Baguatool")
+sys.path.append(r"/home/zhongrunxin/BaguaTool/src/Baguatool")
 import os
 import json
 import baguatool as bgt
@@ -22,9 +22,9 @@ analysis.setDynamicAnalysisMode("sampling", sampling_freq=100)
 
 #analysis.setDynamicSamplingFeature(features=["TOT_CYC", "L1_DCM", "L2_DCM", "L3_DCM", "LST_INS"])
 
-nps = [16]
+nps = [2]
 for np in nps:
-    analysis.setExecutionCommand(cmd="srun -N 4 -n " + str(np) + " ./miniVite -l -w -n 300000", output_file_suffix="_np" + str(np) )
+    analysis.setExecutionCommand(cmd="/opt/openmpi-3.0.0/bin/mpiexec -bind-to socket -np " + str(np) + " ./miniVite -l -w -n 300000", output_file_suffix="_np" + str(np) )
 
 # set
 analysis.setOutputDir(output_dir="miniVite-baguatool-data")
@@ -47,12 +47,12 @@ for np in nps[-1:]:
     psg.performanceDataEmbedding(perf_data)
 
 # graph contraction
-psg.contraction()
+#psg.contraction(["distLouvainMethod"])
 
 psg.show()
 
-ppg = analysis.transferToProgramPerformanceGraph(psg, nprocs=np)
+#ppg = analysis.transferToProgramPerformanceGraph(psg, nprocs=np)
 
-ppg.markProblematicNode(prob_threshold = 1.2)
+#ppg.markProblematicNode(prob_threshold = 1.2)
 
-ppg.show()
+#ppg.show()

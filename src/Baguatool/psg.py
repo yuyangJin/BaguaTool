@@ -33,6 +33,8 @@ class PSG(object):
         self.all_perf_data_config = {}
         self.binary_name = ""
 
+        self.ldmap_flag = False
+
         self.nodes = nodes
         self.edges = edges
 
@@ -74,6 +76,9 @@ class PSG(object):
         global percentage_sum
         #global all_perf_data_config
 
+        if os.path.exists(perf_data.perf_data_dir + "LDMAP" + str(0) + ".TXT"):
+            self.ldmap_flag = True        
+
         self.BFS(self.main_root, clearPerfData)
         #print(perf_data.data)
         for j in range(len(perf_data.data)):
@@ -92,26 +97,29 @@ class PSG(object):
                     real_total_sampling_count += cur_sampling_count
                     if len(callstack) != 0:
                         callstack.pop()
-                        # Invoke "getNodeWithCallstack" to embed one [call stack, sampling count] line to corresponding vertex
-                        node = getNodeWithCallstack(self.main_root, callstack, self.roots_of_all_functions)
-                        #print(node.name, cur_sampling_count)
-                        if node != None:
+                        if len(callstack) != 0:
+                            if self.ldmap_flag == True:
+                                callstack.pop()
+                            # Invoke "getNodeWithCallstack" to embed one [call stack, sampling count] line to corresponding vertex
+                            node = getNodeWithCallstack(self.main_root, callstack, self.roots_of_all_functions)
                             #print(node.name, cur_sampling_count)
-                            if len(node.sampling_count) != len(perf_data.data[j]):
-                                node.sampling_count = [0 for i in range(len(perf_data.data[j]))]
+                            if node != None:
+                                #print(node.name, cur_sampling_count)
+                                if len(node.sampling_count) != len(perf_data.data[j]):
+                                    node.sampling_count = [0 for i in range(len(perf_data.data[j]))]
+                                    #print(node.sampling_count)
                                 #print(node.sampling_count)
-                            #print(node.sampling_count)
-                            node.sampling_count[i] += cur_sampling_count
-                        #else:
-                            #print(callstack, cur_sampling_count, "not found")
-                        # Record total sampling count
-                        total_sampling_count += cur_sampling_count
+                                node.sampling_count[i] += cur_sampling_count
+                            #else:
+                                #print(callstack, cur_sampling_count, "not found")
+                            # Record total sampling count
+                            total_sampling_count += cur_sampling_count
                 # only count for TOT_CYC
                 if j == 0:
                     self.total_sampling_count.append(total_sampling_count)
                     #print(total_sampling_count, real_total_sampling_count)
                     
-                if os.path.exists(perf_data.perf_data_dir + "LDMAP" + str(0) + ".TXT"):
+                if self.ldmap_flag == True:
                     self.BFS(self.main_root, updateNameofAddrNode, perf_data.ldmap[i])
                 else:
                     #print("here")
@@ -904,7 +912,7 @@ def markRemoveFlagOnGrpah(node):
         reserved |= markRemoveFlagOnGrpah(child)
     
     #if node.type_name == "MPI": # or node.sampling_count[0] > 0 :
-    if node.performance_percentage > 0.001 or len(node.comm_dep) > 0:
+    if node.performance_percentage > 0.00001 or len(node.comm_dep) > 0:
         node.removed = False
         node.trimmed = True
         

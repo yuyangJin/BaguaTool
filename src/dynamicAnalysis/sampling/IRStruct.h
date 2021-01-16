@@ -73,10 +73,10 @@ enum NodeType {
 
 extern int mpiRank;
 
-extern int curCommId;
-extern int EventSet;
+//extern int curCommId;
+//extern int EventSet;
 
-#define MPI_INFO_MAX 1000000
+//#define MPI_INFO_MAX 1000000
 
 //extern struct MPIINFO mpiInfo[MPI_INFO_MAX];
 //extern unsigned int mpiInfoPointer;

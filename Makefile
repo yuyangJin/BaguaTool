@@ -25,11 +25,17 @@ psg:
 
 libdynco:
 	python $(BAGUA_DIR)/src/dynamicAnalysis/sampling/wrap/wrap.py -f $(BAGUA_DIR)/src/dynamicAnalysis/sampling/wrap/commData.w -o $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp
-	#$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@-mpich2-1.5.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData-mpich2-1.5.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind -lm
-	$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
-	$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect_multiPMU.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
-	$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU_2.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect_multiPMU_2.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
-	$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU_lib.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect_multiPMU_lib.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
+	#$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
+	#$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect_multiPMU.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
+	#$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU_2.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect_multiPMU_2.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
+	#$(MPICXX) $(CXXFLAGS) $(MPI_INCLUDE) -ldl -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU_lib.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect_multiPMU_lib.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind
+	#$(MPICXX) $(CXXFLAGS) -fpermissive $(MPI_INCLUDE) -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU_lib_omp.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/dyncollect_multiPMU_lib_omp.cpp $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind -fopenmp -ldl
+	$(MPICXX) $(CXXFLAGS) -fpermissive $(MPI_INCLUDE) -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_multiPMU_lib_omp.so $(BAGUA_DIR)/src/dynamicAnalysis/sampling/sampler_omp.c $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind -fopenmp -ldl
+
+libdynco_omp:
+	gcc -g -Wl,--no-undefined $(BAGUA_DIR)/src/dynamicAnalysis/sampling/sampler_omp.c -shared -fPIC -lpapi -c -o $(BAGUA_DIR)/bin/sampler_omp.o -ldl -fopenmp -lpthread
+	$(MPICXX) $(CXXFLAGS) -fpermissive $(MPI_INCLUDE) -Wl,--no-undefined -c -o $(BAGUA_DIR)/bin/comm_data.o $(BAGUA_DIR)/src/dynamicAnalysis/sampling/commData.cpp $(MPI_LIB) -fPIC $(MPI_FLAGS) -lpapi -ldl 
+	$(MPICXX) $(CXXFLAGS) -fpermissive $(MPI_INCLUDE) -Wl,--no-undefined -o $(BAGUA_DIR)/bin/$@_lib.so $(BAGUA_DIR)/bin/sampler_omp.o $(BAGUA_DIR)/bin/comm_data.o $(MPI_LIB) -shared -fPIC $(MPI_FLAGS) -lpapi -lunwind -fopenmp -ldl -lpthread
 
 libcommdep:
 	python $(BAGUA_DIR)/src/dynamicAnalysis/sampling/wrap/wrap.py -f $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDependence_v1.1.w -o $(BAGUA_DIR)/src/dynamicAnalysis/commdependence/commDependence.cpp

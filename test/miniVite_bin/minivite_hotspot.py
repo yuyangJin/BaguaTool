@@ -1,4 +1,5 @@
 import sys
+import os
 proj_dir = os.environ['BAGUA_DIR']
 sys.path.append(proj_dir + r"/src/Baguatool")
 import json
@@ -24,7 +25,7 @@ analysis.setDynamicAnalysisMode("sampling", sampling_freq=100)
 
 nps = [2]
 for np in nps:
-    analysis.setExecutionCommand(cmd="/opt/openmpi-3.0.0/bin/mpiexec -bind-to socket -np " + str(np) + " ./miniVite -l -w -n 300000", output_file_suffix="_np" + str(np) )
+    analysis.setExecutionCommand(cmd="/opt/openmpi-3.0.0/bin/mpiexec -bind-to socket -np " + str(np) + " ./miniVite -l -w -n 30000", output_file_suffix="_np" + str(np) )
 
 # set
 analysis.setOutputDir(output_dir="miniVite-baguatool-data")
@@ -32,7 +33,7 @@ analysis.setOutputDir(output_dir="miniVite-baguatool-data")
 
 # START ANALYSIS
 # including static and dynamic parts
-#analysis.startAnalysis()
+analysis.startAnalysis()
 
 # # OFFLINE PERFORMANCE ANALYSIS
 # # get program structure graph

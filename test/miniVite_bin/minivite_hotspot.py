@@ -25,7 +25,7 @@ analysis.setDynamicAnalysisMode("sampling", sampling_freq=100)
 
 nps = [2]
 for np in nps:
-    analysis.setExecutionCommand(cmd="/opt/openmpi-3.0.0/bin/mpiexec -bind-to socket -np " + str(np) + " ./miniVite -l -w -n 30000", output_file_suffix="_np" + str(np) )
+    analysis.setExecutionCommand(cmd="/opt/openmpi-3.0.0/bin/mpiexec -bind-to socket -np " + str(np) + " ./miniVite -l -w -n 100000", output_file_suffix="_np" + str(np) )
 
 # set
 analysis.setOutputDir(output_dir="miniVite-baguatool-data")

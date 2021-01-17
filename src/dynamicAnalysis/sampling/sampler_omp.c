@@ -331,6 +331,20 @@ void static set_papi_overflow()
 	//printf("set_papi_overflow() PAPI_start(EventSet), PAPI_OK\n");
 }
 
+void static remove_papi_overflow()
+{
+	int Events[NUM_EVENTS] , i;
+	Events[0] = PAPI_TOT_CYC;
+
+	TRY(PAPI_stop(EventSet, NULL), PAPI_OK);
+
+	TRY(PAPI_overflow(EventSet, PAPI_TOT_CYC, 0, 0, papi_handler), PAPI_OK);
+
+	TRY(PAPI_remove_events(EventSet, (int *)Events, NUM_EVENTS), PAPI_OK);
+
+	TRY(PAPI_destroy_eventset(&EventSet), PAPI_OK);
+}
+
 static void* resolve_symbol(const char* symbol_name, int config) 
 {
   void* result;
@@ -405,7 +419,8 @@ static void *fn_wrapper (void* arg) {
 
   void * ret = fn(data); // acutally launch new fn
 
-  TRY(PAPI_stop(EventSet, NULL), PAPI_OK);
+  remove_papi_overflow();
+  //TRY(PAPI_stop(EventSet, NULL), PAPI_OK);
   TRY(PAPI_unregister_thread(), PAPI_OK);
   close_thread_gid();
   LOG_INFO("Thread Finish, thread_gid = %d\n", thread_gid);
@@ -421,7 +436,8 @@ void GOMP_parallel (void *(*fn) (void *), void *data, unsigned num_threads, unsi
   arg->fn = fn;
   arg->data = data;
 
-  TRY(PAPI_stop(EventSet, NULL), PAPI_OK);
+  //TRY(PAPI_stop(EventSet, NULL), PAPI_OK);
+  remove_papi_overflow();
   (*original_GOMP_parallel)(fn_wrapper, arg, num_threads, flags);
   set_papi_overflow();
 }

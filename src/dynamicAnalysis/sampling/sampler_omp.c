@@ -18,6 +18,7 @@
 #include <execinfo.h>
 #include <pthread.h>
 #include <omp.h>
+#include <unistd.h>
 
 // these macros can be used for colorful output
 #define TPRT_NOCOLOR "\033[0m"
@@ -73,7 +74,7 @@ static void (*original_GOMP_parallel)(void *(*fn) (void *), void *data, unsigned
 
 static __thread int thread_gid;
 //thread_local int thread_id;
-static __thread EventSet = PAPI_NULL;
+static __thread int EventSet = PAPI_NULL;
 static int thread_global_id;
 
 FILE* fp = NULL;

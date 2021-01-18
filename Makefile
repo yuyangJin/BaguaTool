@@ -15,7 +15,7 @@ MPI_LIB := -L/opt/openmpi-3.0.0/lib
 #MPI_INCLUDE := -I/mnt/home/jinyuyang/JASMIN/jasmin/thirdparty/mpich2-1.5/include
 #MPI_LIB := -L/mnt/home/jinyuyang/JASMIN/jasmin/thirdparty/mpich2-1.5/lib
 
-all: psg asm libdynco libcommdep
+all: psg asm libdynco libcommdep libdynco_omp
 
 psg:
 	#g++ -g -std=c++11 -o PSG PSG.cpp -L/home/jinyuyang/workspace/build/dyninst-10.1.0/lib -I/home/jinyuyang/workspace/build/dyninst-10.1.0/include -lparseAPI -linstructionAPI -lsymtabAPI -lsymLite -ldynDwarf -ldynElf -lboost_system -lcommon -lelf -ldwarf

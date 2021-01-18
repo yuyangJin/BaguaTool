@@ -119,11 +119,7 @@ class PSG(object):
                     self.total_sampling_count.append(total_sampling_count)
                     #print(total_sampling_count, real_total_sampling_count)
                     
-                if self.ldmap_flag == True:
-                    self.BFS(self.main_root, updateNameofAddrNode, perf_data.ldmap[i])
-                else:
-                    #print("here")
-                    self.BFS(self.main_root, updateNameofAddrNodeNonLib, self.binary_name)
+
             
             self.BFS(self.main_root, appendFeatureDataToPerfData, perf_data.dyn_features[j])
             if j == 0:
@@ -133,6 +129,13 @@ class PSG(object):
             self.BFS(self.main_root, clearSamplingCount)
         
         self.BFS(self.main_root, appendPerfDataToAllData, perf_data.dir_suffix)
+        self.BFS(self.main_root, sortPSG)
+        for i in range(len(perf_data.data[0])):
+            if self.ldmap_flag == True:
+                self.BFS(self.main_root, updateNameofAddrNode, perf_data.ldmap[i])
+            else:
+                #print("here")
+                self.BFS(self.main_root, updateNameofAddrNodeNonLib, self.binary_name)
         #appendPerfDataToAllData(self.main_root, perf_data.dir_suffix, self.main_root.appended_feature_data_to_perf_data)
         
 
@@ -834,7 +837,7 @@ def clearPerfData(node):
 def updateNameofAddrNode(node, ldmap):
     global queried_so_addr_func_map
     global uniqId
-    if node.type_name == "ADDR":
+    if node.type_name == "ADDR" or (node.type_name == "ADDR2FUNC" and node.name == "Unknown Addr"):
         addr = int(node.entry_addr, 16)
         if queried_so_addr_func_map.keys().__contains__(addr):
             node.name = queried_so_addr_func_map[addr]
@@ -848,7 +851,7 @@ def updateNameofAddrNode(node, ldmap):
                 tmp = os.popen(addr2func_cmd)
                 node_name = tmp.read().strip().split('(')[0]
                 #print(hex(base_addr), solib_name, node_name)
-            queried_so_addr_func_map[addr] = node_name
+                queried_so_addr_func_map[addr] = node_name
             node.name = node_name
         node.type = -8
         node.type_name = "ADDR2FUNC"

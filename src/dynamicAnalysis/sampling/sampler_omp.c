@@ -394,13 +394,18 @@ static void fini_mock()
   write_addr_log();
 
   pid_t pid = getpid();
-	char cmdline_str[40] = {0};
+	char cmdline_str[45] = {0};
   char pid_str[12] = {0};
   sprintf(pid_str, "%d", pid);
+  char mpi_rank_str[6] = {0};
+  sprintf(mpi_rank_str, "%d", mpiRank);
 
   strcpy(cmdline_str, "cat /proc/");
   strcat(cmdline_str, pid_str);
   strcat(cmdline_str, "/maps > LDMAP");
+  strcat(cmdline_str, mpi_rank_str);
+  strcat(cmdline_str, ".TXT");
+  printf("%s\n",cmdline_str);
 
   //string str = string("cat /proc/") + to_string(pid) + string("/maps > LDMAP") + to_string(mpiRank) + string(".TXT");
 	system(cmdline_str);

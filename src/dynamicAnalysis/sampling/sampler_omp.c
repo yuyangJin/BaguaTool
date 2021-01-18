@@ -40,7 +40,9 @@
 #define RESOLVE_SYMBOL_UNVERSIONED 2
 #define PTHREAD_VERSION "GLIBC_2.3.2"
 
-#define DEFAULT_SAMPLE_COUNT  (1000) // 1ms
+#define DEFAULT_CYC_SAMPLE_COUNT  (2300000000) // 1000ms
+#define DEFAULT_INS_SAMPLE_COUNT  (20000000) // 10ms
+#define DEFAULT_CM_SAMPLE_COUNT  (100000) // 10ms
 
 #define ADDRLOGSIZE 80000
 #define MAX_STACK_DEPTH 100
@@ -67,7 +69,8 @@ typedef struct callPathStruct{
 }CPS;
 
 int mpiRank = -1;
-static int SAMPLE_COUNT = 10000;
+
+static int CYC_SAMPLE_COUNT;
 static int module_init = 0;
 static void (*original_GOMP_parallel)(void *(*fn) (void *), void *data, unsigned num_threads, unsigned int flags) = NULL;
 
@@ -322,7 +325,7 @@ void static set_papi_overflow()
 
 	TRY(PAPI_add_events(EventSet, (int *)Events, NUM_EVENTS), PAPI_OK);
 
-	TRY(PAPI_overflow(EventSet, PAPI_TOT_CYC, SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
+	TRY(PAPI_overflow(EventSet, PAPI_TOT_CYC, CYC_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
 	//TRY(PAPI_overflow(EventSet, PAPI_LD_INS, INS_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
 	//TRY(PAPI_overflow(EventSet, PAPI_SR_INS, INS_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
 	//TRY(PAPI_overflow(EventSet, PAPI_L1_DCM, CM_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
@@ -381,9 +384,9 @@ static void init_mock() {
   thread_gid = new_thread_gid();
 
   // PAPI setup for main thread
-  char* str = getenv("SAMPLE_COUNT");
-  SAMPLE_COUNT = (str ? atoi(str) : DEFAULT_SAMPLE_COUNT)*2500;
-  LOG_INFO("SET sample interval to %d * 2500 cycles\n", SAMPLE_COUNT/2500);
+  char* str = getenv("CYC_SAMPLE_COUNT");
+  CYC_SAMPLE_COUNT = (str ? atoi(str) : DEFAULT_CYC_SAMPLE_COUNT);
+  LOG_INFO("SET sample interval to %d cycles\n", CYC_SAMPLE_COUNT);
   TRY(PAPI_library_init(PAPI_VER_CURRENT), PAPI_VER_CURRENT);
   TRY(PAPI_thread_init(pthread_self), PAPI_OK);
   set_papi_overflow();

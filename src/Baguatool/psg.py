@@ -129,13 +129,13 @@ class PSG(object):
             self.BFS(self.main_root, clearSamplingCount)
         
         self.BFS(self.main_root, appendPerfDataToAllData, perf_data.dir_suffix)
-        self.BFS(self.main_root, sortPSG)
         for i in range(len(perf_data.data[0])):
             if self.ldmap_flag == True:
                 self.BFS(self.main_root, updateNameofAddrNode, perf_data.ldmap[i])
             else:
                 #print("here")
                 self.BFS(self.main_root, updateNameofAddrNodeNonLib, self.binary_name)
+        self.BFS(self.main_root, sortPSG)
         #appendPerfDataToAllData(self.main_root, perf_data.dir_suffix, self.main_root.appended_feature_data_to_perf_data)
         
 
@@ -956,7 +956,8 @@ def markPreservedSubgraph(node, preserved_func_list, father_has_preserved_func):
     reserved = find_func or father_has_preserved_func
     child_reserved = False
     for child in node.children:
-        child_reserved |= markPreservedSubgraph(child, preserved_func_list, reserved)
+        if not child.user_trimmed:
+            child_reserved |= markPreservedSubgraph(child, preserved_func_list, reserved)
 
     node.user_removed = not (reserved or child_reserved)
     return reserved or child_reserved

@@ -7,6 +7,7 @@ unique_id = 0
 
 class PPG(object):
     def __init__(self, psg, nprocs):
+        assert not psg.has_cycles(), "PPG for graph with cycles is unimplemented!"
         global pnode
         global unique_id
         self.psg = psg
@@ -31,7 +32,6 @@ class PPG(object):
         #print(self.comm_dep_edges)
 
         self.problematic_nodes = []
-
     def buildPPG(self, node, pid):
         global pnode
         global unique_id

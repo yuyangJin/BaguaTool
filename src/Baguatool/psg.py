@@ -44,6 +44,18 @@ class PSG(object):
             self.BFS(self.main_root, sortPSG)
         else:
             self.main_root = generatePSGWithNodesEdges(str(0), self.edges, self.nodes)
+        
+    
+    def has_cycles(self):
+        global revisited
+        revisited = False
+        def check_revisit(node):
+            global revisited
+            if not revisited:
+                for child in node.children:
+                    revisited |= child.bfs_flag == node.bfs_flag
+        self.BFS(self.main_root, check_revisit)
+        return revisited
 
     # read Program Structure Graph from psg_file
     def readPSG(self):

@@ -1,5 +1,5 @@
 from node import *
-
+import copy
 import collections
 import json
 import random
@@ -80,6 +80,37 @@ class PSG(object):
 
         for child in node.children:
             self.doBFS(std_flag, child, func, *args, **kwargs)
+        
+    def deleteSharedObjectLibLeaf(self, node):
+        has_user_defined_func_addr_flag = False
+        for child in node.children:
+            flag = self.deleteSharedObjectLibLeaf(child)
+            has_user_defined_func_addr_flag |= flag
+            #merge performance data
+            #print(child.performance_data)
+            print(child.unique_id, child.performance_data['TOT_CYC'])
+            print(node.unique_id, node.performance_data['TOT_CYC'])
+            if flag == False:
+                for k, v in child.performance_data.items():
+                    if len(node.performance_data[k]) == 1:
+                        node.performance_data[k][0] += v[0]
+                        for i in range(1, len(v)):
+                            node.performance_data[k].append(v[i])
+                    for i in range(len(v)):
+                        node.performance_data[k][i] += v[i]
+            print(node.unique_id, node.performance_data['TOT_CYC'])
+        
+        if int(node.entry_addr, 16) < int('4f0000000000', 16) or has_user_defined_func_addr_flag == True:
+            has_user_defined_func_addr_flag = True
+            #node_perf_data = {}
+            return has_user_defined_func_addr_flag
+        
+        if has_user_defined_func_addr_flag == False:
+            node.removed = True
+            print(node.unique_id, node.performance_data)
+            return has_user_defined_func_addr_flag
+        
+            
     
     def nameSimplifying(self):
         # 去掉<...>之间的内容
@@ -333,6 +364,14 @@ class PSG(object):
             # markRemoveFlagOnGrpahForUser(self.main_root, preserved_func_list)
             markPreservedSubgraph(self.main_root, preserved_func_list, False)
             graphContractionForUser(self.main_root)
+        
+        #clear contracted flag
+        self.BFS(self.main_root, clearContractionFlag)
+
+        self.deleteSharedObjectLibLeaf(self.main_root)
+        graphContractionForUser(self.main_root)
+
+        self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
 
     # Build a ECM Model with asemble instruction data for each vertex
     def buildECMModel(self, node):
@@ -813,11 +852,12 @@ def updatePercentageOfNode(node, total_sampling_count):
         node.all_procs_percentage.append(tmp)
     average_percentage /= len(node.performance_data["TOT_CYC"])
 
-    #print(node.performance_data["TOT_CYC"], total_sampling_count)
+    
     
     node.performance_percentage = round(average_percentage, 5)
     #if abs(node.performance_percentage) > 0:
-        #print(node.unique_id, node.performance_percentage)
+    #    print(node.unique_id, node.performance_percentage)
+    #    print(node.performance_data["TOT_CYC"], total_sampling_count)
     #percentage_sum += node.performance_percentage
 
 

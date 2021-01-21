@@ -28,9 +28,9 @@ class PSG(object):
         self.roots_of_all_functions = []
         self.total_sampling_count = []
         self.total_comm_time = 0
-        self.perf_data_config = {}
-        self.perf_data_config_file = ""
-        self.all_perf_data_config = {}
+        #self.perf_data_config = {}
+        #self.perf_data_config_file = ""
+        #self.all_perf_data_config = {}
         self.binary_name = ""
 
         self.ldmap_flag = False
@@ -87,29 +87,30 @@ class PSG(object):
             flag = self.deleteSharedObjectLibLeaf(child)
             has_user_defined_func_addr_flag |= flag
             #merge performance data
-            #print(child.performance_data)
-            print(child.unique_id, child.performance_data['TOT_CYC'])
-            print(node.unique_id, node.performance_data['TOT_CYC'])
+            print(child.unique_id, child.performance_percentage)
+            print(node.unique_id, node.performance_percentage)
             if flag == False:
-                for k, v in child.performance_data.items():
-                    if len(node.performance_data[k]) == 1:
-                        node.performance_data[k][0] += v[0]
-                        for i in range(1, len(v)):
-                            node.performance_data[k].append(v[i])
-                    for i in range(len(v)):
-                        node.performance_data[k][i] += v[i]
-            print(node.unique_id, node.performance_data['TOT_CYC'])
+                node.performance_percentage += child.performance_percentage
+                # for k, v in child.performance_data.items():
+                #     if len(node.performance_data[k]) == 1:
+                #         node.performance_data[k][0] += v[0]
+                #         for i in range(1, len(v)):
+                #             node.performance_data[k].append(v[i])
+                #     for i in range(len(v)):
+                #         node.performance_data[k][i] += v[i]
+            print(node.unique_id, node.performance_percentage)
         
         if int(node.entry_addr, 16) < int('4f0000000000', 16) or has_user_defined_func_addr_flag == True:
-            has_user_defined_func_addr_flag = True
+            #has_user_defined_func_addr_flag = True
             #node_perf_data = {}
-            return has_user_defined_func_addr_flag
+            return True
         
         if has_user_defined_func_addr_flag == False:
             node.removed = True
-            print(node.unique_id, node.performance_data)
+            #print(node.unique_id, node.performance_data)
             return has_user_defined_func_addr_flag
         
+        return has_user_defined_func_addr_flag
             
     
     def nameSimplifying(self):
@@ -291,15 +292,15 @@ class PSG(object):
 
 
 
-    def convertNodePerfDataToJson(self, node, stand_flag):
-        if node.converted_perfdata_to_json != stand_flag:
-            return
-        node.converted_perfdata_to_json = not stand_flag
+    # def convertNodePerfDataToJson(self, node, stand_flag):
+    #     if node.converted_perfdata_to_json != stand_flag:
+    #         return
+    #     node.converted_perfdata_to_json = not stand_flag
 
-        self.perf_data_config[node.unique_id] = node.performance_data
+    #     self.perf_data_config[node.unique_id] = node.performance_data
 
-        for child in node.children:
-            self.convertNodePerfDataToJson(child, stand_flag)
+    #     for child in node.children:
+    #         self.convertNodePerfDataToJson(child, stand_flag)
 
     # def readPerformanceDataFromJsonFile(self, file):
     #     if os.path.exists(file):
@@ -369,9 +370,9 @@ class PSG(object):
         self.BFS(self.main_root, clearContractionFlag)
 
         self.deleteSharedObjectLibLeaf(self.main_root)
-        graphContractionForUser(self.main_root)
+        graphContraction(self.main_root)
 
-        self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
+        #self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
 
     # Build a ECM Model with asemble instruction data for each vertex
     def buildECMModel(self, node):
@@ -889,7 +890,9 @@ def appendPerfDataToAllData(node, suffix):
 #         appendFeatureDataToPerfData(child, feature, stand_flag)
 
 def appendFeatureDataToPerfData(node, feature):
-    node.performance_data[feature] = node.sampling_count
+    node.performance_data[feature] = []
+    for i in range(len(node.sampling_count)):
+        node.performance_data[feature].append(node.sampling_count[i])
 
 # def clearSamplingCount(node, stand_flag):
 #     if node.appended_feature_data_to_perf_data != stand_flag:

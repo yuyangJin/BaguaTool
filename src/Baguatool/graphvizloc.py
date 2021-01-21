@@ -257,6 +257,7 @@ class GraphvizOutput(Output):
             return
         node.generated_nodes_edges_groups = True
         # Add nodes
+        #print(node.unique_id, node.type_name, node.performance_percentage)
         attr = {
             'color': self.node_color_func(node).rgba_web(),
             'label': self.node_label_func(node),

@@ -233,7 +233,7 @@ class PPG(object):
                     prev_node = [start_node]
                     while next_node != end_node:
                         def leaf_node_filter(name):
-                            li = ['ucm_dlmalloc', 'lock']
+                            li = ['allocate', 'lock']
                             for n in li:
                                 if n in name:
                                     return True

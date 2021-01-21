@@ -80,6 +80,17 @@ class PSG(object):
 
         for child in node.children:
             self.doBFS(std_flag, child, func, *args, **kwargs)
+    
+    def nameSimplifying(self):
+        # 去掉<...>之间的内容
+        def simplify(node):
+            start = node.name.find('<')
+            end = node.name.rfind('>')
+            if start == -1 or end == -1: return
+            new_name = node.name[:start + 1] + '...' + node.name[end:]
+            node.name = new_name
+        
+        self.BFS(self.main_root, simplify)
 
     # Embed performance data to Program Structure Graph
     def performanceDataEmbedding(self, perf_data, nthreads=1):

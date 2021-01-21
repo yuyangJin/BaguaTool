@@ -53,6 +53,8 @@ for np in nps[-1:]:
 # graph contraction
 psg.contraction(["distLouvainMethod"])
 
+psg.nameSimplifying()
+
 psg.show()
 
 

@@ -217,9 +217,9 @@ class Baguatool(object):
         self.asm_data = asembleInstructionData(asm_file, self.funcs)
         return self.asm_data
 
-    def getPerformanceData(self, dir_suffix, nprocs, dyn_features):
+    def getPerformanceData(self, dir_suffix, nprocs, dyn_features, nthreads=1):
         # Read performance data from SAMPLE[pid].TXT
-        perf_data = perfData(self.binary_name, "./" + self.output_dir + "/dynamic_data/", dir_suffix, nprocs, dyn_features)
+        perf_data = perfData(self.binary_name, "./" + self.output_dir + "/dynamic_data/", dir_suffix, nprocs, dyn_features, nthreads)
         return perf_data
  
     def getCommDepData(self, dir_suffix, nprocs):

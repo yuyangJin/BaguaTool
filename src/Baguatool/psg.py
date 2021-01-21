@@ -45,7 +45,6 @@ class PSG(object):
         else:
             self.main_root = generatePSGWithNodesEdges(str(0), self.edges, self.nodes)
         
-    
     def has_cycles(self):
         global revisited
         revisited = False
@@ -83,7 +82,7 @@ class PSG(object):
             self.doBFS(std_flag, child, func, *args, **kwargs)
 
     # Embed performance data to Program Structure Graph
-    def performanceDataEmbedding(self, perf_data):
+    def performanceDataEmbedding(self, perf_data, nthreads=1):
         self.binary_name = perf_data.binary_name
         global percentage_sum
         #global all_perf_data_config
@@ -101,7 +100,8 @@ class PSG(object):
                 total_sampling_count = 0
                 real_total_sampling_count = 0
                 # This loop is for traversing all [call stack, sampling count] lines of one process's performance data
-                for callstack_line in perf_data.data[j][i]:
+                #for callstack_line in perf_data.data[j][i]:
+                for k, callstack_line in enumerate(perf_data.data[j][i]):
                     callstack = callstack_line[0]
                     cur_sampling_count = int(callstack_line[1])
                     #if cur_sampling_count <= 1:
@@ -122,6 +122,13 @@ class PSG(object):
                                     #print(node.sampling_count)
                                 #print(node.sampling_count)
                                 node.sampling_count[i] += cur_sampling_count
+
+                                # thread level
+                                if j == 0 and nthreads > 1:
+                                    callpath_thread_id = perf_data.thread_data[j][i][k][2]
+                                    if len(node.thread_sampling_count) != len(perf_data.data[j]) or len(node.thread_sampling_count[0]) != nthreads + 1:
+                                        node.thread_sampling_count = [[0] * (nthreads + 1)] * len(perf_data.data[j])
+                                    node.thread_sampling_count[i][callpath_thread_id] += cur_sampling_count
                             #else:
                                 #print(callstack, cur_sampling_count, "not found")
                             # Record total sampling count
@@ -360,6 +367,17 @@ class PSG(object):
             else:
                 self.edges[node.unique_id] = [child.unique_id]
 
+    def markUnderOmpStart(self):
+        assert not self.has_cycles()
+        # DFS
+        def dfs(node, omp_father):
+            node.under_omp_start = omp_father
+
+            is_omp_start = node.name in OMP_START_LIST or omp_father
+            for child in node.children:
+                dfs(child, is_omp_start)
+
+        dfs(self.main_root, False)
 
 
 def recursiveAsembleDataEmbedding(node, asm_data):

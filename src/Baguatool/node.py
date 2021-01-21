@@ -1,6 +1,8 @@
 import copy
 typeDict = {k: v for (k, v) in zip([-10, -9, -8, -7, -6, -5, -4, -1, 1], ['LOOP_END', 'ADDR', 'ADDR2FUNC', 'CALL_IND', 'CALL_REC', 'CALL', 'FUNCTION', 'LOOP', 'MPI'])}
 
+OMP_START_LIST = ['GOMP_parallel', 'gomp_thread_start']
+
 class Node(object):
     def __init__(self,
                  uid,
@@ -40,6 +42,9 @@ class Node(object):
         #self.exitLineNum = exitLineNum
         #self.sumTime = sumTime
         self.sampling_count = [0]
+
+        self.thread_sampling_count = [[0]]
+
         self.performance_percentage = performance_percentage
         self.all_procs_percentage = []
         self.performance_data = performance_data
@@ -82,14 +87,20 @@ class Node(object):
 
         self.group_flag = False
 
+        # 该节点父节点是否含有Gomp_start等
+        self.under_omp_start = False
+
 class PNode(object):
     def __init__(self,
                  unique_id,
                  node,
                  node_type,
                  total_sampling_count,
-                 pid
+                 pid,
+                 thread_id = 0
                  ):
+        self.pid = pid
+        self.thread_id = thread_id
         self.unique_id = unique_id
         self.id = node.unique_id
         self.type = node_type
@@ -144,3 +155,6 @@ class PNode(object):
 
         if pid == 0 and len(node.comm_dep) > 0:
             self.comm_dep = node.comm_dep
+        
+        # for thread level
+        self.psg_node = node

@@ -32,6 +32,8 @@ class PPG(object):
         #print(self.comm_dep_edges)
 
         self.problematic_nodes = []
+
+        self.nprocs = nprocs
     def buildPPG(self, node, pid):
         global pnode
         global unique_id
@@ -180,7 +182,114 @@ class PPG(object):
         else:    
             output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, group_list=self.problematic_nodes, output_file = save_fig + ".ppg")
         output.done()
+    
 
+    def addThreadParallelism(self, nthreads=2):
+        assert len(self.main_root.children) == self.nprocs
+
+        def check_single_path(node):
+            if len(node.children) > 1: return False
+            if len(node.children) == 1:
+                return check_single_path(node.children[0])
+            else:
+                return True
+        
+        # check
+        for pid in range(self.nprocs):
+            assert check_single_path(self.main_root.children[pid]), "check failed for {}".format(pid)
+            print("check done for {}".format(pid))
+        
+        for pid in range(self.nprocs):
+            def find_omp_path(node):
+                start_node = node
+                while start_node.name not in OMP_START_LIST:
+                    if len(start_node.children) == 0:
+                        start_node = None
+                        break
+                    else:
+                        start_node = start_node.children[0]
+                if start_node == None: return None, None
+
+                # find the end
+                if len(start_node.children) == 0: return start_node, None 
+                end_node = start_node.children[0]
+                while end_node.psg_node.under_omp_start:
+                    if len(end_node.children) == 0:
+                        end_node = None
+                        break
+                    end_node = end_node.children[0]
+                return start_node, end_node
+            
+            cur_start_node = self.main_root.children[pid]
+            while True:
+                if cur_start_node == None: break
+                omp_start_node, omp_end_node = find_omp_path(cur_start_node)
+                if omp_start_node == None: break
+                # copy
+                def copy(start_node, end_node):
+                    global unique_id
+                    if len(start_node.children) == 0: return
+                    next_node = start_node.children[0]
+                    prev_node = [start_node]
+                    while next_node != end_node:
+                        def leaf_node_filter(name):
+                            li = ['ucm_dlmalloc', 'lock']
+                            for n in li:
+                                if n in name:
+                                    return True
+                            return False
+                        if len(next_node.psg_node.children) == 0 and leaf_node_filter(next_node.psg_node.name):
+                            #print("pid:{}, name: {} converge".format(pid, next_node.psg_node.name))
+                            # leaf node
+                            # converge
+                            for pn in prev_node:
+                                pn.children = [next_node]
+                            prev_node = [next_node]
+                        else:
+                            #print("pid:{}, name: {} not converge".format(pid, next_node.psg_node.name))
+                            # non-leaf node
+                            # parallel
+                            new_nodes = []
+                            for tid in range(1, nthreads):
+                                new_node = PNode(unique_id, next_node.psg_node, next_node.psg_node.type, self.psg.total_sampling_count, pid, tid)
+                                unique_id += 1
+                                new_nodes.append(new_node)
+                            
+                            new_nodes.insert(0, next_node)
+                            assert len(new_nodes) == nthreads
+                            # connection
+                            if len(prev_node) == 1:
+                                assert prev_node[0].children[0] in new_nodes
+                                prev_node[0].children = new_nodes
+                            else:
+                                assert len(prev_node) == nthreads
+                                for pn, nn in zip(prev_node, new_nodes):
+                                    pn.children = [nn]
+                            
+                            prev_node = new_nodes
+                    
+                        if len(next_node.children) == 0:
+                            break
+                        else:
+                            next_node = next_node.children[0]
+                    
+                    if next_node == end_node:
+                        if len(prev_node) == 1:
+                            prev_node[0].children = next_node
+                        else:
+                            assert len(prev_node) == nthreads
+                            for pn in prev_node:
+                                pn.children = [next_node]
+                
+                copy(omp_start_node, omp_end_node)
+                cur_start_node = omp_end_node
+                
+                
+
+
+                
+
+            
 # do nothing
 def noneFunc(node):
     return 

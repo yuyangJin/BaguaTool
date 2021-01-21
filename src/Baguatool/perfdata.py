@@ -1,7 +1,7 @@
 import os
 
 class perfData(object):
-    def __init__(self, binary_name, perf_data_dir, dir_suffix, nprocs, dyn_features):
+    def __init__(self, binary_name, perf_data_dir, dir_suffix, nprocs, dyn_features, nthreads=1):
         self.binary_name = binary_name
         self.dynamic_data_dir = perf_data_dir
         self.dir_suffix = dir_suffix
@@ -9,6 +9,9 @@ class perfData(object):
         self.nprocs = nprocs
         self.dyn_features = dyn_features
         self.data = []
+
+        self.nthreads = nthreads
+
         self.readPerfData()
 
         # ldmap {key: value} key is string("[low_addr] - [high_addr]"), value is file path
@@ -16,9 +19,9 @@ class perfData(object):
             self.ldmap = []
             self.readLdMap()
 
-    
     def readPerfData(self):
         self.data = [[[] for i in range(self.nprocs)] for j in range(len(self.dyn_features))]
+        self.thread_data = [[[] for i in range(self.nprocs)] for j in range(len(self.dyn_features))]
         #print (self.data)
         for feature_id in range(len(self.dyn_features)):
             for pid in range(self.nprocs):
@@ -46,6 +49,8 @@ class perfData(object):
                     callpath_struct = callpath_line.strip().split('|')
                     callpath_addr_str = callpath_struct[0]
                     callpath_count = callpath_struct[1]
+                    if self.dyn_features[feature_id] == 'TOT_CYC' and self.nthreads > 1:
+                        callpath_thread_id = int(callpath_struct[2].strip())
                     callpath_addrs = callpath_addr_str.strip().split(' ')
                     while '' in callpath_addrs:
                         callpath_addrs.remove('')
@@ -58,6 +63,8 @@ class perfData(object):
                         #symb_line_pointer += 1
                     #self.data[pid].append(tmp_list)
                     self.data[feature_id][pid].append([tmp_list, callpath_count])
+                    if self.dyn_features[feature_id] == 'TOT_CYC' and self.nthreads > 1:
+                        self.thread_data[feature_id][pid].append([tmp_list, callpath_count, callpath_thread_id])
 
                 #f2.close()
         #rm_cmd = "rm -f " + self.perf_data_dir + "./SAMPLE*-*-*"

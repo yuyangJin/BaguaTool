@@ -22,7 +22,7 @@ class Node(object):
                  #sampleCount,
                  #sumTime
                  performance_percentage = 0.0,
-                 performance_data={}
+                 #performance_data={}
                  ):
         self.unique_id = uid
         self.id = node_id
@@ -47,7 +47,8 @@ class Node(object):
 
         self.performance_percentage = performance_percentage
         self.all_procs_percentage = []
-        self.performance_data = performance_data
+        #self.performance_data = performance_data
+        self.performance_data = {}
         self.all_data = {}
         self.has_calculated_performance = False
         self.appended_feature_data_to_perf_data = False

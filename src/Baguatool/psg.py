@@ -45,6 +45,24 @@ class PSG(object):
         else:
             self.main_root = generatePSGWithNodesEdges(str(0), self.edges, self.nodes)
         
+    def get_common_features(self):
+        _feat = {}
+        _feat['num_vertices'] = 0
+        _feat['num_loop_vertices'] = 0
+        _feat['num_call_vertices'] = 0
+        _feat['num_edges'] = 0
+        #feat['num_controlflow_edges'] = 0
+        def update_feat(node, feat):
+            feat['num_vertices'] += 1
+            if "loop" in node.type_name.lower():
+                feat['num_loop_vertices'] += 1 
+            if "call" in node.type_name.lower():
+                feat['num_call_vertices'] += 1
+            
+            feat['num_edges'] += len(node.children)
+        self.BFS(self.main_root, update_feat, _feat)
+        return _feat
+
     def has_cycles(self):
         global revisited
         revisited = False

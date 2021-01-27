@@ -114,7 +114,7 @@ class PPG(object):
             self.doBFS(std_flag, child, func, *args, **kwargs)
 
     def listProblematicNode(self, pnode, prob_threshold):
-        print(pnode.unique_id)
+        #print(pnode.unique_id)
         if pnode.type_name != "LOOP_END" and len(pnode.all_procs_percentage) > 1:
             perf_data = pnode.all_procs_percentage
             #perf_data = pnode.sampling_count
@@ -148,15 +148,15 @@ class PPG(object):
 
             '''None normalization'''
             avg_perf = sum(perf_data) / len(perf_data)
-            print(pnode.unique_id, perf_data, avg_perf)
+            #print(pnode.unique_id, perf_data, avg_perf)
             for pid in range(len(perf_data)):
                 if avg_perf == 0:
                     if perf_data[pid] > prob_threshold:
-                        print(pid)
+                        #print(pid)
                         self.problematic_nodes.append(self.num_node_per_column * pid + pnode.unique_id)
                 else:
                     if perf_data[pid] - avg_perf > prob_threshold:
-                        print(pid)
+                        #print(pid)
                         self.problematic_nodes.append(self.num_node_per_column * pid + pnode.unique_id)
                         #print(self.num_node_per_column * pid + unique_id)
                 
@@ -238,7 +238,7 @@ class PPG(object):
                                 if n in name:
                                     return True
                             return False
-                        if len(next_node.psg_node.children) == 0 and leaf_node_filter(next_node.psg_node.name):
+                        if len(next_node.psg_node.children) == 0 and leaf_node_filter(next_node.psg_node.name) and next_node.performance_percentage > 0.001:
                             #print("pid:{}, name: {} converge".format(pid, next_node.psg_node.name))
                             # leaf node
                             # converge
@@ -275,7 +275,7 @@ class PPG(object):
                     
                     if next_node == end_node:
                         if len(prev_node) == 1:
-                            prev_node[0].children = next_node
+                            prev_node[0].children = [next_node]
                         else:
                             assert len(prev_node) == nthreads
                             for pn in prev_node:

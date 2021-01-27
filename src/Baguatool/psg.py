@@ -105,18 +105,18 @@ class PSG(object):
             flag = self.deleteSharedObjectLibLeaf(child)
             has_user_defined_func_addr_flag |= flag
             #merge performance data
-            print(child.unique_id, child.performance_percentage)
-            print(node.unique_id, node.performance_percentage)
+            #print(child.unique_id, child.performance_percentage)
+            #print(node.unique_id, node.performance_percentage)
             if flag == False:
-                node.performance_percentage += child.performance_percentage
-                # for k, v in child.performance_data.items():
-                #     if len(node.performance_data[k]) == 1:
-                #         node.performance_data[k][0] += v[0]
-                #         for i in range(1, len(v)):
-                #             node.performance_data[k].append(v[i])
-                #     for i in range(len(v)):
-                #         node.performance_data[k][i] += v[i]
-            print(node.unique_id, node.performance_percentage)
+                #node.performance_percentage += child.performance_percentage
+                for k, v in child.performance_data.items():
+                    if len(node.performance_data[k]) == 1:
+                        node.performance_data[k][0] += v[0]
+                        for i in range(1, len(v)):
+                            node.performance_data[k].append(v[i])
+                    for i in range(len(v)):
+                        node.performance_data[k][i] += v[i]
+            #print(node.unique_id, node.performance_percentage)
         
         if int(node.entry_addr, 16) < int('4f0000000000', 16) or has_user_defined_func_addr_flag == True:
             #has_user_defined_func_addr_flag = True
@@ -390,7 +390,7 @@ class PSG(object):
         self.deleteSharedObjectLibLeaf(self.main_root)
         graphContraction(self.main_root)
 
-        #self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
+        self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
 
     # Build a ECM Model with asemble instruction data for each vertex
     def buildECMModel(self, node):

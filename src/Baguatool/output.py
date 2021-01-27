@@ -44,7 +44,7 @@ class Output(object):
         elif node.type_name == "LOOP":
             color = 0.8
         if node.performance_percentage > 0.0:
-            value = float(math.sqrt(math.sqrt(math.sqrt(node.performance_percentage * 100) * 10 ) * 10) / 10) ** 3
+            value = float(math.sqrt(math.sqrt(math.sqrt(math.sqrt(node.performance_percentage * 100) * 10 ) * 10) * 10) / 10) ** 4
             #value = (node.sampling_count / self.total_sample_count) ** 2
             #print(performance_percentage)
             
@@ -69,25 +69,27 @@ class Output(object):
             'Type: {0.type_name}',
         ]
 
-        if node.performance_percentage:
-            parts += [
-                'Percentage: {0.performance_percentage}',
-            ]
-        # if node.comm_time[0]:
+        # if node.performance_percentage:
         #     parts += [
-        #         'Communication Time: {0.comm_time[0]}ms',
+        #         'Percentage: {0.performance_percentage}',
+        #     ]
+        # # if node.comm_time[0]:
+        # #     parts += [
+        # #         'Communication Time: {0.comm_time[0]}ms',
+        # #     ]
+
+        # if node.type_name == "ADDR":
+        #     parts += [
+        #         'addr: {0.entry_addr}',
+        #     ]
+        # else:
+        #     parts += [
+        #         'Entry: {0.entry_addr}'
+        #         ' Exit: {0.exit_addr}',
+        #     # 'Removed: {0.removed}',
         #     ]
 
-        if node.type_name == "ADDR":
-            parts += [
-                'addr: {0.entry_addr}',
-            ]
-        else:
-            parts += [
-                'Entry: {0.entry_addr}'
-                ' Exit: {0.exit_addr}',
-            # 'Removed: {0.removed}',
-            ]
+
         # if node.ECMmodel:
         #     parts += [
         #         'ECM Model: [{0.ECMmodel}]',

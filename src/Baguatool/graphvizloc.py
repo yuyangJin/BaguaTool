@@ -306,16 +306,17 @@ class GraphvizOutput(Output):
         #     self.group_id += 1
 
         #Add edges
-        for child in node.children:
-            attr = {
-                'color': self.edge_color_func(node.unique_id).rgba_web(),
-                'label': self.edge_label_func(""),
-            }
-            # if child.removed == False:
-            #     self.edges.append(self.edge(node.unique_id, child.unique_id, attr))
-            #     self.generateNodesEdgesGroups(child)
-            self.edges.append(self.edge(node.unique_id, child.unique_id, attr))
-            self.generateNodesEdgesGroups(child)
+        if len(node.children) > 0:
+            for child in node.children:
+                attr = {
+                    'color': self.edge_color_func(node.unique_id).rgba_web(),
+                    'label': self.edge_label_func(""),
+                }
+                # if child.removed == False:
+                #     self.edges.append(self.edge(node.unique_id, child.unique_id, attr))
+                #     self.generateNodesEdgesGroups(child)
+                self.edges.append(self.edge(node.unique_id, child.unique_id, attr))
+                self.generateNodesEdgesGroups(child)
 
     def generateNodesEdgesGroupsByNodeEdges(self, input_nodes, input_edges):
         global group_id

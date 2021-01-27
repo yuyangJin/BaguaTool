@@ -12,7 +12,7 @@ analysis = bgt.Baguatool()
 analysis.setAnalysisMode("static+dynamic")
 
 # set static analysis mode as "binary" (binary analysis) / "src" (source code analysis)
-analysis.setStaticAnalysisMode(mode="binary", binary="./miniVite") 
+analysis.setStaticAnalysisMode(mode="binary", binary="./miniVite-zrx") 
 
 # set static analysis feature as "psg" (program structure graph) / "asm" (asemble instruction analysis)
 analysis.setStaticAnalysisFeature(features=["psg"])
@@ -25,12 +25,12 @@ analysis.setDynamicAnalysisMode("sampling", sampling_freq=100)
 
 # export OMP_PLACES=sockets
 # export OMP_PROC_BIND=true
-nps = [2]
+nps = [8]
 for np in nps:
-    analysis.setExecutionCommand(cmd="/opt/openmpi-3.0.0/bin/mpiexec -bind-to socket -np " + str(np) + " ./miniVite -l -w -n 100000", output_file_suffix="_np" + str(np) )
+    analysis.setExecutionCommand(cmd="mpiexec -bind-to socket -np " + str(np) + " --host gorgon1:4,gorgon2:4  ./miniVite-zrx -l -w -n 200000", output_file_suffix="_np" + str(np) )
 
 # set
-analysis.setOutputDir(output_dir="miniVite-baguatool-data")
+analysis.setOutputDir(output_dir="miniVite-zrx-baguatool-data")
 
 
 # START ANALYSIS
@@ -41,7 +41,7 @@ analysis.setOutputDir(output_dir="miniVite-baguatool-data")
 # # get program structure graph
 psg = analysis.getProgramStructureGraph()
 
-nthreads = 12
+nthreads = 6
 
 # get performance data
 features = ["TOT_CYC"]#, "TOT_INS"]#, "L2_DCM"]
@@ -60,7 +60,7 @@ psg.show()
 
 psg.markUnderOmpStart()
 
-ppg = analysis.transferToProgramPerformanceGraph(psg, nprocs=2)
+ppg = analysis.transferToProgramPerformanceGraph(psg, nprocs=np)
 
 ppg.addThreadParallelism(nthreads)
 

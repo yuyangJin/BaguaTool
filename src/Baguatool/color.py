@@ -17,6 +17,11 @@ class Color(object):
     @classmethod
     def hsv(cls, h, s, v, a=1):
         r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        #print("warning: r,g,b should be 0 ~ 1")
+        clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
+        r = clamp(r, 0, 1)
+        g = clamp(g, 0, 1)
+        b = clamp(b, 0, 1)
         return cls(r, g, b, a)
 
     def __str__(self):

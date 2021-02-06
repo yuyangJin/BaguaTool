@@ -146,8 +146,8 @@ class Baguatool(object):
         index = 0
         for command_line in self.command_lines:
             sampling_cmd = "SAMPLE_COUNT=" + \
-               str(int(self.sampling_count)) + \
-               " CYC_SAMPLE_COUNT=23000000 INS_SAMPLE_COUNT=10000000 CM_SAMPLE_COUNT=100000 LD_PRELOAD=$BAGUA_DIR/bin/libdynco_omp_lib.so " + command_line
+                str(int(self.sampling_count)) + \
+                " CYC_SAMPLE_COUNT=23000000 INS_SAMPLE_COUNT=10000000 CM_SAMPLE_COUNT=100000 LD_PRELOAD=$BAGUA_DIR/bin/libdynco_omp_lib.so " + command_line
             # sampling_cmd = "SAMPLE_COUNT=" + \
             #     str(int(self.sampling_count)) + \
             #     " LD_PRELOAD=$BAGUA_DIR/bin/libdynco.so " + command_line

@@ -55,6 +55,49 @@ def multivariatePolynomialFitting(X, Y, X_new):
 
     return model, pred_
 
+
+def multivariateLogPolynomialFitting(X, Y, X_new):
+    #generate a model of polynomial features
+    poly = PolynomialFeatures(degree=3)
+
+    lx = np.log2(X)                                                                                                                                                                                                                                    
+    ly = np.log2(Y)                                                                                                                                                                                                                                  
+    #input_x = list(map(lambda t: [t[0], t[1]], lx))
+
+    #transform the x data for proper fitting (for single variable type it returns,[1,x,x**2])
+    X_ = poly.fit_transform(lx)
+
+    #transform the prediction to fit the model type
+    #Y_ = poly.fit_transform(Y)
+
+    #here we can remove polynomial orders we don't want for instance I'm removing the `x` component
+    X_ = np.delete(X_,(1),axis=1)
+    #Y_ = np.delete(Y_, (1), axis=1)
+    
+    #generate the regression object
+    lr = linear_model.LinearRegression()
+
+    #preform the actual regression
+    model = lr.fit(X_, ly)
+
+    #data = np.arange().reshape((12, 2))
+
+    X_new_l = np.log2(X_new)
+
+    X_new_l = poly.fit_transform(X_new_l)
+    X_new_l = np.delete(X_new_l,(1),axis=1)
+    pred_l = model.predict(X_new_l)
+
+    pred_ = np.exp2(pred_l)
+
+    #fig = plt.figure()
+    #ax = Axes3D(fig)
+    #ax.scatter(X[:,0], X[:,1], Y)
+
+    #ax.plot_surface(X[:,0], X[:,1], pred_)
+
+    return model, pred_
+
 def multivariatePolynomialSklearn(X, Y):
     poly = PolynomialFeatures(degree=2)
     X_ = poly.fit_transform(X)
@@ -68,3 +111,10 @@ def multivariatePolynomialSklearn(X, Y):
     
 
     return model
+
+# X = [[1,2], [2,6], [3,8], [4,1]]
+# Y = [2, 7, 7, 2]
+
+# m, p = multivariateLogPolynomialFitting(X, Y, X)
+
+# print(p)

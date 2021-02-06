@@ -34,6 +34,10 @@ class PPG(object):
         self.problematic_nodes = []
 
         self.nprocs = nprocs
+
+        self.groups = []
+        self.red_edges = []
+
     def buildPPG(self, node, pid):
         global pnode
         global unique_id
@@ -97,6 +101,11 @@ class PPG(object):
         # add comm_dep to each ppg node
         self.BFS(self.main_root, self.addCommDepInList)
 
+    def addGroup(self, group): 
+        self.groups = group
+
+    def addRedEdges(self, edges):
+        self.red_edges = edges
 
     def BFS(self, node, func, *args, **kwargs):
         sys.setrecursionlimit(100000)
@@ -179,6 +188,8 @@ class PPG(object):
         #printGraph(self.main_root,0)
         if save_fig == "":
             output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, group_list=self.problematic_nodes)
+        elif self.red_edges != [] and self.groups != []:
+            output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, group_list=self.groups, output_file = save_fig + ".ppg", red_edge_list=self.red_edges)
         else:    
             output = GraphvizOutput(self.ppg_file, self.main_root, edge_list=self.comm_dep_edges, group_list=self.problematic_nodes, output_file = save_fig + ".ppg")
         output.done()

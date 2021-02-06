@@ -385,12 +385,12 @@ class PSG(object):
             graphContractionForUser(self.main_root)
         
         #clear contracted flag
-        self.BFS(self.main_root, clearContractionFlag)
+        # self.BFS(self.main_root, clearContractionFlag)
 
-        self.deleteSharedObjectLibLeaf(self.main_root)
-        graphContraction(self.main_root)
+        # self.deleteSharedObjectLibLeaf(self.main_root)
+        # graphContraction(self.main_root)
 
-        self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
+        # self.BFS(self.main_root, updatePercentageOfNode, self.total_sampling_count)
 
     # Build a ECM Model with asemble instruction data for each vertex
     def buildECMModel(self, node):
@@ -865,11 +865,12 @@ def updatePercentageOfNode(node, total_sampling_count):
     #global percentage_sum
 
     average_percentage = 0.0
-    for i in range(len(node.performance_data["TOT_CYC"])):
-        tmp = float(node.performance_data["TOT_CYC"][i]) / float(total_sampling_count[i])
-        average_percentage += tmp
-        node.all_procs_percentage.append(tmp)
-    average_percentage /= len(node.performance_data["TOT_CYC"])
+    if node.performance_data.keys().__contains__("TOT_CYC"):
+        for i in range(len(node.performance_data["TOT_CYC"])):
+            tmp = float(node.performance_data["TOT_CYC"][i]) / float(total_sampling_count[i])
+            average_percentage += tmp
+            node.all_procs_percentage.append(tmp)
+        average_percentage /= len(node.performance_data["TOT_CYC"])
 
     
     

@@ -49,6 +49,9 @@ class Output(object):
             #print(performance_percentage)
             
             #print (node.sampling_count/self.total_sample_count, value)
+            value *= 2
+            if value > 1:
+                value = 0.9
             return Color.hsv(color, value, 0.9)
         # elif node.comm_time[-1] > 0.0:
         #     value = float(math.sqrt(math.sqrt(math.sqrt(node.comm_time[-1] / self.total_comm_time * 100) * 10) * 10) / 10)** 3

@@ -14,7 +14,7 @@ from node import *
 (COMPUTING, COMBINE, CALL_INDIRECT, CALL_REC, CALL, FUNCTION, COMPOUND, BRANCH, LOOP) = (i for i in range(-9, 0, 1))
 
 class GraphvizOutput(Output):
-    def __init__(self, file_name, root_node, nodes = {}, edges = {}, edge_list = [], group_list = [], total_sample_count = 100000 , total_comm_time = 100000, output_file = "", **kwargs):
+    def __init__(self, file_name, root_node, nodes = {}, edges = {}, edge_list = [], group_list = [], total_sample_count = 100000 , total_comm_time = 100000, output_file = "", red_edge_list = [], **kwargs):
         self.tool = 'dot'
         #self.tool = 'circo'
         #self.tool = 'neato'
@@ -36,6 +36,7 @@ class GraphvizOutput(Output):
         self.edges = []
         self.edge_list = edge_list
         self.group_list = group_list
+        self.red_edge_list = red_edge_list
         self.input_nodes = nodes
         self.nodes = []
         self.groups = []
@@ -155,6 +156,7 @@ class GraphvizOutput(Output):
             self.generateNodesEdgesGroupsByNodeEdges(self.input_nodes, self.input_edges)
         
         self.generateEdgeFromEdgeList()
+        self.generateRedEdgeFromRedEdgeList()
         return textwrap.dedent('''\
         digraph G {{
             // Attributes
@@ -268,7 +270,8 @@ class GraphvizOutput(Output):
         #self.percentage_sum += node.performance_percentage
 
         #Add group 
-        if node.group_flag == True:
+        #if node.group_flag == True:
+        if node.unique_id in self.group_list:
             funcs = []
             #for child in node.children:
             #    if child.removed == False:
@@ -393,6 +396,18 @@ class GraphvizOutput(Output):
                     'label': self.edge_label_func(str(edge_[2])),
                     'penwidth':self.edge_penwidth_func(1),
                 }
+            # if child.removed == False:
+            #     self.edges.append(self.edge(node.unique_id, child.unique_id, attr))
+            #     self.generateNodesEdgesGroups(child)
+            self.edges.append(self.edge(edge_[0], edge_[1], attr))
+
+    def generateRedEdgeFromRedEdgeList(self):
+        for edge_ in self.red_edge_list:
+            attr = {
+                'color': '#FF0000',
+                #'label': self.edge_label_func(''),
+                'penwidth':self.edge_penwidth_func(10),
+            }
             # if child.removed == False:
             #     self.edges.append(self.edge(node.unique_id, child.unique_id, attr))
             #     self.generateNodesEdgesGroups(child)

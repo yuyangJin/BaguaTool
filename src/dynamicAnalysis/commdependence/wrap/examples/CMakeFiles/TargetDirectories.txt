@@ -1,3 +1,0 @@
-/home/jinyuyang/workspace/ScalAna/src_2020/dynamic/wrap/examples/CMakeFiles/edit_cache.dir
-/home/jinyuyang/workspace/ScalAna/src_2020/dynamic/wrap/examples/CMakeFiles/world48.dir
-/home/jinyuyang/workspace/ScalAna/src_2020/dynamic/wrap/examples/CMakeFiles/rebuild_cache.dir

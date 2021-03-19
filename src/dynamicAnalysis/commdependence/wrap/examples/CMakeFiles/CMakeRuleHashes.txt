@@ -1,2 +1,0 @@
-# Hashes of file build rules.
-9003724ca9a310606ccc24b615a98c9e world48.C

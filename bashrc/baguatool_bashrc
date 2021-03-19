@@ -1,6 +1,6 @@
 #!/bin/bash
 PREFIX=/mnt/home/jinyuyang/build
-PROGLIST="papi-5.4.3 dyninst-10.1.0 libdwarf"
+PROGLIST="igraph-0.9.0 papi-5.4.3 dyninst-10.1.0 libdwarf"
 
 for prog in $PROGLIST
 do
@@ -13,5 +13,5 @@ do
 done
 
 export DYNINSTAPI_RT_LIB=/home/jinyuyang/workspace/build/dyninst-10.1.0/lib/libdyninstAPI_RT.so
-export BAGUA_DIR=/home/jinyuyang/workspace/BaguaTool                                                                                                                                                                                      
+export BAGUA_DIR=/home/jinyuyang/workspace/MY_PROJECT/BaguaTool                                                                                                                                                                                      
 export DYNINST_DIR=/mnt/home/jinyuyang/build/dyninst-10.1.0     

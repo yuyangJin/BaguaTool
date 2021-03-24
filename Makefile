@@ -24,7 +24,7 @@ PLUGIN_LDFLAGS := -shared
 AR := ar
 ARTAG := rcs
 
-all: graphsd_dyninst
+all: graphsd_dyninst graphperf_preprocess
 
 graphsd_dyninst: static_analysis igraph
 
@@ -33,3 +33,6 @@ igraph:
 
 static_analysis: $(BAGUA_DIR)/src/pag.cpp $(BAGUA_DIR)/src/pag.h $(BAGUA_DIR)/src/GraphSD/dyninst/static_analysis.cpp $(BAGUA_DIR)/src/GraphSD/dyninst/static_analysis.h  $(BAGUA_DIR)/src/GraphSD/dyninst/main.cpp 
 	$(CXX) -g -std=c++11 -o $(BAGUA_DIR)/bin/$@ $^ $(IGRAPH_INCLUDE) $(IGRAPH_LIB) $(DYNINST_INCLUDE) $(DYNINST_LIB) 
+
+graphperf_preprocess: $(BAGUA_DIR)/src/GraphPerf/preprocessing/main.cpp $(BAGUA_DIR)/src/pag.cpp $(BAGUA_DIR)/src/pag.h $(BAGUA_DIR)/src/utils.cpp $(BAGUA_DIR)/src/GraphPerf/preprocessing/preprocess.cpp $(BAGUA_DIR)/src/GraphPerf/preprocessing/preprocess.h 
+	$(CXX) -g -std=c++11 -o $(BAGUA_DIR)/bin/$@ $^ $(IGRAPH_INCLUDE) $(IGRAPH_LIB)

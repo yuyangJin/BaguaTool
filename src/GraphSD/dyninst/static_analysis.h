@@ -58,10 +58,12 @@ class StaticAnalysis{
 
   ~StaticAnalysis();
 
-  void CaptureProgramCallGraph();
-  void ExtractFuncStructureGraph();
+  
+  void IntraProceduralAnalysis();
   void ExtractLoopStructure(ProgramAbstractionGraph* func_struct_graph, LoopTreeNode* loop_tree,int depth, int parent_id);
   void ExtractCallStructure(ProgramAbstractionGraph* func_struct_graph, vector <Block *>& bvec, int parent_id);
+  void InterProceduralAnalysis();
+  void CaptureProgramCallGraph();
   void DumpFunctionGraph(ProgramAbstractionGraph* func_struct_graph, const char* file_name);
   void DumpAllFunctionGraph();
   void GetBinaryName();

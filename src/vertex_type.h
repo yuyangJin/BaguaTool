@@ -1,3 +1,6 @@
+#ifndef VERTEX_TYPE_
+#define VERTEX_TYPE_
+
 enum VERTEX_TYPE {
   //COMPUTE_NODE = -9,
   //COMBINE = -8,
@@ -10,3 +13,5 @@ enum VERTEX_TYPE {
   LOOP_NODE = -1,
   MPI_NODE = 1,
 };
+
+#endif

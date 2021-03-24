@@ -7,9 +7,11 @@ int main(int argc, char *argv[]){
 
   static_analysis->CaptureProgramCallGraph();
 
-  static_analysis->ExtractFuncStructureGraph();
+  static_analysis->IntraProceduralAnalysis();
 
   static_analysis->DumpAllFunctionGraph();
+
+  //static_analysis->DumpProgramCallGraph()
 
 	
 // #ifdef DEBUG_COUT

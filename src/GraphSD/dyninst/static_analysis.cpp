@@ -188,27 +188,7 @@ bool trim(Node* node, int loopDepth) {
 	return reserved;
 }
 
-void expand(Node* node) {
-	if (!node || node->expanded)
-		return;
 
-	for (auto child: node->children) {
-		expand(child);
-	}
-
-	if (node->type == CALL_NODE) {
-		auto callee = node->funcName;
-    if ( this->func_2_graph.find(callee) != this->func_2_graph.end()){
-		  auto calleeNode = this->func_2_graph[callee];
-		  assert(calleeNode);
-		  expand(calleeNode);
-		  node->addChild(calleeNode);
-		  calleeNode->isAttachedToAnotherNode = true;
-    }
-	}
-
-	node->expanded = true;
-}
 
 */
 
@@ -229,17 +209,7 @@ BlockLessThan(Block * b1, Block * b2)
 {
 	return b1->start() < b2->start();
 }
-/*
-// Get addr interval by blocks vector;
-static  void 
-getAddrIntervalByBasicBlocks(vector <Block*> blocks, int & entry_addr, int & exit_addr) {
-sort(blocks.begin(), blocks.end(), BlockLessThan);
 
-entry_addr = blocks.begin()->start();
-exit_addr = blocks.end()->end();
-
-}
- */
 // Returns: the min entry VMA for the loop, or else 0 if the loop is
 // somehow invalid.  Irreducible loops have more than one entry
 // address.
@@ -271,153 +241,16 @@ LoopTreeLessThan(LoopTreeNode * n1, LoopTreeNode * n2)
 	return LoopMinEntryAddr(n1->loop) < LoopMinEntryAddr(n2->loop);
 }
 
-// Capture function call structure in this function but not in the loop
-void StaticAnalysis::ExtractCallStructure(ProgramAbstractionGraph* func_struct_graph, vector <Block *>& bvec, int parent_id){
-  //int j = 0;
-  auto bit = bvec.begin();
-  
-  // Traverse through all blocks
-  for( ; bit != bvec.end(); ++bit) {
-    Block *b = *bit;
-    
-    // If block is visited, it means it is inside the loop
-    if(!this->visited_block_map[b]){
-      this->visited_block_map[b] = true;
-      auto inst_iter = b->targets().begin();
-      auto inst_end_iter = b->targets().end();
-      
-      // Traverse through all instructions
-      for( ;inst_iter != inst_end_iter; ++inst_iter) {
-
-        // Only focus on CALL type instruction
-        if((*inst_iter)->type() == CALL){
-#ifdef DEBUG_COUT 
-          cout << "Call : " << decoder.decode((unsigned char *)func->isrc()->getPtrToInstruction((*it)->src()->start())).format()
-#endif
-          Address entry_addr = (*inst_iter)->src()->last();
-          Address exit_addr = (*inst_iter)->src()->last();
-          string call_name = this->addr_2_func_name[this->call_graph_map[entry_addr]];
-          int call_vertex_id = 0;
-
-          if(startsWith(call_name, "MPI_")){
-            call_vertex_id = func_struct_graph->AddVertex(MPI_NODE, call_name.c_str());
-            //call_vertex_id = new Node(MPI_NODE, entry_addr, exit_addr);
-          }else if(call_name == string("")){
-            call_vertex_id = func_struct_graph->AddVertex(CALL_IND_NODE, call_name.c_str());
-            //call_vertex_id = new Node(CALL_IND_NODE, entry_addr, exit_addr);
-          } else{
-            call_vertex_id = func_struct_graph->AddVertex(CALL_NODE, call_name.c_str());
-            //call_vertex_id = new Node(CALL_NODE, call_name, entry_addr, exit_addr);
-          }
-          func_struct_graph->AddEdge(parent_id, call_vertex_id);
-          //func_vertex_id->addChild(call_vertex_id);
-#ifdef DEBUG_COUT   
-          for (int i = 0; i < 1 ; i++)
-            printf("  ");
-                    
-          cout << "Call : " << call_name
-            << " addr : " << hex << entry_addr <<" - " << exit_addr <<dec <<endl;;
-#endif
-          //j++;
-        }
-      }
-    }
-  }
-}
-
-
-void StaticAnalysis::ExtractLoopStructure(ProgramAbstractionGraph* func_struct_graph, LoopTreeNode* loop_tree,int depth, int parent_id){
-	if (loop_tree == NULL) {
-		return ;
-	}
-	//Loop *loop = loop_tree->loop;
-
-	//for (int i = 0; i < depth ; i++)
-	//	printf("  ");
-	//printf("Loop : %s\n",loop_tree->name());
-	// process the children of the loop tree
-	vector <LoopTreeNode *> child_loop_list = loop_tree->children;
-	std::sort(child_loop_list.begin(), child_loop_list.end(), LoopTreeLessThan);
-
-	for (uint i = 0; i < child_loop_list.size(); i++) {
-		vector<Block*> blocks;
-		child_loop_list[i] ->loop -> getLoopBasicBlocks(blocks);
-		sort(blocks.begin(), blocks.end(), BlockLessThan);
-
-		Address entry_addr = blocks[0]->start();
-		Address exit_addr = blocks[blocks.size() - 1]->end();
-		//getAddrIntervalByBasicBlocks(blocks, entry_addr, exit_addr);
-    string loop_name = child_loop_list[i]->name();
-
-    int loop_vertex_id = func_struct_graph->AddVertex(LOOP_NODE, loop_name.c_str());
-    func_struct_graph->AddEdge(parent_id, loop_vertex_id);
-
-    //auto loop_vertex_id = new Node(LOOP_NODE, entry_addr-8, exit_addr-8);
-    //parent_id->addChild(loop_vertex_id);
-
-#ifdef DEBUG_COUT 
-		for (int i = 0; i < depth ; i++)
-			printf("  ");
-		cout<<"Loop : " << loop_name << " addr : " << hex << entry_addr <<" - " << exit_addr <<dec <<endl;		
-#endif
-		//int numCall = child_loop_list[i] -> numCallees();
-		//vector <Function* > callees = child_loop_list[i] -> getCallees();
-		//for (int j = 0 ; j < numCall ; j++){
-		//	for (int i = 0; i < depth + 1 ; i++)
-		//        	printf("  ");
-		//	printf("Call : %s\n",child_loop_list[i]->getCalleeName(j));
-		//}
-		this->ExtractLoopStructure(func_struct_graph, child_loop_list[i], depth+1, loop_vertex_id);
-		if(child_loop_list[i] -> numCallees() >0){	
-      this->ExtractCallStructure(func_struct_graph, blocks, loop_vertex_id);
-// 			int j = 0;
-// 			auto bit = blocks.begin();
-// 			for( ; bit != blocks.end(); ++bit) {
-
-// 				Block *b = *bit;
-// 				if(!visited_block_map[b]){
-// 					visited_block_map[b] = true;
-// 					auto it = b->targets().begin();
-// 					for( ; it != b->targets().end(); ++it) {
-// 						if((*it)->type() == CALL){
-//               entry_addr = (*it)->src()->last();
-//               exit_addr = (*it)->src()->last();
-//               Node* call_vertex_id = nullptr;
-//               if(startsWith(this->addr_2_func_name[ this->call_graph_map[(*it)->src()->last()]], "MPI_")){
-//                 call_vertex_id = new Node(MPI_NODE, entry_addr, exit_addr);
-//               }else if(this->addr_2_func_name[ this->call_graph_map[(*it)->src()->last()] ] == string("")){
-//                 call_vertex_id = new Node(CALL_IND_NODE, entry_addr, exit_addr);
-//               }else{
-//                 call_vertex_id = new Node(CALL_NODE, this->addr_2_func_name[ this->call_graph_map[(*it)->src()->last()] ], entry_addr, exit_addr);
-//               }
-//               loop_vertex_id->addChild(call_vertex_id);
-// #ifdef DEBUG_COUT 
-// 							for (int i = 0; i < depth + 1 ; i++)
-// 								printf("  ");
-              
-// 							cout << "Call : " << this->addr_2_func_name[ this->call_graph_map[(*it)->src()->last()] ]
-// 								<< " addr : " << hex << (*it)->src()->last() <<" - " << (*it)->src()->last() <<dec <<endl;;
-// #endif
-// 							j++;
-// 						}
-// 					}
-// 				}
-// 			}
-		}
-	}	
-
-	return ;
-}
-
-
 
 // Capture a Program Call Graph (PCG)
 void StaticAnalysis::CaptureProgramCallGraph(){
 
+  //ProgramAbstractionGraph* pcg = new ProgramAbstractionGraph("program_call_graph");
+
   // Get function list
   const CodeObject::funclist& func_list = this->co->funcs();
 	
-	auto fit = func_list.begin();
+  auto fit = func_list.begin();
   auto endfit = func_list.end();
 
   // Traverse through all functions
@@ -433,10 +266,111 @@ void StaticAnalysis::CaptureProgramCallGraph(){
 			this->call_graph_map[src] = targ;
 		}
 	}
+
 }
 
+
+// Capture function call structure in this function but not in the loop
+void StaticAnalysis::ExtractCallStructure(ProgramAbstractionGraph* func_struct_graph, vector <Block *>& bvec, int parent_id){
+  auto bit = bvec.begin();
+  
+  // Traverse through all blocks
+  for( ; bit != bvec.end(); ++bit) {
+    Block *b = *bit;
+    
+    // If block is visited, it means it is inside the loop
+    if(!this->visited_block_map[b]){
+      this->visited_block_map[b] = true;
+      auto inst_iter = b->targets().begin();
+      auto inst_end_iter = b->targets().end();
+      
+      // Traverse through all instructions
+      for( ;inst_iter != inst_end_iter; ++inst_iter) {
+
+        // Only analyze CALL type instruction
+        if((*inst_iter)->type() == CALL){
+#ifdef DEBUG_COUT 
+          cout << "Call : " << decoder.decode((unsigned char *)func->isrc()->getPtrToInstruction((*it)->src()->start())).format()
+#endif
+          Address entry_addr = (*inst_iter)->src()->last();
+          Address exit_addr = (*inst_iter)->src()->last();
+          string call_name = this->addr_2_func_name[this->call_graph_map[entry_addr]];
+          int call_vertex_id = 0;
+
+          // Add a CALL vertex, including MPI_CALL, INDIRECT_CALL, and CALL
+          if(startsWith(call_name, "MPI_") || startsWith(call_name, "_MPI_") || startsWith(call_name, "mpi_") || startsWith(call_name, "_mpi_")){  // MPI communication calls
+            call_vertex_id = func_struct_graph->AddVertex();
+			func_struct_graph->SetVertexBasicInfo(call_vertex_id, MPI_NODE, call_name.c_str());
+            //call_vertex_id = new Node(MPI_NODE, entry_addr, exit_addr);
+          }else if(call_name == string("")){  // Function calls that are not analyzed at static analysis
+            call_vertex_id = func_struct_graph->AddVertex();
+			func_struct_graph->SetVertexBasicInfo(call_vertex_id, CALL_IND_NODE, call_name.c_str());
+            //call_vertex_id = new Node(CALL_IND_NODE, entry_addr, exit_addr);
+          } else{ // Common function calls
+            call_vertex_id = func_struct_graph->AddVertex();
+			func_struct_graph->SetVertexBasicInfo(call_vertex_id, CALL_NODE, call_name.c_str());
+            //call_vertex_id = new Node(CALL_NODE, call_name, entry_addr, exit_addr);
+          }
+
+          func_struct_graph->SetVertexDebugInfo(call_vertex_id, entry_addr, exit_addr);
+
+		      // Add an edge
+          func_struct_graph->AddEdge(parent_id, call_vertex_id);
+#ifdef DEBUG_COUT   
+          for (int i = 0; i < 1 ; i++)
+            cout << "  ";
+          cout << "Call : " << call_name << " addr : " << hex << entry_addr <<" - " << exit_addr <<dec <<endl;;
+#endif
+        }
+      }
+    }
+  }
+}
+
+
+void StaticAnalysis::ExtractLoopStructure(ProgramAbstractionGraph* func_struct_graph, LoopTreeNode* loop_tree,int depth, int parent_id){
+	if (loop_tree == NULL) {
+		return ;
+	}
+
+	// process the children of the loop tree
+	vector <LoopTreeNode *> child_loop_list = loop_tree->children;
+	std::sort(child_loop_list.begin(), child_loop_list.end(), LoopTreeLessThan);
+
+	for (uint i = 0; i < child_loop_list.size(); i++) {
+		vector<Block*> blocks;
+		child_loop_list[i] ->loop -> getLoopBasicBlocks(blocks);
+		sort(blocks.begin(), blocks.end(), BlockLessThan);
+
+		Address entry_addr = blocks[0]->start();
+		Address exit_addr = blocks[blocks.size() - 1]->end();
+
+    string loop_name = child_loop_list[i]->name();
+
+    int loop_vertex_id = func_struct_graph->AddVertex();
+	func_struct_graph->SetVertexBasicInfo(loop_vertex_id, LOOP_NODE, loop_name.c_str());
+    func_struct_graph->SetVertexDebugInfo(loop_vertex_id, entry_addr - 8,  exit_addr - 8);
+    
+    func_struct_graph->AddEdge(parent_id, loop_vertex_id);
+
+#ifdef DEBUG_COUT 
+		for (int i = 0; i < depth ; i++)
+			cout << "  ";
+		cout<<"Loop : " << loop_name << " addr : " << hex << entry_addr <<" - " << exit_addr <<dec <<endl;		
+#endif
+
+		this->ExtractLoopStructure(func_struct_graph, child_loop_list[i], depth+1, loop_vertex_id);
+		if(child_loop_list[i] -> numCallees() >0){	
+      this->ExtractCallStructure(func_struct_graph, blocks, loop_vertex_id);
+		}
+	}	
+
+	return ;
+}
+
+
 // Extract structure graph for each fucntion
-void StaticAnalysis::ExtractFuncStructureGraph(){
+void StaticAnalysis::IntraProceduralAnalysis(){
 
   // Get function list
   const CodeObject::funclist& func_list = this->co->funcs();
@@ -452,7 +386,8 @@ void StaticAnalysis::ExtractFuncStructureGraph(){
 		string func_name = func->name();	
 
     // Create a graph for each function
-    ProgramAbstractionGraph* func_struct_graph = new ProgramAbstractionGraph(func_name.c_str());
+    ProgramAbstractionGraph* func_struct_graph = new ProgramAbstractionGraph();
+	func_struct_graph->GraphInit(func_name.c_str());
     this->func_2_graph[func_name] = func_struct_graph;
 
 		const ParseAPI::Function::blocklist & blist = func->blocks();
@@ -467,7 +402,9 @@ void StaticAnalysis::ExtractFuncStructureGraph(){
 		Address exit_addr = bvec[bvec.size() - 1]->last();		
 
     // Create root vertex in the graph
-    int func_vertex_id = func_struct_graph->AddVertex(FUNC_NODE, func_name.c_str());
+    int func_vertex_id = func_struct_graph->AddVertex();
+	func_struct_graph->SetVertexBasicInfo(func_vertex_id, FUNC_NODE, func_name.c_str());
+    func_struct_graph->SetVertexDebugInfo(func_vertex_id, entry_addr, exit_addr);
     
     // Add DebugInfo attributes
     //auto func_vertex_id = new Node(FUNC_NODE, entry_addr, exit_addr);
@@ -516,11 +453,45 @@ void StaticAnalysis::DumpAllFunctionGraph(){
     Function * func = * fit;
 		string func_name = func->name();	
     ProgramAbstractionGraph* func_struct_graph = this->func_2_graph[func_name];
-    string file_name= "./" + string(this->binary_name) + string(".pag") + "/" + func_name + ".gml";
+    string file_name= string("./") + string(this->binary_name) + string(".pag/") + func_name + string(".gml");
     this->DumpFunctionGraph(func_struct_graph, file_name.c_str());
   }
 }
 
+
 // void StaticAnalysis::GetBinaryName(){
 //   return this->binary_name;
+// }
+
+
+
+// int CallerCallee(ProgramAbstractionGraph* func_struct_graph, const int vertex_id){
+//   if (func_struct_graph->GetVertexType(vertex_id) == CALL){
+
+//   }
+// }
+
+// void StaticAnalysis::InterProceduralAnalysis(ProgramAbstractionGraph* func_struct_graph) {
+	
+//   func_struct_graph->Dfs(dfs_callback, NULL);
+  
+//   // if (!node || node->expanded)
+// 	// 	return;
+
+// 	// for (auto child: node->children) {
+// 	// 	expand(child);
+// 	// }
+
+// 	// if (node->type == CALL_NODE) {
+// 	// 	auto callee = node->funcName;
+//   //   if ( this->func_2_graph.find(callee) != this->func_2_graph.end()){
+// 	// 	  auto calleeNode = this->func_2_graph[callee];
+// 	// 	  assert(calleeNode);
+// 	// 	  expand(calleeNode);
+// 	// 	  node->addChild(calleeNode);
+// 	// 	  calleeNode->isAttachedToAnotherNode = true;
+//   //   }
+// 	// }
+
+// 	// node->expanded = true;
 // }

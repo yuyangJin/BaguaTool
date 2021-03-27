@@ -2,12 +2,11 @@
 #define PREPROCESS_H_
 
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "baguatool.h"
 #include "core/pag.h"
-
 
 #endif

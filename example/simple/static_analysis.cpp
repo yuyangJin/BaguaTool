@@ -1,55 +1,55 @@
 #include "baguatool.h"
 
 int main(int argc, char *argv[]) {
-    auto static_analysis = new baguatool::graph_sd::StaticAnalysis(argv[1]);
+  auto static_analysis = new baguatool::graph_sd::StaticAnalysis(argv[1]);
 
-    static_analysis->CaptureProgramCallGraph();
+  static_analysis->CaptureProgramCallGraph();
 
-    static_analysis->IntraProceduralAnalysis();
+  static_analysis->IntraProceduralAnalysis();
 
-    static_analysis->DumpAllFunctionGraph();
+  static_analysis->DumpAllFunctionGraph();
 
-    // static_analysis->DumpProgramCallGraph()
+  // static_analysis->DumpProgramCallGraph()
 
-    // #ifdef DEBUG_COUT
-    //   cout << "==============================" <<endl;
-    //   printFunc2Node();
-    //   cout << "==============================" <<endl;
-    // #endif
+  // #ifdef DEBUG_COUT
+  //   cout << "==============================" <<endl;
+  //   printFunc2Node();
+  //   cout << "==============================" <<endl;
+  // #endif
 
-    //   Node* root = func_2_node["main"];
-    //   expand(root);
+  //   Node* root = func_2_node["main"];
+  //   expand(root);
 
-    // #ifdef DEBUG_COUT
-    //   printTree(root,0);
-    //   cout << "==============================" <<endl;
-    // #endif
+  // #ifdef DEBUG_COUT
+  //   printTree(root,0);
+  //   cout << "==============================" <<endl;
+  // #endif
 
-    //   trim(root,0);
+  //   trim(root,0);
 
-    // #ifdef DEBUG_COUT
-    //   printTree(root,0);
-    //   cout << "==============================" <<endl;
-    // #endif
+  // #ifdef DEBUG_COUT
+  //   printTree(root,0);
+  //   cout << "==============================" <<endl;
+  // #endif
 
-    //   generateID(root, 0);
-    // 	generateChildID(root);
+  //   generateID(root, 0);
+  // 	generateChildID(root);
 
-    //   // Write tree to a file
-    //   string outputFilename = string(argv[1]) + ".psg";
-    // 	ofstream fout(outputFilename.c_str());
+  //   // Write tree to a file
+  //   string outputFilename = string(argv[1]) + ".psg";
+  // 	ofstream fout(outputFilename.c_str());
 
-    // 	if (!fout.good()) {
-    // 		cout << "Failed to open output file\n";
-    // 		return true;
-    // 	}
+  // 	if (!fout.good()) {
+  // 		cout << "Failed to open output file\n";
+  // 		return true;
+  // 	}
 
-    // #ifdef DEBUG_COUT
-    //   printTree(root,0);
-    // #endif
+  // #ifdef DEBUG_COUT
+  //   printTree(root,0);
+  // #endif
 
-    //   recordAllTrees(root, fout); // first print root
+  //   recordAllTrees(root, fout); // first print root
 
-    //   fout.close();
-    //   //cout << "==============================" <<endl;
+  //   fout.close();
+  //   //cout << "==============================" <<endl;
 }

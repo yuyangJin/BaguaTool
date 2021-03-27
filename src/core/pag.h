@@ -2,21 +2,22 @@
 #define PAG_H
 
 #include <stdint.h>
+
 #include <string>
-#include "vertex_type.h"
 
 #include "common/common.h"
 #include "igraph.h"
+#include "vertex_type.h"
 #define TRUNK_SIZE 1000
 
 namespace baguatool::core {
 
 struct PAGImpl {
-    igraph_t graph;
+  igraph_t graph;
 };
 
 struct PAGVertex {
-    igraph_vs_t vertex;
+  igraph_vs_t vertex;
 };
-}
+}  // namespace baguatool::core
 #endif  // PAG_H

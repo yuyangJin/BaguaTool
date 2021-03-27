@@ -24,7 +24,8 @@
 #include <Symtab.h>
 #include <LineInformation.h>
 
-#include "../../pag.h"
+#include "baguatool.h"
+#include "core/pag.h"
 #include "static_analysis.h"
 
 using namespace std;
@@ -34,6 +35,32 @@ using namespace ParseAPI;
 using namespace InstructionAPI;
 
 
+
+namespace baguatool::graph_sd {
+
+StaticAnalysis::StaticAnalysis(char* binary_name) {
+	this->sa = new StaticAnalysisImpl(binary_name);
+}
+
+StaticAnalysis::~StaticAnalysis() {
+	delete sa;
+}
+
+void StaticAnalysis::IntraProceduralAnalysis() {
+	sa->IntraProceduralAnalysis();
+}
+void StaticAnalysis::InterProceduralAnalysis() {
+	sa->InterProceduralAnalysis();
+}
+void StaticAnalysis::CaptureProgramCallGraph() {
+	sa->CaptureProgramCallGraph();
+}
+void StaticAnalysis::DumpAllFunctionGraph() {
+	sa->DumpAllFunctionGraph();
+}
+void StaticAnalysis::GetBinaryName() {
+	sa->GetBinaryName();
+}
 /*
 void writeTree(Node* node, ostream& fout) {
 	if (node && node->removed )
@@ -166,7 +193,7 @@ bool trim(Node* node, int loopDepth) {
 		node->removed = false;
 		node->trimmed = true;
 		return true;
-	}else if (node->type == LOOP_NODE ){
+	}else if (node->type == core::LOOP_NODE ){
     loopDepth++;
     if(loopDepth <= MAX_LOOP_DEPTH){
       node->removed = false;
@@ -243,9 +270,9 @@ LoopTreeLessThan(LoopTreeNode * n1, LoopTreeNode * n2)
 
 
 // Capture a Program Call Graph (PCG)
-void StaticAnalysis::CaptureProgramCallGraph(){
+void StaticAnalysisImpl::CaptureProgramCallGraph(){
 
-  //ProgramAbstractionGraph* pcg = new ProgramAbstractionGraph("program_call_graph");
+  //core::ProgramAbstractionGraph* pcg = new core::ProgramAbstractionGraph("program_call_graph");
 
   // Get function list
   const CodeObject::funclist& func_list = this->co->funcs();
@@ -271,7 +298,7 @@ void StaticAnalysis::CaptureProgramCallGraph(){
 
 
 // Capture function call structure in this function but not in the loop
-void StaticAnalysis::ExtractCallStructure(ProgramAbstractionGraph* func_struct_graph, vector <Block *>& bvec, int parent_id){
+void StaticAnalysisImpl::ExtractCallStructure(core::ProgramAbstractionGraph* func_struct_graph, vector <Block *>& bvec, int parent_id){
   auto bit = bvec.begin();
   
   // Traverse through all blocks
@@ -300,16 +327,16 @@ void StaticAnalysis::ExtractCallStructure(ProgramAbstractionGraph* func_struct_g
           // Add a CALL vertex, including MPI_CALL, INDIRECT_CALL, and CALL
           if(startsWith(call_name, "MPI_") || startsWith(call_name, "_MPI_") || startsWith(call_name, "mpi_") || startsWith(call_name, "_mpi_")){  // MPI communication calls
             call_vertex_id = func_struct_graph->AddVertex();
-			func_struct_graph->SetVertexBasicInfo(call_vertex_id, MPI_NODE, call_name.c_str());
-            //call_vertex_id = new Node(MPI_NODE, entry_addr, exit_addr);
+			func_struct_graph->SetVertexBasicInfo(call_vertex_id, core::MPI_NODE, call_name.c_str());
+            //call_vertex_id = new Node(core::MPI_NODE, entry_addr, exit_addr);
           }else if(call_name == string("")){  // Function calls that are not analyzed at static analysis
             call_vertex_id = func_struct_graph->AddVertex();
-			func_struct_graph->SetVertexBasicInfo(call_vertex_id, CALL_IND_NODE, call_name.c_str());
-            //call_vertex_id = new Node(CALL_IND_NODE, entry_addr, exit_addr);
+			func_struct_graph->SetVertexBasicInfo(call_vertex_id, core::CALL_IND_NODE, call_name.c_str());
+            //call_vertex_id = new Node(core::CALL_IND_NODE, entry_addr, exit_addr);
           } else{ // Common function calls
             call_vertex_id = func_struct_graph->AddVertex();
-			func_struct_graph->SetVertexBasicInfo(call_vertex_id, CALL_NODE, call_name.c_str());
-            //call_vertex_id = new Node(CALL_NODE, call_name, entry_addr, exit_addr);
+			func_struct_graph->SetVertexBasicInfo(call_vertex_id, core::CALL_NODE, call_name.c_str());
+            //call_vertex_id = new Node(core::CALL_NODE, call_name, entry_addr, exit_addr);
           }
 
           func_struct_graph->SetVertexDebugInfo(call_vertex_id, entry_addr, exit_addr);
@@ -328,7 +355,7 @@ void StaticAnalysis::ExtractCallStructure(ProgramAbstractionGraph* func_struct_g
 }
 
 
-void StaticAnalysis::ExtractLoopStructure(ProgramAbstractionGraph* func_struct_graph, LoopTreeNode* loop_tree,int depth, int parent_id){
+void StaticAnalysisImpl::ExtractLoopStructure(core::ProgramAbstractionGraph* func_struct_graph, LoopTreeNode* loop_tree,int depth, int parent_id){
 	if (loop_tree == NULL) {
 		return ;
 	}
@@ -348,7 +375,7 @@ void StaticAnalysis::ExtractLoopStructure(ProgramAbstractionGraph* func_struct_g
     string loop_name = child_loop_list[i]->name();
 
     int loop_vertex_id = func_struct_graph->AddVertex();
-	func_struct_graph->SetVertexBasicInfo(loop_vertex_id, LOOP_NODE, loop_name.c_str());
+	func_struct_graph->SetVertexBasicInfo(loop_vertex_id, core::LOOP_NODE, loop_name.c_str());
     func_struct_graph->SetVertexDebugInfo(loop_vertex_id, entry_addr - 8,  exit_addr - 8);
     
     func_struct_graph->AddEdge(parent_id, loop_vertex_id);
@@ -370,7 +397,7 @@ void StaticAnalysis::ExtractLoopStructure(ProgramAbstractionGraph* func_struct_g
 
 
 // Extract structure graph for each fucntion
-void StaticAnalysis::IntraProceduralAnalysis(){
+void StaticAnalysisImpl::IntraProceduralAnalysis(){
 
   // Get function list
   const CodeObject::funclist& func_list = this->co->funcs();
@@ -386,7 +413,7 @@ void StaticAnalysis::IntraProceduralAnalysis(){
 		string func_name = func->name();	
 
     // Create a graph for each function
-    ProgramAbstractionGraph* func_struct_graph = new ProgramAbstractionGraph();
+    core::ProgramAbstractionGraph* func_struct_graph = new core::ProgramAbstractionGraph();
 	func_struct_graph->GraphInit(func_name.c_str());
     this->func_2_graph[func_name] = func_struct_graph;
 
@@ -403,11 +430,11 @@ void StaticAnalysis::IntraProceduralAnalysis(){
 
     // Create root vertex in the graph
     int func_vertex_id = func_struct_graph->AddVertex();
-	func_struct_graph->SetVertexBasicInfo(func_vertex_id, FUNC_NODE, func_name.c_str());
+	func_struct_graph->SetVertexBasicInfo(func_vertex_id, core::FUNC_NODE, func_name.c_str());
     func_struct_graph->SetVertexDebugInfo(func_vertex_id, entry_addr, exit_addr);
     
     // Add DebugInfo attributes
-    //auto func_vertex_id = new Node(FUNC_NODE, entry_addr, exit_addr);
+    //auto func_vertex_id = new Node(core::FUNC_NODE, entry_addr, exit_addr);
     
 
 #ifdef DEBUG_COUT 
@@ -426,11 +453,11 @@ void StaticAnalysis::IntraProceduralAnalysis(){
 }
 
 
-void StaticAnalysis::DumpFunctionGraph(ProgramAbstractionGraph* func_struct_graph, const char* file_name){
+void StaticAnalysisImpl::DumpFunctionGraph(core::ProgramAbstractionGraph* func_struct_graph, const char* file_name){
   func_struct_graph->DumpGraph(file_name);
 }
 
-void StaticAnalysis::DumpAllFunctionGraph(){
+void StaticAnalysisImpl::DumpAllFunctionGraph(){
 
   string dir_name = string(getcwd(NULL, 0)) + string("/") + string(this->binary_name) + string(".pag");
 
@@ -452,26 +479,30 @@ void StaticAnalysis::DumpAllFunctionGraph(){
 	for(int i = 0; fit != endfit; ++fit, i++) {	
     Function * func = * fit;
 		string func_name = func->name();	
-    ProgramAbstractionGraph* func_struct_graph = this->func_2_graph[func_name];
+    core::ProgramAbstractionGraph* func_struct_graph = this->func_2_graph[func_name];
     string file_name= string("./") + string(this->binary_name) + string(".pag/") + func_name + string(".gml");
     this->DumpFunctionGraph(func_struct_graph, file_name.c_str());
   }
 }
 
 
-// void StaticAnalysis::GetBinaryName(){
+void StaticAnalysisImpl::GetBinaryName(){
+
 //   return this->binary_name;
-// }
+}
 
 
 
-// int CallerCallee(ProgramAbstractionGraph* func_struct_graph, const int vertex_id){
+// int CallerCallee(core::ProgramAbstractionGraph* func_struct_graph, const int vertex_id){
 //   if (func_struct_graph->GetVertexType(vertex_id) == CALL){
 
 //   }
 // }
 
-// void StaticAnalysis::InterProceduralAnalysis(ProgramAbstractionGraph* func_struct_graph) {
+void StaticAnalysisImpl::InterProceduralAnalysis() {
+}
+
+// void StaticAnalysis::InterProceduralAnalysis(core::ProgramAbstractionGraph* func_struct_graph) {
 	
 //   func_struct_graph->Dfs(dfs_callback, NULL);
   
@@ -482,7 +513,7 @@ void StaticAnalysis::DumpAllFunctionGraph(){
 // 	// 	expand(child);
 // 	// }
 
-// 	// if (node->type == CALL_NODE) {
+// 	// if (node->type == core::CALL_NODE) {
 // 	// 	auto callee = node->funcName;
 //   //   if ( this->func_2_graph.find(callee) != this->func_2_graph.end()){
 // 	// 	  auto calleeNode = this->func_2_graph[callee];
@@ -495,3 +526,5 @@ void StaticAnalysis::DumpAllFunctionGraph(){
 
 // 	// node->expanded = true;
 // }
+
+}

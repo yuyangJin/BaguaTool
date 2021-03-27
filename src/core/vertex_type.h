@@ -1,6 +1,8 @@
 #ifndef VERTEX_TYPE_
 #define VERTEX_TYPE_
 
+namespace baguatool::core {
+
 enum VERTEX_TYPE {
   //COMPUTE_NODE = -9,
   //COMBINE = -8,
@@ -11,7 +13,9 @@ enum VERTEX_TYPE {
   //COMPOUND = -3,
   BRANCH = -2,
   LOOP_NODE = -1,
-  MPI_NODE = 1,
+  MPI_NODE = 1
 };
+
+}
 
 #endif

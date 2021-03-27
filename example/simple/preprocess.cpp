@@ -1,5 +1,4 @@
-#include "preprocess.h"
-#include "../../pag.h"
+#include "baguatool.h"
 
 int main(int argc, char** argv){
   // if (argc != 2) {
@@ -9,13 +8,13 @@ int main(int argc, char** argv){
   // const int n = atoi(argv[1]);
   const char *dir_name = argv[1];
 
-  Preprocess* prep = new Preprocess(); 
+  auto prep = new baguatool::graph_perf::Preprocess(); 
     
-  std::vector<ProgramAbstractionGraph*> func_pag_vec;
+  std::vector<baguatool::core::ProgramAbstractionGraph*> func_pag_vec;
     
   prep->ReadFunctionGraphs(dir_name, func_pag_vec);
 
-  ProgramAbstractionGraph* root = prep->InterProceduralAnalysis(func_pag_vec);
+  auto root = prep->InterProceduralAnalysis(func_pag_vec);
 
   root->DumpGraph("root.gml");
 

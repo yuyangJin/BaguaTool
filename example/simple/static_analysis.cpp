@@ -1,9 +1,9 @@
-#include "static_analysis.h"
+#include "baguatool.h"
 
 int main(int argc, char *argv[]){
 
 
-	StaticAnalysis* static_analysis = new StaticAnalysis(argv[1]);
+	auto static_analysis = new baguatool::graph_sd::StaticAnalysis(argv[1]);
 
   static_analysis->CaptureProgramCallGraph();
 

@@ -46,37 +46,35 @@
 // }
 
 int main() {
+  igraph_t g1;
+  igraph_integer_t n = 1;
+  igraph_vector_t v1;
+  int ret;
 
-    igraph_t g1;
-    igraph_integer_t n = 1;
-    igraph_vector_t v1;
-    int ret;
+  igraph_set_attribute_table(&igraph_cattribute_table);
 
-    igraph_set_attribute_table(&igraph_cattribute_table);
+  igraph_empty(&g1, n, IGRAPH_DIRECTED);
 
-    igraph_empty(&g1, n, IGRAPH_DIRECTED);
+  SETGAS(&g1, "name", "Bruce's graph");
+  igraph_add_vertices(&g1, 1, 0);
+  printf("%d\n", igraph_vcount(&g1));
 
-    SETGAS(&g1, "name", "Bruce's graph");
-    igraph_add_vertices(&g1, 1, 0);
-    printf("%d\n", igraph_vcount(&g1));
+  igraph_add_edge(&g1, 1, 0);
+  SETVAS(&g1, "name", 0, "main");
+  SETVAS(&g1, "name", 1, "foo");
 
-    igraph_add_edge(&g1, 1, 0);
-    SETVAS(&g1, "name", 0, "main");
-    SETVAS(&g1, "name", 1, "foo");
+  FILE* outfile = NULL;
+  outfile = fopen("test.graphml", "w");
+  // igraph_write_graph_graphml(&g1, outfile, 1);
+  fclose(outfile);
 
-    FILE* outfile = NULL;
-    outfile = fopen("test.graphml", "w");
-    //igraph_write_graph_graphml(&g1, outfile, 1);
-    fclose(outfile);
+  outfile = fopen("test.dat", "w");
+  igraph_write_graph_gml(&g1, outfile, 0, "test suite");
+  fclose(outfile);
 
-    outfile = fopen("test.dat", "w");
-    igraph_write_graph_gml(&g1, outfile, 0, "test suite");
-    fclose(outfile);
-
-    igraph_destroy(&g1);
-    return 0;
+  igraph_destroy(&g1);
+  return 0;
 }
-
 
 // void null_warning_handler (const char *reason, const char *file,
 //                            int line, int igraph_errno) {

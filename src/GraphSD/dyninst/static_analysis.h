@@ -12,7 +12,7 @@
 
 #include "baguatool.h"
 
-#include "dbg.h"
+#include "common/common.h"
 
 using namespace std;
 using namespace Dyninst;

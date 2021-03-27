@@ -5,7 +5,7 @@
 #include <string>
 #include "vertex_type.h"
 
-#include "dbg.h"
+#include "common/common.h"
 #include "igraph.h"
 #define TRUNK_SIZE 1000
 

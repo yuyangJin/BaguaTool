@@ -457,6 +457,7 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
 }
 
 void StaticAnalysisImpl::GetBinaryName() {
+    UNIMPLEMENTED();
     //   return this->binary_name;
 }
 
@@ -467,7 +468,7 @@ void StaticAnalysisImpl::GetBinaryName() {
 //   }
 // }
 
-void StaticAnalysisImpl::InterProceduralAnalysis() {}
+void StaticAnalysisImpl::InterProceduralAnalysis() { UNIMPLEMENTED(); }
 
 // void StaticAnalysis::InterProceduralAnalysis(core::ProgramAbstractionGraph*
 // func_struct_graph) {

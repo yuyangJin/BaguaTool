@@ -3,7 +3,7 @@
 
 #include "dbg.h"
 
-#define ERR_EXIT(code, ...) \
+#define ERR_EXIT(...) \
     do {                    \
         dbg(__VA_ARGS__);   \
     } while (false)

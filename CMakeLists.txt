@@ -6,6 +6,9 @@ if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   message(FATAL_ERROR "Do not support non-Linux now!")
 endif()
 
+# TODO: remove it in the future
+set(CMAKE_BUILD_TYPE Debug CACHE STRING "Set build type to DEBUG" FORCE)
+message(AUTHOR_WARNING "Overwrite build type to DEBUG for development")
 
 # third party
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
@@ -42,13 +45,18 @@ target_compile_options(
   -Wall -Wno-missing-braces
   #-fno-rtti # We cannot open it because dyninst use `typeid` in header
   -fno-omit-frame-pointer -fstack-protector-all
-  $<$<CONFIG:DEBUG>:-fsanitize=address -static-libasan>)
+)
+
+# FIXME: how to use sanitize for subproject?
+#target_compile_options(
+#  baguatool PUBLIC
+#  $<$<CONFIG:DEBUG>:-fsanitize=address -g>
+#)
 
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/include)
-# TODO: the following directory should be PRIVATE in the future
-target_include_directories(baguatool PUBLIC src)
+target_include_directories(baguatool PRIVATE src)
 target_include_directories(baguatool PRIVATE ${PROJECT_SOURCE_DIR}/third_party/dbg)
-target_include_directories(baguatool PRIVATE igraph)#${PROJECT_BINARY_DIR}/third_party/igraph/include)# ${DYNINST_LIBRARIES} ${PAPI_LIBRARIES})
+target_include_directories(baguatool PRIVATE igraph)
 target_include_directories(baguatool PRIVATE ${DYNINST_INCLUDE_DIR})
 target_include_directories(baguatool PRIVATE ${PAPI_INCLUDE_DIRS})
 

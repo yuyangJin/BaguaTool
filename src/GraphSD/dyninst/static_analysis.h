@@ -14,7 +14,6 @@
 #include "common/common.h"
 #include "core/pag.h"
 
-using namespace std;
 using namespace Dyninst;
 using namespace ParseAPI;
 // using namespace SymtabAPI;
@@ -41,10 +40,10 @@ class StaticAnalysisImpl {
  private:
   SymtabCodeSource *sts;
   CodeObject *co;
-  unordered_map<Block *, bool> visited_block_map;
-  unordered_map<Address, string> addr_2_func_name;
-  map<VMA, VMA> call_graph_map;
-  unordered_map<string, core::ProgramAbstractionGraph *> func_2_graph;
+  std::unordered_map<Block *, bool> visited_block_map;
+  std::unordered_map<Address, std::string> addr_2_func_name;
+  std::map<VMA, VMA> call_graph_map;
+  std::unordered_map<std::string, core::ProgramAbstractionGraph *> func_2_graph;
   char *binary_name;
 
  public:
@@ -69,7 +68,7 @@ class StaticAnalysisImpl {
   void IntraProceduralAnalysis();
   void ExtractLoopStructure(core::ProgramAbstractionGraph *func_struct_graph, LoopTreeNode *loop_tree, int depth,
                             int parent_id);
-  void ExtractCallStructure(core::ProgramAbstractionGraph *func_struct_graph, vector<Block *> &bvec, int parent_id);
+  void ExtractCallStructure(core::ProgramAbstractionGraph *func_struct_graph, std::vector<Block *> &bvec, int parent_id);
   void InterProceduralAnalysis();
   void CaptureProgramCallGraph();
   void DumpFunctionGraph(core::ProgramAbstractionGraph *func_struct_graph, const char *file_name);

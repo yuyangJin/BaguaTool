@@ -8,14 +8,14 @@
 #define ERR_EXIT(...) \
   do {                \
     dbg(__VA_ARGS__); \
-    exit(1); \
+    exit(1);          \
   } while (false)
 #else
 // ATTENTION: ERR_EXIT here only support one parameter!!
 #define ERR_EXIT(_str_) \
-  do { \
-    perror(_str_); \
-    exit(1); \
+  do {                  \
+    perror(_str_);      \
+    exit(1);            \
   } while (false)
 #endif
 

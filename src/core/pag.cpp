@@ -9,7 +9,7 @@
 namespace baguatool::core {
 
 ProgramAbstractionGraph::ProgramAbstractionGraph() {
-  //ipag_ = new PAGImpl;
+  // ipag_ = new PAGImpl;
   ipag_ = std::make_unique<PAGImpl>();
   // open attributes
   igraph_set_attribute_table(&igraph_cattribute_table);
@@ -17,7 +17,7 @@ ProgramAbstractionGraph::ProgramAbstractionGraph() {
 
 ProgramAbstractionGraph::~ProgramAbstractionGraph() {
   igraph_destroy(&ipag_->graph);
-  //delete ipag_;
+  // delete ipag_;
 }
 
 void ProgramAbstractionGraph::GraphInit(const char *graph_name) {

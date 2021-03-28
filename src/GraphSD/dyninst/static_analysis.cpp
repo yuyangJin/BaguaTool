@@ -406,8 +406,8 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
     func_struct_graph->SetVertexBasicInfo(func_vertex_id, core::FUNC_NODE, func_name.c_str());
     func_struct_graph->SetVertexDebugInfo(func_vertex_id, entry_addr, exit_addr);
 
-    // Add DebugInfo attributes
-    // auto func_vertex_id = new Node(core::FUNC_NODE, entry_addr, exit_addr);
+// Add DebugInfo attributes
+// auto func_vertex_id = new Node(core::FUNC_NODE, entry_addr, exit_addr);
 
 #ifdef DEBUG_COUT
     cout << "Function : " << func_name << " addr : " << hex << entry_addr << "/" << entry_addr << " - " << exit_addr

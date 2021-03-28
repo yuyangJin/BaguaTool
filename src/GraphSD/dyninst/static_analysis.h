@@ -59,7 +59,12 @@ class StaticAnalysisImpl {
     this->binary_name = binary_name;
   }
 
-  ~StaticAnalysisImpl() {}
+  ~StaticAnalysisImpl() {
+    //delete this->sts;
+    delete this->co;
+    // TODO: it is beter to use unique_ptr instead of raw pointer?
+    for (auto& it: func_2_graph) delete it.second;
+  }
 
   void IntraProceduralAnalysis();
   void ExtractLoopStructure(core::ProgramAbstractionGraph *func_struct_graph, LoopTreeNode *loop_tree, int depth,

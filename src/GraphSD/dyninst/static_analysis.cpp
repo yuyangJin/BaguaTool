@@ -36,9 +36,9 @@ using namespace InstructionAPI;
 
 namespace baguatool::graph_sd {
 
-StaticAnalysis::StaticAnalysis(char *binary_name) { this->sa = new StaticAnalysisImpl(binary_name); }
+StaticAnalysis::StaticAnalysis(char *binary_name) { this->sa = std::make_unique<StaticAnalysisImpl>(binary_name); }
 
-StaticAnalysis::~StaticAnalysis() { delete sa; }
+StaticAnalysis::~StaticAnalysis() {}
 
 void StaticAnalysis::IntraProceduralAnalysis() { sa->IntraProceduralAnalysis(); }
 void StaticAnalysis::InterProceduralAnalysis() { sa->InterProceduralAnalysis(); }

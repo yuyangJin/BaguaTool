@@ -1,7 +1,7 @@
 #ifndef BAGUATOOL_H
 #define BAGUATOOL_H
 
-//#include <memory>
+#include <memory>
 #include <vector>
 
 // All public APIs are defined here.
@@ -13,7 +13,8 @@ class PAGImpl;
 class PAGVertex;
 class ProgramAbstractionGraph {
 private:
-  PAGImpl* ipag_;
+  //PAGImpl* ipag_;
+  std::unique_ptr<PAGImpl> ipag_;
   int cur_vertex_id;
 
  public:
@@ -86,7 +87,7 @@ namespace graph_sd {
 class StaticAnalysisImpl;
 class StaticAnalysis{
  private: 
-  StaticAnalysisImpl* sa;
+  std::unique_ptr<StaticAnalysisImpl> sa;
  public:
   StaticAnalysis(char* binary_name);
 

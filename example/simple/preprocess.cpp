@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
   // const int n = atoi(argv[1]);
   const char *dir_name = argv[1];
 
-  auto prep = new baguatool::graph_perf::Preprocess();
+  auto prep = std::make_unique<baguatool::graph_perf::Preprocess>();
 
   std::vector<baguatool::core::ProgramAbstractionGraph *> func_pag_vec;
 

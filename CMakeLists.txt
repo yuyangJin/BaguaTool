@@ -23,6 +23,7 @@ endif()
 
 option(ENABLE_TEST "Enable test" ON)
 option(ENABLE_EXAMPLE "Enable example" ON)
+option(ENABLE_SANITIZE "Enable sanitize" OFF)
 
 # explicitly list all source file
 add_library(
@@ -48,10 +49,12 @@ target_compile_options(
 )
 
 # FIXME: how to use sanitize for subproject?
-#target_compile_options(
-#  baguatool PUBLIC
-#  $<$<CONFIG:DEBUG>:-fsanitize=address -g>
-#)
+if (ENABLE_SANITIZE) 
+  target_compile_options(
+    baguatool PUBLIC
+    $<$<CONFIG:DEBUG>:-fsanitize=address -g>
+  )
+endif()
 
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(baguatool PRIVATE src)

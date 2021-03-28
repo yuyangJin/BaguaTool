@@ -9,14 +9,15 @@
 namespace baguatool::core {
 
 ProgramAbstractionGraph::ProgramAbstractionGraph() {
-  ipag_ = new PAGImpl;
+  //ipag_ = new PAGImpl;
+  ipag_ = std::make_unique<PAGImpl>();
   // open attributes
   igraph_set_attribute_table(&igraph_cattribute_table);
 }
 
 ProgramAbstractionGraph::~ProgramAbstractionGraph() {
   igraph_destroy(&ipag_->graph);
-  delete ipag_;
+  //delete ipag_;
 }
 
 void ProgramAbstractionGraph::GraphInit(const char *graph_name) {
@@ -126,25 +127,25 @@ int ProgramAbstractionGraph::SetVertexDebugInfo(const int vertex_id, const int e
   return 0;
 }
 
-void ProgramAbstractionGraph::DeleteVertex() {}
+void ProgramAbstractionGraph::DeleteVertex() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::DeleteEdge() {}
+void ProgramAbstractionGraph::DeleteEdge() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::QueryVertex() {}
+void ProgramAbstractionGraph::QueryVertex() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::QueryEdge() {}
+void ProgramAbstractionGraph::QueryEdge() { UNIMPLEMENTED(); }
 
 int ProgramAbstractionGraph::GetEdgeSrc(int edge_id) { return IGRAPH_FROM(&ipag_->graph, edge_id); }
 
 int ProgramAbstractionGraph::GetEdgeDest(int edge_id) { return IGRAPH_TO(&ipag_->graph, edge_id); }
 
-void ProgramAbstractionGraph::QueryEdgeOtherSide() {}
+void ProgramAbstractionGraph::QueryEdgeOtherSide() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::SetVertexAttribute() {}
+void ProgramAbstractionGraph::SetVertexAttribute() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::SetEdgeAttribute() {}
+void ProgramAbstractionGraph::SetEdgeAttribute() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::GetVertexAttribute() {}
+void ProgramAbstractionGraph::GetVertexAttribute() { UNIMPLEMENTED(); }
 
 int ProgramAbstractionGraph::GetVertexAttributeNum(const char *attr_name, int vertex_id) {
   int ret_str = VAN(&ipag_->graph, attr_name, vertex_id);
@@ -156,7 +157,7 @@ const char *ProgramAbstractionGraph::GetVertexAttributeString(const char *attr_n
   return ret_str;
 }
 
-void ProgramAbstractionGraph::GetEdgeAttribute() {}
+void ProgramAbstractionGraph::GetEdgeAttribute() { UNIMPLEMENTED(); }
 
 const char *ProgramAbstractionGraph::GetGraphAttributeString(const char *attr_name) {
   // igraph_vector_t gtypes, vtypes, etypes;
@@ -186,9 +187,9 @@ const char *ProgramAbstractionGraph::GetGraphAttributeString(const char *attr_na
   return ret_str;
 }
 
-void ProgramAbstractionGraph::MergeVertices() {}
+void ProgramAbstractionGraph::MergeVertices() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::SplitVertex() {}
+void ProgramAbstractionGraph::SplitVertex() { UNIMPLEMENTED(); }
 
 void ProgramAbstractionGraph::CopyVertex(int new_vertex_id, ProgramAbstractionGraph *g, int vertex_id) {
   igraph_vector_t gtypes, vtypes, etypes;
@@ -233,7 +234,7 @@ void ProgramAbstractionGraph::DeleteExtraTailVertices() {
   igraph_vs_destroy(&vs.vertex);
 }
 
-void ProgramAbstractionGraph::Dfs() {}
+void ProgramAbstractionGraph::Dfs() { UNIMPLEMENTED(); }
 
 // void ProgramAbstractionGraph::Dfs(igraph_dfshandler_t in_callback,
 // igraph_dfshandler_t out_callback) {

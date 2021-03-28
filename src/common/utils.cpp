@@ -5,8 +5,7 @@ void getFiles(std::string path, std::vector<std::string> &files) {
   struct dirent *ptr;
 
   if ((dir = opendir(path.c_str())) == NULL) {
-    perror("Open dir error...");
-    exit(1);
+    ERR_EXIT("Open dir error...");
   }
 
   while ((ptr = readdir(dir)) != NULL) {

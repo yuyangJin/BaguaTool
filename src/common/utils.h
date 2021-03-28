@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include "common.h"
+
 void getFiles(std::string path, std::vector<std::string> &files);
 
 #endif

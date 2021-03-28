@@ -212,7 +212,7 @@ CALL_IND_NODE ) {
 //        if these functions won't be used in many diffrent cases
 
 // Sort Blocks by start address, low to high.
-//static bool BlockLessThan(Block *b1, Block *b2) { return b1->start() < b2->start(); }
+// static bool BlockLessThan(Block *b1, Block *b2) { return b1->start() < b2->start(); }
 
 // Returns: the min entry VMA for the loop, or else 0 if the loop is
 // somehow invalid.  Irreducible loops have more than one entry
@@ -255,12 +255,12 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
   const CodeObject::funclist &func_list = this->co->funcs();
 
   // Traverse through all functions
-  for (auto func: func_list) {
+  for (auto func : func_list) {
     this->addr_2_func_name[func->addr()] = func->name();
     const Function::edgelist &elist = func->callEdges();
 
     // Traverse through all fuunction calls in this function
-    for (const auto& e: elist) {
+    for (const auto &e : elist) {
       VMA src = e->src()->last();
       VMA targ = e->trg()->start();
       this->call_graph_map[src] = targ;
@@ -269,40 +269,37 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
 }
 
 // Capture function call structure in this function but not in the loop
-void StaticAnalysisImpl::ExtractCallStructure(core::ProgramAbstractionGraph *func_struct_graph, std::vector<Block *> &bvec,
-                                              int parent_id) {
-
+void StaticAnalysisImpl::ExtractCallStructure(core::ProgramAbstractionGraph *func_struct_graph,
+                                              std::vector<Block *> &bvec, int parent_id) {
   // Traverse through all blocks
-  for (auto b: bvec) {
+  for (auto b : bvec) {
     // If block is visited, it means it is inside the loop
     if (!this->visited_block_map[b]) {
       this->visited_block_map[b] = true;
 
       // Traverse through all instructions
-      for (auto inst: b->targets()) {
+      for (auto inst : b->targets()) {
         // Only analyze CALL type instruction
         if (inst->type() == CALL) {
 #ifdef DEBUG_COUT
           std::cout << "Call : "
-               << decoder.decode((unsigned char *)func->isrc()->getPtrToInstruction((*it)->src()->start()))
-                      .format()
+                    << decoder.decode((unsigned char *)func->isrc()->getPtrToInstruction((*it)->src()->start()))
+                           .format()
 #endif
-          Address entry_addr = inst->src()->last();
+                               Address entry_addr = inst->src()->last();
           Address exit_addr = inst->src()->last();
           std::string call_name = this->addr_2_func_name[this->call_graph_map[entry_addr]];
           int call_vertex_id = 0;
 
           // Add a CALL vertex, including MPI_CALL, INDIRECT_CALL, and CALL
-          auto startsWith = [](const std::string& s, const std::string& sub) -> bool {
-            return s.find(sub) == 0;
-          };
+          auto startsWith = [](const std::string &s, const std::string &sub) -> bool { return s.find(sub) == 0; };
           if (startsWith(call_name, "MPI_") || startsWith(call_name, "_MPI_") || startsWith(call_name, "mpi_") ||
               startsWith(call_name, "_mpi_")) {  // MPI communication calls
             call_vertex_id = func_struct_graph->AddVertex();
             func_struct_graph->SetVertexBasicInfo(call_vertex_id, core::MPI_NODE, call_name.c_str());
             // call_vertex_id = new Node(core::MPI_NODE, entry_addr, exit_addr);
           } else if (call_name.empty()) {  // Function calls that are not
-                                                 // analyzed at static analysis
+                                           // analyzed at static analysis
             call_vertex_id = func_struct_graph->AddVertex();
             func_struct_graph->SetVertexBasicInfo(call_vertex_id, core::CALL_IND_NODE, call_name.c_str());
             // call_vertex_id = new Node(core::CALL_IND_NODE, entry_addr,
@@ -320,7 +317,8 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ProgramAbstractionGraph *fun
           func_struct_graph->AddEdge(parent_id, call_vertex_id);
 #ifdef DEBUG_COUT
           for (int i = 0; i < 1; i++) cout << "  ";
-          std::cout << "Call : " << std::call_name << " addr : " << std::hex << entry_addr << " - " << exit_addr << std::dec << endl;
+          std::cout << "Call : " << std::call_name << " addr : " << std::hex << entry_addr << " - " << exit_addr
+                    << std::dec << endl;
 #endif
         }
       }
@@ -336,8 +334,8 @@ void StaticAnalysisImpl::ExtractLoopStructure(core::ProgramAbstractionGraph *fun
 
   // process the children of the loop tree
   std::vector<LoopTreeNode *> child_loop_list = loop_tree->children;
-  std::unordered_map<Loop*, VMA> loop_min_entry_addr;
-  for (auto loop_tree_node: child_loop_list) {
+  std::unordered_map<Loop *, VMA> loop_min_entry_addr;
+  for (auto loop_tree_node : child_loop_list) {
     auto loop = loop_tree_node->loop;
     VMA addr = 0;
     if (loop != nullptr) {
@@ -354,17 +352,16 @@ void StaticAnalysisImpl::ExtractLoopStructure(core::ProgramAbstractionGraph *fun
     loop_min_entry_addr[loop] = addr;
   }
 
-  std::sort(child_loop_list.begin(), child_loop_list.end(), [&loop_min_entry_addr](LoopTreeNode *a, LoopTreeNode *b) -> bool {
-    return loop_min_entry_addr[a->loop] < loop_min_entry_addr[b->loop];
-  });
+  std::sort(child_loop_list.begin(), child_loop_list.end(),
+            [&loop_min_entry_addr](LoopTreeNode *a, LoopTreeNode *b) -> bool {
+              return loop_min_entry_addr[a->loop] < loop_min_entry_addr[b->loop];
+            });
 
-  for (auto loop_tree_node: child_loop_list) {
+  for (auto loop_tree_node : child_loop_list) {
     std::vector<Block *> blocks;
     loop_tree_node->loop->getLoopBasicBlocks(blocks);
 
-    std::sort(blocks.begin(), blocks.end(), [](Block *a, Block *b) -> bool {
-      return a->start() < b->start();
-    });
+    std::sort(blocks.begin(), blocks.end(), [](Block *a, Block *b) -> bool { return a->start() < b->start(); });
 
     Address entry_addr = blocks.front()->start();
     Address exit_addr = blocks.back()->end();
@@ -379,7 +376,8 @@ void StaticAnalysisImpl::ExtractLoopStructure(core::ProgramAbstractionGraph *fun
 
 #ifdef DEBUG_COUT
     for (int i = 0; i < depth; i++) cout << "  ";
-    std::cout << "Loop : " << std::loop_name << " addr : " << std::hex << entry_addr << " - " << exit_addr << std::dec << std::endl;
+    std::cout << "Loop : " << std::loop_name << " addr : " << std::hex << entry_addr << " - " << exit_addr << std::dec
+              << std::endl;
 #endif
 
     this->ExtractLoopStructure(func_struct_graph, loop_tree_node, depth + 1, loop_vertex_id);
@@ -392,7 +390,7 @@ void StaticAnalysisImpl::ExtractLoopStructure(core::ProgramAbstractionGraph *fun
 // Extract structure graph for each fucntion
 void StaticAnalysisImpl::IntraProceduralAnalysis() {
   // Traverse through all functions
-  for (auto func: this->co->funcs()) {
+  for (auto func : this->co->funcs()) {
     Address entry_addr = func->addr();
     std::string func_name = func->name();
 
@@ -401,12 +399,9 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
     func_struct_graph->GraphInit(func_name.c_str());
     this->func_2_graph[func_name] = func_struct_graph;
 
-
     const ParseAPI::Function::blocklist &blist = func->blocks();
     std::vector<Block *> bvec(blist.begin(), blist.end());
-    std::sort(bvec.begin(), bvec.end(), [](Block *a, Block *b) -> bool {
-      return a->start() < b->start();
-    });
+    std::sort(bvec.begin(), bvec.end(), [](Block *a, Block *b) -> bool { return a->start() < b->start(); });
 
     entry_addr = bvec.front()->start();
     Address exit_addr = bvec.back()->last();
@@ -420,8 +415,8 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
 // auto func_vertex_id = new Node(core::FUNC_NODE, entry_addr, exit_addr);
 
 #ifdef DEBUG_COUT
-    std::cout << "Function : " << func_name << " addr : " << hex << entry_addr << "/" << entry_addr << " - " << exit_addr
-         << dec << std::endl;
+    std::cout << "Function : " << func_name << " addr : " << hex << entry_addr << "/" << entry_addr << " - "
+              << exit_addr << dec << std::endl;
 #endif
 
     // Capture loop structure in this function
@@ -439,7 +434,8 @@ void StaticAnalysisImpl::DumpFunctionGraph(core::ProgramAbstractionGraph *func_s
 }
 
 void StaticAnalysisImpl::DumpAllFunctionGraph() {
-  std::string dir_name = std::string(getcwd(NULL, 0)) + std::string("/") + std::string(this->binary_name) + std::string(".pag");
+  std::string dir_name =
+      std::string(getcwd(NULL, 0)) + std::string("/") + std::string(this->binary_name) + std::string(".pag");
 
   printf("%s\n", dir_name.c_str());
   // TODO: this syscall needs to be wrapped
@@ -451,7 +447,7 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
   }
 
   // Traverse through all functions
-  for (auto func: this->co->funcs()) {
+  for (auto func : this->co->funcs()) {
     std::string func_name = func->name();
     core::ProgramAbstractionGraph *func_struct_graph = this->func_2_graph[func_name];
     std::stringstream ss;

@@ -68,7 +68,8 @@ class StaticAnalysisImpl {
   void IntraProceduralAnalysis();
   void ExtractLoopStructure(core::ProgramAbstractionGraph *func_struct_graph, LoopTreeNode *loop_tree, int depth,
                             int parent_id);
-  void ExtractCallStructure(core::ProgramAbstractionGraph *func_struct_graph, std::vector<Block *> &bvec, int parent_id);
+  void ExtractCallStructure(core::ProgramAbstractionGraph *func_struct_graph, std::vector<Block *> &bvec,
+                            int parent_id);
   void InterProceduralAnalysis();
   void CaptureProgramCallGraph();
   void DumpFunctionGraph(core::ProgramAbstractionGraph *func_struct_graph, const char *file_name);

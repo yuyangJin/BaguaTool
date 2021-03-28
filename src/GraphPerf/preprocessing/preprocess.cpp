@@ -11,7 +11,7 @@ void Preprocess::ReadFunctionGraphs(const char *dir_name, std::vector<core::Prog
   getFiles(std::string(dir_name), file_names);
 
   // Traverse the files
-  for (const auto& fn: file_names) {
+  for (const auto &fn : file_names) {
     dbg(fn);
 
     // Read a ProgramAbstractionGraph from each file
@@ -48,7 +48,7 @@ core::ProgramAbstractionGraph *Preprocess::InterProceduralAnalysis(
   core::ProgramAbstractionGraph *root_pag = nullptr;
   std::map<std::string, core::ProgramAbstractionGraph *> func_name_2_pag;
 
-  for (auto pag: func_pag_vec) {
+  for (auto pag : func_pag_vec) {
     func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     if (strcmp(pag->GetGraphAttributeString("name"), "main") == 0) {
       root_pag = pag;

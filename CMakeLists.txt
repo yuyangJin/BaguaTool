@@ -37,9 +37,15 @@ add_library(
   src/GraphSD/dyninst/static_analysis.cpp
 )
 
-
 set_property(TARGET baguatool PROPERTY CXX_STANDARD 17)
-
+set_property(TARGET baguatool PROPERTY CXX_STANDARD_REQUIRED ON)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0.0")
+    message(FATAL_ERROR "Insufficient GCC version (${CMAKE_CXX_COMPILER_VERSION}), need > 7.0.0")
+  endif()
+else()
+  message(FATAL_ERROR "Do not support cxx compiler for ${CMAKE_CXX_COMPILER_ID}, choose GNU please")
+endif()
 
 target_compile_options(
   baguatool PRIVATE

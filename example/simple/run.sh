@@ -1,7 +1,10 @@
 #!/bin/bash
-./static_analysis ./cg.A.4
-./graphperf_preprocess ./cg.A.4.pag/
+prog=$1
+./static_analysis ${prog}
+./preprocess ${prog}.pag/
 
 dot -Tpdf -o root.pdf ./root.dot
 
 #
+
+LD_PRELOAD=./libsampler_test.so ${prog}

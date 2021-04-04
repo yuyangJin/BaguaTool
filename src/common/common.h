@@ -19,12 +19,11 @@
   } while (false)
 #endif
 
-template<typename T>
-inline void FREE_CONTAINER(T& p_container)
-{
-    T empty;
-    using std::swap;
-    swap(p_container, empty);
+template <typename T>
+inline void FREE_CONTAINER(T& p_container) {
+  T empty;
+  using std::swap;
+  swap(p_container, empty);
 }
 
 #define UNREACHABLE() ERR_EXIT("control flow should never reach here")

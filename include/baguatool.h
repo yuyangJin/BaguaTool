@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-
 // All public APIs are defined here.
 
 namespace baguatool {
@@ -95,6 +94,7 @@ class SamplerImpl;
 class Sampler {
  private:
   std::unique_ptr<SamplerImpl> sa;
+
  public:
   Sampler();
   ~Sampler();
@@ -105,12 +105,12 @@ class Sampler {
   void Start();
   void Stop();
   int GetOverflowEvent(LongLongVec* overflow_vector);
-  void GetBacktrace(char* call_path_str,  int max_call_path_str_len);
-  //int my_backtrace(unw_word_t *buffer, int max_depth);
-  //static void papi_handler(int EventSet, void *address, long_long overflow_vector, void *context); 
+  void GetBacktrace(char* call_path_str, int max_call_path_str_len);
+  // int my_backtrace(unw_word_t *buffer, int max_depth);
+  // static void papi_handler(int EventSet, void *address, long_long overflow_vector, void *context);
 };
 
-}// namespace graph_sd
-} // namespace baguatool
+}  // namespace graph_sd
+}  // namespace baguatool
 
 #endif

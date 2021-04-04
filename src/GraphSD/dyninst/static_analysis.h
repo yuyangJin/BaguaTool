@@ -59,17 +59,15 @@ class StaticAnalysisImpl {
   }
 
   ~StaticAnalysisImpl() {
-
     delete this->co;
     delete this->sts;
 
     FREE_CONTAINER(visited_block_map);
     FREE_CONTAINER(addr_2_func_name);
     FREE_CONTAINER(call_graph_map);
-    
+
     // TODO: it is beter to use unique_ptr instead of raw pointer?
     for (auto &it : func_2_graph) delete it.second;
-
   }
 
   void IntraProceduralAnalysis();

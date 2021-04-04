@@ -29,7 +29,7 @@ typedef struct callPathStruct {
 
 std::unique_ptr<baguatool::graph_sd::Sampler> sampler = nullptr;
 
-bool first_flag = false;
+bool first_flag = true;
 
 FILE *(fp)[NUM_EVENTS] = {NULL};
 
@@ -60,6 +60,7 @@ int mpiRank = -1;
 
 static void DumpAddrLog(bool last_flag) {
   if (first_flag == true) {
+    first_flag = false;
     for (int i = 0; i < NUM_EVENTS; i++) {
       char file_name[30] = {0};
       char mpi_rank_str[10] = {0};
@@ -73,10 +74,10 @@ static void DumpAddrLog(bool last_flag) {
       strcat(file_name, event_num_str);
       strcat(file_name, ".TXT");
 
-      fp[i] = fopen(file_name, "a");
+      fp[i] = fopen(file_name, "w");
 
       if (!fp[i]) {
-        // LOG_INFO("Failed to open %s\n", file_name);
+        LOG_INFO("Failed to open %s\n", file_name);
         call_path_addr_log_pointer[i] = __sync_and_and_fetch(&call_path_addr_log_pointer[i], 0);
         return;
       }
@@ -84,10 +85,11 @@ static void DumpAddrLog(bool last_flag) {
   }
 
   for (int i = 0; i < NUM_EVENTS; i++) {
-    // LOG_INFO("Rank %d : WRITE %d ADDR to %d TXT\n", mpiRank, call_path_addr_log_pointer[i], i);
+    LOG_INFO("Rank %d : WRITE %d ADDR to %d TXT\n", mpiRank, call_path_addr_log_pointer[i], i);
     for (int j = 0; j < call_path_addr_log_pointer[i]; j++) {
-      fprintf(fp[i], "%s | %lld | %d\n", call_path_addr_log[i][j].call_path_str,
-              call_path_addr_log[i][j].count);  // , call_path_addr_log[i][j].thread_id);
+      // fprintf(fp[i], "%s | %lld | %d\n", call_path_addr_log[i][j].call_path_str,
+      //        call_path_addr_log[i][j].count, call_path_addr_log[i][j].thread_id);
+      fprintf(fp[i], "%s | %lld\n", call_path_addr_log[i][j].call_path_str, call_path_addr_log[i][j].count);
       fflush(fp[i]);
     }
     call_path_addr_log_pointer[i] = __sync_and_and_fetch(&call_path_addr_log_pointer[i], 0);
@@ -186,7 +188,7 @@ static void fini_mock() {
 
   // sampler->RecordLdLib();
 
-  // DumpAddrLog(true);
+  DumpAddrLog(true);
 
   //   TRY(PAPI_stop(EventSet, NULL), PAPI_OK);
   //   write_addr_log();

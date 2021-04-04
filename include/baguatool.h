@@ -1,8 +1,8 @@
 #ifndef BAGUATOOL_H_
 #define BAGUATOOL_H_
-
 #include <memory>
 #include <vector>
+#include "../src/common/tprintf.h"
 
 // All public APIs are defined here.
 

@@ -471,7 +471,7 @@ void StaticAnalysisImpl::GetBinaryName() {
 
 void StaticAnalysisImpl::InterProceduralAnalysis() { UNIMPLEMENTED(); }
 
-// void StaticAnalysis::InterProceduralAnalysis(core::ProgramAbstractionGraph*
+// void StaticAnalysisImpl::InterProceduralAnalysis(core::ProgramAbstractionGraph*
 // func_struct_graph) {
 
 //   func_struct_graph->Dfs(dfs_callback, NULL);

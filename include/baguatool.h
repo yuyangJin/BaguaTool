@@ -1,8 +1,9 @@
-#ifndef BAGUATOOL_H
-#define BAGUATOOL_H
+#ifndef BAGUATOOL_H_
+#define BAGUATOOL_H_
 
 #include <memory>
 #include <vector>
+
 
 // All public APIs are defined here.
 
@@ -69,7 +70,7 @@ class Preprocess {
 
   // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
 };
-}
+}  // graph_perf
 
 namespace graph_sd {
 
@@ -88,7 +89,28 @@ class StaticAnalysis {
   void DumpAllFunctionGraph();
   void GetBinaryName();
 };
-}
-}
+
+class LongLongVec;
+class SamplerImpl;
+class Sampler {
+ private:
+  std::unique_ptr<SamplerImpl> sa;
+ public:
+  Sampler();
+  ~Sampler();
+
+  void SetSamplingFreq(int freq);
+  void Setup();
+  void SetOverflow(void (*FUNC_AT_OVERFLOW)(int));
+  void Start();
+  void Stop();
+  int GetOverflowEvent(LongLongVec* overflow_vector);
+  void GetBacktrace(char* call_path_str,  int max_call_path_str_len);
+  //int my_backtrace(unw_word_t *buffer, int max_depth);
+  //static void papi_handler(int EventSet, void *address, long_long overflow_vector, void *context); 
+};
+
+}// namespace graph_sd
+} // namespace baguatool
 
 #endif

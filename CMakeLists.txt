@@ -35,6 +35,7 @@ add_library(
 
   src/GraphPerf/preprocessing/preprocess.cpp
   src/GraphSD/dyninst/static_analysis.cpp
+  src/GraphSD/papi/sampler.cpp
 )
 
 set_property(TARGET baguatool PROPERTY CXX_STANDARD 17)
@@ -74,7 +75,7 @@ target_link_libraries(
   baguatool
   PRIVATE
   # TODO: we do not need all these
-  dyninstAPI parseAPI instructionAPI symtabAPI symLite dynDwarf dynElf boost_system common elf)
+  dyninstAPI parseAPI instructionAPI symtabAPI symLite dynDwarf dynElf boost_system common elf unwind papi)
 target_link_libraries(baguatool PRIVATE ${PAPI_LIBRARIES})
 
 

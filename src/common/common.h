@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef COMMON_H_
+#define COMMON_H_
 
 #define DBG_MACRO_NO_WARNING
 #include "dbg.h"
@@ -18,6 +18,14 @@
     exit(1);            \
   } while (false)
 #endif
+
+template<typename T>
+inline void FREE_CONTAINER(T& p_container)
+{
+    T empty;
+    using std::swap;
+    swap(p_container, empty);
+}
 
 #define UNREACHABLE() ERR_EXIT("control flow should never reach here")
 #define UNIMPLEMENTED() ERR_EXIT("unimplemented here")

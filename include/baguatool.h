@@ -1,6 +1,8 @@
 #ifndef BAGUATOOL_H_
 #define BAGUATOOL_H_
+#include <fstream>
 #include <memory>
+#include <string>
 #include <vector>
 #include "../src/common/tprintf.h"
 
@@ -53,7 +55,29 @@ class ProgramAbstractionGraph {
   int GetCurVertexId();
   void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
 };
-}
+
+typedef struct SAMPLER_STRUCT SaStruct;
+
+class PerfData {
+ private:
+  SaStruct* sampler_data = nullptr;
+  unsigned long int sampler_data_size = 0;
+  FILE* sampler_data_fp = nullptr;
+  std::ifstream sampler_data_in;
+  bool has_open_output_file = false;
+  char* file_name = nullptr;
+
+ public:
+  PerfData();
+  ~PerfData();
+  // int SetAttribute();
+  int Query();
+  void Record();
+  void Read(std::string&);
+  void Dump();
+};
+
+}  // namespace core
 
 namespace graph_perf {
 
@@ -69,7 +93,7 @@ class Preprocess {
 
   // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
 };
-}  // graph_perf
+}  // namespace graph_perf
 
 namespace graph_sd {
 

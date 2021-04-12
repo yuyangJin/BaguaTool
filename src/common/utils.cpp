@@ -22,3 +22,40 @@ void getFiles(std::string path, std::vector<std::string> &files) {
   }
   closedir(dir);
 }
+
+vector<string> split(const string &str, const string &delim) {
+  vector<string> res;
+  if ("" == str) return res;
+  // convert str from string to char*
+  char *strs = new char[str.length() + 1];
+  strcpy(strs, str.c_str());
+
+  char *d = new char[delim.length() + 1];
+  strcpy(d, delim.c_str());
+
+  char *p = strtok(strs, d);
+  while (p) {
+    string s = p;      // convert splited p from char* to string
+    res.push_back(s);  // store in res(result)
+    p = strtok(NULL, d);
+  }
+
+  return res;
+}
+
+std::vector<std::string> split(char *str, const char *delim) {
+  std::vector<std::string> res;
+  char *s = strdup(str);
+  char *token;
+  if (strlen(s) == 0) {
+    return res;
+  }
+
+  int n = 0;
+  for (token = strsep(&s, delim); token != NULL; token = strsep(&s, delim)) {
+    std::string token_str = token;  // convert splited p from char* to string
+    res.push_back(token_str);       // store in res(result)
+                                    // strcpy(dst[n++], token);
+  }
+  return res;
+}

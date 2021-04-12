@@ -32,6 +32,7 @@ add_library(
   
   src/common/utils.cpp
   src/core/pag.cpp
+  src/core/perf_data.cpp
 
   src/GraphPerf/preprocessing/preprocess.cpp
   src/GraphSD/dyninst/static_analysis.cpp

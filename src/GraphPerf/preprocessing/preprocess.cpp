@@ -34,7 +34,7 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
     callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
 
     // Get
-    int vertex_count = pag->GetCurVertexId();
+    int vertex_count = pag->GetCurVertexNum();
 
     pag->AddGraph(callee_pag);
 

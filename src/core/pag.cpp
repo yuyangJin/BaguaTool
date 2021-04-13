@@ -26,15 +26,15 @@ void ProgramAbstractionGraph::GraphInit(const char *graph_name) {
   // set graph name
   SETGAS(&ipag_->graph, "name", graph_name);
   // set vertex number as 0
-  cur_vertex_id = 0;
+  cur_vertex_num = 0;
 }
 
-int ProgramAbstractionGraph::AddVertex() {
-  if (this->cur_vertex_id >= igraph_vcount(&ipag_->graph)) {
+PAG_vertex_t ProgramAbstractionGraph::AddVertex() {
+  if (this->cur_vertex_num >= igraph_vcount(&ipag_->graph)) {
     igraph_add_vertices(&ipag_->graph, TRUNK_SIZE, 0);
   }
   // Add a new vertex
-  igraph_integer_t new_vertex_id = this->cur_vertex_id++;
+  igraph_integer_t new_vertex_id = this->cur_vertex_num++;
 
   // igraph_integer_t new_vertex_id = igraph_vcount(&ipag_.graph);
   // printf("Add a vertex: %d %s\n", new_vertex_id, vertex_name);
@@ -42,23 +42,23 @@ int ProgramAbstractionGraph::AddVertex() {
   // Set basic attributes
 
   // Return id of new vertex
-  return (int)new_vertex_id;
+  return (PAG_vertex_t)new_vertex_id;
 }
 
-int ProgramAbstractionGraph::AddEdge(const int src_vertex_id, const int dest_vertex_id) {
+PAG_edge_t ProgramAbstractionGraph::AddEdge(const PAG_vertex_t src_vertex_id, const PAG_vertex_t dest_vertex_id) {
   // Add a new edge
   // printf("Add an edge: %d, %d\n", src_vertex_id, dest_vertex_id);
   igraph_add_edge(&ipag_->graph, (igraph_integer_t)src_vertex_id, (igraph_integer_t)dest_vertex_id);
   igraph_integer_t new_edge_id = igraph_ecount(&ipag_->graph);
 
   // Return id of new edge
-  return (int)(new_edge_id - 1);
+  return (PAG_edge_t)(new_edge_id - 1);
 }
 
 void ProgramAbstractionGraph::AddGraph(ProgramAbstractionGraph *g) {
   g->DeleteExtraTailVertices();
 
-  std::map<int, int> old_vertex_id_2_new_vertex_id;
+  std::map<PAG_vertex_t, PAG_vertex_t> old_vertex_id_2_new_vertex_id;
 
   // Step over all vertices
   igraph_vs_t vs;
@@ -68,11 +68,11 @@ void ProgramAbstractionGraph::AddGraph(ProgramAbstractionGraph *g) {
   igraph_vit_create(&g->ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
-    int vertex_id = (int)IGRAPH_VIT_GET(vit);
+    PAG_vertex_t vertex_id = (PAG_vertex_t)IGRAPH_VIT_GET(vit);
     printf("vertex %d", vertex_id);
 
     // Add new vertex (the copy of that in the input g) into this pag
-    int new_vertex_id = this->AddVertex();
+    PAG_vertex_t new_vertex_id = this->AddVertex();
 
     old_vertex_id_2_new_vertex_id[vertex_id] = new_vertex_id;
 
@@ -95,12 +95,12 @@ void ProgramAbstractionGraph::AddGraph(ProgramAbstractionGraph *g) {
 
   while (!IGRAPH_EIT_END(eit)) {
     // Get edge id
-    int edge_id = (int)IGRAPH_EIT_GET(eit);
+    PAG_edge_t edge_id = (PAG_edge_t)IGRAPH_EIT_GET(eit);
     printf("edge %d", edge_id);
 
     // Add new edge (the copy of that in the input g) into this pag
-    int new_edge_id = this->AddEdge(old_vertex_id_2_new_vertex_id[g->GetEdgeSrc(edge_id)],
-                                    old_vertex_id_2_new_vertex_id[g->GetEdgeDest(edge_id)]);
+    PAG_edge_t new_edge_id = this->AddEdge(old_vertex_id_2_new_vertex_id[g->GetEdgeSrc(edge_id)],
+                                           old_vertex_id_2_new_vertex_id[g->GetEdgeDest(edge_id)]);
 
     // copy all attributes of this vertex
     // this->CopyVertex(new_vertex_id, g, vertex_id);
@@ -113,14 +113,16 @@ void ProgramAbstractionGraph::AddGraph(ProgramAbstractionGraph *g) {
   igraph_es_destroy(&es);
 }
 
-int ProgramAbstractionGraph::SetVertexBasicInfo(const int vertex_id, const int vertex_type, const char *vertex_name) {
+int ProgramAbstractionGraph::SetVertexBasicInfo(const PAG_vertex_t vertex_id, const int vertex_type,
+                                                const char *vertex_name) {
   //
   SETVAN(&ipag_->graph, "type", vertex_id, (igraph_real_t)vertex_type);
   SETVAS(&ipag_->graph, "name", vertex_id, vertex_name);
   return 0;
 }
 
-int ProgramAbstractionGraph::SetVertexDebugInfo(const int vertex_id, const int entry_addr, const int exit_addr) {
+int ProgramAbstractionGraph::SetVertexDebugInfo(const PAG_vertex_t vertex_id, const int entry_addr,
+                                                const int exit_addr) {
   //
   SETVAN(&ipag_->graph, "s_addr", vertex_id, (igraph_real_t)entry_addr);
   SETVAN(&ipag_->graph, "e_addr", vertex_id, (igraph_real_t)exit_addr);
@@ -135,9 +137,9 @@ void ProgramAbstractionGraph::QueryVertex() { UNIMPLEMENTED(); }
 
 void ProgramAbstractionGraph::QueryEdge() { UNIMPLEMENTED(); }
 
-int ProgramAbstractionGraph::GetEdgeSrc(int edge_id) { return IGRAPH_FROM(&ipag_->graph, edge_id); }
+int ProgramAbstractionGraph::GetEdgeSrc(PAG_edge_t edge_id) { return IGRAPH_FROM(&ipag_->graph, edge_id); }
 
-int ProgramAbstractionGraph::GetEdgeDest(int edge_id) { return IGRAPH_TO(&ipag_->graph, edge_id); }
+int ProgramAbstractionGraph::GetEdgeDest(PAG_edge_t edge_id) { return IGRAPH_TO(&ipag_->graph, edge_id); }
 
 void ProgramAbstractionGraph::QueryEdgeOtherSide() { UNIMPLEMENTED(); }
 
@@ -147,12 +149,12 @@ void ProgramAbstractionGraph::SetEdgeAttribute() { UNIMPLEMENTED(); }
 
 void ProgramAbstractionGraph::GetVertexAttribute() { UNIMPLEMENTED(); }
 
-int ProgramAbstractionGraph::GetVertexAttributeNum(const char *attr_name, int vertex_id) {
+int ProgramAbstractionGraph::GetVertexAttributeNum(const char *attr_name, PAG_vertex_t vertex_id) {
   int ret_str = VAN(&ipag_->graph, attr_name, vertex_id);
   return ret_str;
 }
 
-const char *ProgramAbstractionGraph::GetVertexAttributeString(const char *attr_name, int vertex_id) {
+const char *ProgramAbstractionGraph::GetVertexAttributeString(const char *attr_name, PAG_vertex_t vertex_id) {
   const char *ret_str = VAS(&ipag_->graph, attr_name, vertex_id);
   return ret_str;
 }
@@ -191,7 +193,8 @@ void ProgramAbstractionGraph::MergeVertices() { UNIMPLEMENTED(); }
 
 void ProgramAbstractionGraph::SplitVertex() { UNIMPLEMENTED(); }
 
-void ProgramAbstractionGraph::CopyVertex(int new_vertex_id, ProgramAbstractionGraph *g, int vertex_id) {
+void ProgramAbstractionGraph::CopyVertex(PAG_vertex_t new_vertex_id, ProgramAbstractionGraph *g,
+                                         PAG_vertex_t vertex_id) {
   igraph_vector_t gtypes, vtypes, etypes;
   igraph_strvector_t gnames, vnames, enames;
   int i;
@@ -231,7 +234,7 @@ void ProgramAbstractionGraph::DeleteVertices(PAG_vertex_set_t *vs) {
 void ProgramAbstractionGraph::DeleteExtraTailVertices() {
   // Check the number of vertices
   PAG_vertex_set_t vs;
-  igraph_vs_seq(&vs.vertices, this->cur_vertex_id, igraph_vcount(&ipag_->graph) - 1);
+  igraph_vs_seq(&vs.vertices, this->cur_vertex_num, igraph_vcount(&ipag_->graph) - 1);
   this->DeleteVertices(&vs);
   igraph_vs_destroy(&vs.vertices);
 }
@@ -254,7 +257,7 @@ void ProgramAbstractionGraph::ReadGraphGML(const char *file_name) {
   SETGAS(&ipag_->graph, "name", graph_name);
   fclose(in_file);
 
-  this->cur_vertex_id = igraph_vcount(&ipag_->graph);
+  this->cur_vertex_num = igraph_vcount(&ipag_->graph);
 }
 
 void ProgramAbstractionGraph::DumpGraph(const char *file_name) {
@@ -284,7 +287,7 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
-    int vertex_id = (int)IGRAPH_VIT_GET(vit);
+    PAG_vertex_t vertex_id = (PAG_vertex_t)IGRAPH_VIT_GET(vit);
     printf("Traverse %d\n", vertex_id);
 
     // Call user-defined function
@@ -299,5 +302,5 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
   printf("Function %s End\n", this->GetGraphAttributeString("name"));
 }
 
-int ProgramAbstractionGraph::GetCurVertexId() { return this->cur_vertex_id; }
+int ProgramAbstractionGraph::GetCurVertexNum() { return this->cur_vertex_num; }
 }  // namespace baguatool::core

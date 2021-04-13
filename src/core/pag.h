@@ -5,10 +5,10 @@
 
 #include <string>
 
+#include <igraph.h>
 #include "common/common.h"
-#include "igraph.h"
+#include "core/graph.h"
 #include "vertex_type.h"
-#define TRUNK_SIZE 1000
 
 namespace baguatool::core {
 

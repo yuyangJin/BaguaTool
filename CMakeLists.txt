@@ -31,10 +31,11 @@ add_library(
   SHARED
   
   src/common/utils.cpp
+  src/core/graph.cpp
   src/core/pag.cpp
   src/core/perf_data.cpp
 
-  src/GraphPerf/preprocessing/preprocess.cpp
+  #src/GraphPerf/preprocessing/preprocess.cpp
   src/GraphSD/dyninst/static_analysis.cpp
   src/GraphSD/papi/sampler.cpp
 )

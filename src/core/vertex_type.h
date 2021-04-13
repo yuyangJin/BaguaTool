@@ -4,6 +4,7 @@
 namespace baguatool::core {
 
 enum VERTEX_TYPE {
+  ADDR_NODE = -10,
   // COMPUTE_NODE = -9,
   // COMBINE = -8,
   CALL_IND_NODE = -7,
@@ -11,7 +12,7 @@ enum VERTEX_TYPE {
   CALL_NODE = -5,
   FUNC_NODE = -4,
   // COMPOUND = -3,
-  BRANCH = -2,
+  BRANCH_NODE = -2,
   LOOP_NODE = -1,
   MPI_NODE = 1
 };

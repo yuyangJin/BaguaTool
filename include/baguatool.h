@@ -11,51 +11,68 @@
 namespace baguatool {
 
 namespace core {
-class PAG_graph_t;
-class PAG_vertex_set_t;
-typedef int PAG_vertex_t;
-typedef int PAG_edge_t;
 
-class ProgramAbstractionGraph {
- private:
-  std::unique_ptr<PAG_graph_t> ipag_;
+class graph_t;
+class vertex_set_t;
+typedef int vertex_t;
+typedef int edge_t;
+
+class Graph {
+ protected:
+  std::unique_ptr<graph_t> ipag_;
   int cur_vertex_num;
 
  public:
-  ProgramAbstractionGraph();
-  ~ProgramAbstractionGraph();
+  Graph();
+  ~Graph();
   void GraphInit(const char* graph_name);
-  PAG_vertex_t AddVertex();
-  PAG_edge_t AddEdge(const PAG_vertex_t src_vertex_id, const PAG_vertex_t dest_vertex_id);
-  void AddGraph(ProgramAbstractionGraph* g);
-  int SetVertexBasicInfo(const PAG_vertex_t vertex_id, const int vertex_type, const char* vertex_name);
-  int SetVertexDebugInfo(const PAG_vertex_t vertex_id, const int entry_addr, const int exit_addr);
+  vertex_t AddVertex();
+  edge_t AddEdge(const vertex_t src_vertex_id, const vertex_t dest_vertex_id);
+  void AddGraph(Graph* g);
+
   void DeleteVertex();
   void DeleteEdge();
+
   void QueryVertex();
   void QueryEdge();
-  int GetEdgeSrc(PAG_edge_t edge_id);
-  int GetEdgeDest(PAG_edge_t edge_id);
+
+  int GetEdgeSrc(edge_t edge_id);
+  int GetEdgeDest(edge_t edge_id);
   void QueryEdgeOtherSide();
+
   void SetVertexAttribute();
   void SetEdgeAttribute();
   void GetVertexAttribute();
-  int GetVertexAttributeNum(const char* attr_name, PAG_vertex_t vertex_id);
-  const char* GetVertexAttributeString(const char* attr_name, PAG_vertex_t vertex_id);
+
+  int GetVertexAttributeNum(const char* attr_name, vertex_t vertex_id);
+  const char* GetVertexAttributeString(const char* attr_name, vertex_t vertex_id);
   void GetEdgeAttribute();
+
   const char* GetGraphAttributeString(const char* attr_name);
+
   void MergeVertices();
   void SplitVertex();
-  void CopyVertex(PAG_vertex_t new_vertex_id, ProgramAbstractionGraph* g, PAG_vertex_t vertex_id);
+  void CopyVertex(vertex_t new_vertex_id, Graph* g, vertex_t vertex_id);
   // TODO: do not expose inner igraph
-  void DeleteVertices(PAG_vertex_set_t* vs);
+  void DeleteVertices(vertex_set_t* vs);
   void DeleteExtraTailVertices();
   void Dfs();
   void ReadGraphGML(const char* file_name);
   void DumpGraph(const char* file_name);
   void DumpGraphDot(const char* file_name);
   int GetCurVertexNum();
-  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph*, PAG_vertex_t, void*), void* extra);
+  void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, vertex_t, void*), void* extra);
+  std::vector<vertex_t> GetChildVertexSet(vertex_t);
+};
+
+class ProgramAbstractionGraph : public Graph {
+ private:
+ public:
+  ProgramAbstractionGraph();
+  ~ProgramAbstractionGraph();
+  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
+  int SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr);
+  vertex_t GetChildVertexWithAddress(vertex_t root_vertex, unsigned long long addr);
 };
 
 typedef struct SAMPLER_STRUCT SaStruct;

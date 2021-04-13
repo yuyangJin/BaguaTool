@@ -12,12 +12,17 @@
 
 namespace baguatool::core {
 
-struct PAGImpl {
+struct PAG_graph_t {
   igraph_t graph;
 };
 
-struct PAGVertex {
-  igraph_vs_t vertex;
+struct PAG_vertex_set_t {
+  igraph_vs_t vertices;
 };
+
+struct PAG_vertex_t {
+  igraph_integer_t vertex_id;
+};
+
 }  // namespace baguatool::core
 #endif  // PAG_H

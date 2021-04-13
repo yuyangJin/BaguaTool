@@ -9,8 +9,8 @@
 namespace baguatool::core {
 
 ProgramAbstractionGraph::ProgramAbstractionGraph() {
-  // ipag_ = new PAGImpl;
-  ipag_ = std::make_unique<PAGImpl>();
+  // ipag_ = new PAG_graph_t;
+  ipag_ = std::make_unique<PAG_graph_t>();
   // open attributes
   igraph_set_attribute_table(&igraph_cattribute_table);
 }
@@ -224,14 +224,16 @@ void ProgramAbstractionGraph::CopyVertex(int new_vertex_id, ProgramAbstractionGr
   printf("\n");
 }
 
-void ProgramAbstractionGraph::DeleteVertices(PAGVertex *vs) { igraph_delete_vertices(&ipag_->graph, vs->vertex); }
+void ProgramAbstractionGraph::DeleteVertices(PAG_vertex_set_t *vs) {
+  igraph_delete_vertices(&ipag_->graph, vs->vertices);
+}
 
 void ProgramAbstractionGraph::DeleteExtraTailVertices() {
   // Check the number of vertices
-  PAGVertex vs;
-  igraph_vs_seq(&vs.vertex, this->cur_vertex_id, igraph_vcount(&ipag_->graph) - 1);
+  PAG_vertex_set_t vs;
+  igraph_vs_seq(&vs.vertices, this->cur_vertex_id, igraph_vcount(&ipag_->graph) - 1);
   this->DeleteVertices(&vs);
-  igraph_vs_destroy(&vs.vertex);
+  igraph_vs_destroy(&vs.vertices);
 }
 
 void ProgramAbstractionGraph::Dfs() { UNIMPLEMENTED(); }

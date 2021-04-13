@@ -63,4 +63,5 @@ core::ProgramAbstractionGraph *Preprocess::InterProceduralAnalysis(
 
   return root_pag;
 }
+
 }  // namespace baguatool::graph_perf

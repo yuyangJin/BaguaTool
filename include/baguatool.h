@@ -11,12 +11,13 @@
 namespace baguatool {
 
 namespace core {
-class PAGImpl;
-class PAGVertex;
+class PAG_graph_t;
+class PAG_vertex_set_t;
+class PAG_vertex_t;
 class ProgramAbstractionGraph {
  private:
-  // PAGImpl* ipag_;
-  std::unique_ptr<PAGImpl> ipag_;
+  // PAG_graph_t* ipag_;
+  std::unique_ptr<PAG_graph_t> ipag_;
   int cur_vertex_id;
 
  public:
@@ -46,7 +47,7 @@ class ProgramAbstractionGraph {
   void SplitVertex();
   void CopyVertex(int new_vertex_id, ProgramAbstractionGraph* g, int vertex_id);
   // TODO: do not expose inner igraph
-  void DeleteVertices(PAGVertex* vs);
+  void DeleteVertices(PAG_vertex_set_t* vs);
   void DeleteExtraTailVertices();
   void Dfs();
   void ReadGraphGML(const char* file_name);

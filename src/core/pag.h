@@ -1,5 +1,5 @@
-#ifndef PAG_H
-#define PAG_H
+#ifndef PAG_H_
+#define PAG_H_
 
 #include <stdint.h>
 

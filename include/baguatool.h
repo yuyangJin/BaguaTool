@@ -1,6 +1,7 @@
 #ifndef BAGUATOOL_H_
 #define BAGUATOOL_H_
 #include <fstream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -75,6 +76,20 @@ class ProgramAbstractionGraph : public Graph {
   vertex_t GetChildVertexWithAddress(vertex_t root_vertex, unsigned long long addr);
 };
 
+class ControlFlowGraph : public Graph {
+ private:
+ public:
+  ControlFlowGraph();
+  ~ControlFlowGraph();
+};
+
+class ProgramCallGraph : public Graph {
+ private:
+ public:
+  ProgramCallGraph();
+  ~ProgramCallGraph();
+};
+
 typedef struct SAMPLER_STRUCT SaStruct;
 
 class PerfData {
@@ -95,6 +110,54 @@ class PerfData {
   void Read(std::string&);
   void Dump();
 };
+
+class HybridAnalysis {
+ private:
+  std::map<std::string, std::unique_ptr<ControlFlowGraph>> func_cfg_vec;
+  std::unique_ptr<ProgramCallGraph> pcg;
+  std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>> func_pag_vec;
+  std::unique_ptr<ProgramAbstractionGraph> pag;
+
+ public:
+  HybridAnalysis() {}
+  ~HybridAnalysis() {}
+
+  /** Control Flow Graph of Each Function **/
+
+  void ReadStaticControlFlowGraphs(const char* dir_name);
+
+  void GenerateControlFlowGraphs(const char* dir_name);
+
+  std::unique_ptr<ControlFlowGraph> GetControlFlowGraph(std::string func_name);
+
+  std::map<std::string, std::unique_ptr<ControlFlowGraph>>& GetControlFlowGraphs();
+
+  /** Program Call Graph **/
+
+  void ReadStaticProgramCallGraph(std::string static_pcg_file_name);
+
+  void ReadDynamicProgramCallGraph();
+
+  void GenerateProgramCallGraph();
+
+  std::unique_ptr<ProgramCallGraph> GetProgramCallGraph();
+
+  /** Intra-procedural Analysis **/
+
+  std::unique_ptr<ProgramAbstractionGraph> GetFunctionAbstractionGraph(std::string func_name);
+
+  std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>>& GetFunctionAbstractionGraphs();
+
+  void IntraProceduralAnalysis();
+
+  /** Inter-procedural Analysis **/
+
+  void InterProceduralAnalysis();
+
+  void GenerateProgramAbstractionGraph();
+
+  // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
+};  // class HybridAnalysis
 
 }  // namespace core
 

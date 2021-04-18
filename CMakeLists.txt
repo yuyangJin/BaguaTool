@@ -33,7 +33,10 @@ add_library(
   src/common/utils.cpp
   src/core/graph.cpp
   src/core/pag.cpp
+  src/core/pcg.cpp
+  src/core/cfg.cpp
   src/core/perf_data.cpp
+  src/core/hybrid_analysis.cpp
 
   #src/GraphPerf/preprocessing/preprocess.cpp
   src/GraphSD/dyninst/static_analysis.cpp

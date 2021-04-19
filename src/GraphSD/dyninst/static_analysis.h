@@ -43,7 +43,10 @@ class StaticAnalysisImpl {
   std::unordered_map<Block *, bool> visited_block_map;
   std::unordered_map<Address, std::string> addr_2_func_name;
   std::map<VMA, VMA> call_graph_map;
-  std::unordered_map<std::string, core::ProgramAbstractionGraph *> func_2_graph;
+
+  std::unique_ptr<core::ProgramCallGraph> pcg;
+
+  std::unordered_map<std::string, core::ControlFlowGraph *> func_2_graph;
   char *binary_name;
 
  public:
@@ -66,20 +69,20 @@ class StaticAnalysisImpl {
     FREE_CONTAINER(addr_2_func_name);
     FREE_CONTAINER(call_graph_map);
 
-    // TODO: it is beter to use unique_ptr instead of raw pointer?
+    // TODO: it is better to use unique_ptr instead of raw pointer?
     for (auto &it : func_2_graph) delete it.second;
   }
 
   void IntraProceduralAnalysis();
-  void ExtractLoopStructure(core::ProgramAbstractionGraph *func_struct_graph, LoopTreeNode *loop_tree, int depth,
+  void ExtractLoopStructure(core::ControlFlowGraph *func_struct_graph, LoopTreeNode *loop_tree, int depth,
                             int parent_id);
-  void ExtractCallStructure(core::ProgramAbstractionGraph *func_struct_graph, std::vector<Block *> &bvec,
-                            int parent_id);
+  void ExtractCallStructure(core::ControlFlowGraph *func_struct_graph, std::vector<Block *> &bvec, int parent_id);
   void InterProceduralAnalysis();
   void CaptureProgramCallGraph();
-  void DumpFunctionGraph(core::ProgramAbstractionGraph *func_struct_graph, const char *file_name);
+  void DumpFunctionGraph(core::ControlFlowGraph *func_struct_graph, const char *file_name);
   void DumpAllFunctionGraph();
   void GetBinaryName();
+  void DumpProgramCallGraph();
 };
 }  // namespace baguatool::graph_sd
 

@@ -81,6 +81,8 @@ class ControlFlowGraph : public Graph {
  public:
   ControlFlowGraph();
   ~ControlFlowGraph();
+  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
+  int SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr);
 };
 
 class ProgramCallGraph : public Graph {
@@ -88,6 +90,8 @@ class ProgramCallGraph : public Graph {
  public:
   ProgramCallGraph();
   ~ProgramCallGraph();
+  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
+  int SetVertexDebugInfo(const vertex_t vertex_id, const int addr);
 };
 
 typedef struct SAMPLER_STRUCT SaStruct;

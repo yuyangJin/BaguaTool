@@ -195,7 +195,8 @@ class StaticAnalysis {
   void IntraProceduralAnalysis();
   void InterProceduralAnalysis();
   void CaptureProgramCallGraph();
-  void DumpAllFunctionGraph();
+  void DumpAllControlFlowGraph();
+  void DumpProgramCallGraph();
   void GetBinaryName();
 };
 

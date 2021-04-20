@@ -42,7 +42,8 @@ StaticAnalysis::~StaticAnalysis() {}
 void StaticAnalysis::IntraProceduralAnalysis() { sa->IntraProceduralAnalysis(); }
 void StaticAnalysis::InterProceduralAnalysis() { sa->InterProceduralAnalysis(); }
 void StaticAnalysis::CaptureProgramCallGraph() { sa->CaptureProgramCallGraph(); }
-void StaticAnalysis::DumpAllFunctionGraph() { sa->DumpAllFunctionGraph(); }
+void StaticAnalysis::DumpAllControlFlowGraph() { sa->DumpAllFunctionGraph(); }
+void StaticAnalysis::DumpProgramCallGraph() { sa->DumpProgramCallGraph(); }
 void StaticAnalysis::GetBinaryName() { sa->GetBinaryName(); }
 
 // Capture a Program Call Graph (PCG)
@@ -51,6 +52,11 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
   const CodeObject::funclist &func_list = this->co->funcs();
 
   std::map<Address, core::vertex_t> addr_2_vertex_id;
+
+  // Create a graph for each function
+  // this->pcg = new core::ProgramCallGraph();
+  this->pcg = std::make_unique<baguatool::core::ProgramCallGraph>();
+  this->pcg->GraphInit("Program Call Graph");
 
   // Traverse through all functions
   for (auto func : func_list) {
@@ -264,7 +270,7 @@ void StaticAnalysisImpl::DumpFunctionGraph(core::ControlFlowGraph *func_cfg, con
 
 void StaticAnalysisImpl::DumpAllFunctionGraph() {
   std::string dir_name =
-      std::string(getcwd(NULL, 0)) + std::string("/") + std::string(this->binary_name) + std::string(".pag");
+      std::string(getcwd(NULL, 0)) + std::string("/") + std::string(this->binary_name) + std::string(".cfg");
 
   printf("%s\n", dir_name.c_str());
   // TODO: this syscall needs to be wrapped
@@ -280,10 +286,17 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
     std::string func_name = func->name();
     core::ControlFlowGraph *func_cfg = this->func_2_graph[func_name];
     std::stringstream ss;
-    ss << "./" << this->binary_name << ".pag/" << func_name << ".gml";
+    ss << "./" << this->binary_name << ".cfg/" << func_name << ".gml";
     auto file_name = ss.str();
     this->DumpFunctionGraph(func_cfg, file_name.c_str());
   }
+}
+
+void StaticAnalysisImpl::DumpProgramCallGraph() {
+  std::stringstream ss;
+  ss << "./" << this->binary_name << ".pcg";
+  auto file_name = ss.str();
+  this->pcg->DumpGraph(file_name.c_str());
 }
 
 void StaticAnalysisImpl::GetBinaryName() {

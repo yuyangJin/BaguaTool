@@ -61,11 +61,13 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
   // Traverse through all functions
   for (auto func : func_list) {
     this->addr_2_func_name[func->addr()] = func->name();
+    auto blist = func->blocks();
+    Address exit_addr = blist.back() -> last();
 
     // Add Function as a vertex
     core::vertex_t func_vertex_id = this->pcg->AddVertex();
     this->pcg->SetVertexBasicInfo(func_vertex_id, core::FUNC_NODE, func->name().c_str());
-    this->pcg->SetVertexDebugInfo(func_vertex_id, func->addr());
+    this->pcg->SetVertexDebugInfo(func_vertex_id, func->addr(), exit_addr);
     addr_2_vertex_id[func->addr()] = func_vertex_id;
   }
 
@@ -76,18 +78,18 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
 
     // Traverse through all fuunction calls in this function
     for (const auto &e : elist) {
-      VMA src = e->src()->last();
-      VMA targ = e->trg()->start();
-      this->call_graph_map[src] = targ;
+      VMA src_addr = e->src()->last();
+      VMA targ_addr = e->trg()->start();
+      this->call_graph_map[src_addr] = targ_addr;
 
       // Add CALL Vertex as child of function vertex
       core::vertex_t call_vertex_id = this->pcg->AddVertex();
       this->pcg->SetVertexBasicInfo(call_vertex_id, core::CALL_NODE, "CALL");
-      this->pcg->SetVertexDebugInfo(call_vertex_id, src);
+      this->pcg->SetVertexDebugInfo(call_vertex_id, src_addr, src_addr );
       this->pcg->AddEdge(func_vertex_id, call_vertex_id);
 
       // Add Callee Function Vertex as child of CALL Vertex
-      this->pcg->AddEdge(call_vertex_id, addr_2_vertex_id[targ]);
+      this->pcg->AddEdge(call_vertex_id, addr_2_vertex_id[targ_addr]);
     }
   }
 }

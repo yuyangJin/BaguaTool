@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <stack>
 #include "../src/common/tprintf.h"
 
 // All public APIs are defined here.
@@ -35,7 +36,7 @@ class Graph {
   void DeleteEdge();
 
   void QueryVertex();
-  void QueryEdge();
+  int QueryEdge(vertex_t, vertex_t);
 
   int GetEdgeSrc(edge_t edge_id);
   int GetEdgeDest(edge_t edge_id);
@@ -66,32 +67,42 @@ class Graph {
   std::vector<vertex_t> GetChildVertexSet(vertex_t);
 };
 
-class ProgramAbstractionGraph : public Graph {
+class ProgramGraph : public Graph {
+ private:
+ public:
+  ProgramGraph();
+  ~ProgramGraph();
+  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
+  int SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr);
+  int GetVertexType(vertex_t);
+  vertex_t GetChildVertexWithAddr(vertex_t root_vertex, unsigned long long addr);
+  vertex_t GetVertexWithCallPath(vertex_t, std::stack<unsigned long long>&);
+  vertex_t GetCallVertexWithAddr(unsigned long long addr);
+  vertex_t GetFuncVertexWithAddr(unsigned long long addr);
+  int AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr);
+  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph *, int, void *), void *extra);
+};
+
+class ProgramAbstractionGraph : public ProgramGraph {
  private:
  public:
   ProgramAbstractionGraph();
   ~ProgramAbstractionGraph();
-  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
-  int SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr);
-  vertex_t GetChildVertexWithAddress(vertex_t root_vertex, unsigned long long addr);
+  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *), void *extra);
 };
 
-class ControlFlowGraph : public Graph {
+class ControlFlowGraph : public ProgramGraph {
  private:
  public:
   ControlFlowGraph();
   ~ControlFlowGraph();
-  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
-  int SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr);
 };
 
-class ProgramCallGraph : public Graph {
+class ProgramCallGraph : public ProgramGraph {
  private:
  public:
   ProgramCallGraph();
   ~ProgramCallGraph();
-  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
-  int SetVertexDebugInfo(const vertex_t vertex_id, const int addr);
 };
 
 typedef struct SAMPLER_STRUCT SaStruct;
@@ -113,6 +124,9 @@ class PerfData {
   void Record();
   void Read(std::string&);
   void Dump();
+  unsigned long int GetSize();
+  void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  int GetSamplingCount(unsigned long int data_index);
 };
 
 class HybridAnalysis {
@@ -140,7 +154,7 @@ class HybridAnalysis {
 
   void ReadStaticProgramCallGraph(std::string static_pcg_file_name);
 
-  void ReadDynamicProgramCallGraph();
+  void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
 
   void GenerateProgramCallGraph();
 
@@ -159,6 +173,8 @@ class HybridAnalysis {
   void InterProceduralAnalysis();
 
   void GenerateProgramAbstractionGraph();
+
+  void Dataembedding(std::unique_ptr<ProgramAbstractionGraph>, std::unique_ptr<PerfData>);
 
   // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
 };  // class HybridAnalysis

@@ -32,15 +32,44 @@ std::map<std::string, std::unique_ptr<ControlFlowGraph>> &HybridAnalysis::GetCon
   return this->func_cfg_vec;
 }
 
-void HybridAnalysis::ReadStaticProgramCallGraph(std::string static_pcg_file_name) {
+void HybridAnalysis::ReadStaticProgramCallGraph(std::string binary_name) {
   // Get name of static program call graph's file
+  std::string static_pcg_file_name = binary_name + std::string(".pcg");
 
   // Read a ProgramCallGraph from each file
   this->pcg = std::make_unique<ProgramCallGraph>();
-  pcg->ReadGraphGML(static_pcg_file_name.c_str());
+  this->pcg->ReadGraphGML(static_pcg_file_name.c_str());
 }
 
-void HybridAnalysis::ReadDynamicProgramCallGraph() {}
+
+
+
+void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
+  std::unique_ptr<PerfData> perf_data = std::make_unique<PerfData>();
+  perf_data->Read(perf_data_file);
+  auto data_size = perf_data->GetSize();
+
+  /** Optimization: First scan all call path and store <call_addr, callee_addr> pairs, 
+   * then AddEdgeWithAddr. It can reduce redundant graph query **/ 
+
+  // AddEdgeWithAddr for each <call_addr, callee_addr> pair of each call path 
+  for (unsigned long int i = 0; i < data_size; i++) {
+    std::stack<unsigned long long> call_path;
+    perf_data->GetCallPath(i, call_path);
+    auto count = perf_data->GetSamplingCount(i);
+    //auto process_id = perf_data->GetProcessId(i); 
+    //auto thread_id = perf_data->GetThreadId(i, process_id);
+    
+    while (!call_path.empty()) {
+      auto call_addr = call_path.top();
+      call_path.pop();
+      auto callee_addr = call_path.top();
+      this->pcg->AddEdgeWithAddr(call_addr, callee_addr);
+    }
+
+  }
+
+}
 
 void HybridAnalysis::GenerateProgramCallGraph() {
   std::string str = std::string("tmp");
@@ -51,9 +80,9 @@ std::unique_ptr<ProgramCallGraph> HybridAnalysis::GetProgramCallGraph() { return
 
 /** Intra-procedural Analysis **/
 
-std::unique_ptr<ProgramAbstractionGraph> HybridAnalysis::GetFunctionAbstractionGraph(std::string func_name) {}
+std::unique_ptr<ProgramAbstractionGraph> HybridAnalysis::GetFunctionAbstractionGraph(std::string func_name) {return std::move(this->func_pag_vec[func_name]);}
 
-std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>> &HybridAnalysis::GetFunctionAbstractionGraphs() {}
+std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>> &HybridAnalysis::GetFunctionAbstractionGraphs() {return this->func_pag_vec;}
 
 void HybridAnalysis::IntraProceduralAnalysis() {}
 
@@ -98,8 +127,12 @@ void HybridAnalysis::InterProceduralAnalysis() {
   //   root_pag->VertexTraversal(ConnectCallerCalleePointer, (void *)&func_name_2_pag);
 
   //   return root_pag;
-}
+}  // function InterProceduralAnalysis
 
 void HybridAnalysis::GenerateProgramAbstractionGraph() {}
+
+void HybridAnalysis::Dataembedding(std::unique_ptr<ProgramAbstractionGraph>, std::unique_ptr<PerfData>) {
+
+} // function Dataembedding
 
 }  // namespace baguatool::core

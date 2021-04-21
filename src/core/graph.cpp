@@ -123,7 +123,14 @@ void Graph::DeleteEdge() { UNIMPLEMENTED(); }
 
 void Graph::QueryVertex() { UNIMPLEMENTED(); }
 
-void Graph::QueryEdge() { UNIMPLEMENTED(); }
+int Graph::QueryEdge(vertex_t src_id, vertex_t dest_id) { 
+  edge_t edge_id = -1;
+  int ret = igraph_get_eid(&ipag_->graph, &edge_id, src_id, dest_id, IGRAPH_DIRECTED, /**error*/ 1);
+  if (ret != IGRAPH_SUCCESS) {
+    return -1;
+  }
+  return edge_id; 
+}
 
 int Graph::GetEdgeSrc(edge_t edge_id) { return IGRAPH_FROM(&ipag_->graph, edge_id); }
 

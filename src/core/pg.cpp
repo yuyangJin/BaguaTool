@@ -1,0 +1,181 @@
+#include "core/pg.h"
+#include "baguatool.h"
+#include "vertex_type.h"
+
+namespace baguatool::core {
+
+ProgramGraph::ProgramGraph() {}
+ProgramGraph::~ProgramGraph() {}
+
+void ProgramGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph *, int, void *), void *extra) {
+  igraph_vs_t vs;
+  igraph_vit_t vit;
+  printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
+  igraph_vs_all(&vs);
+  igraph_vit_create(&ipag_->graph, vs, &vit);
+  while (!IGRAPH_VIT_END(vit)) {
+    // Get vector id
+    vertex_t vertex_id = (vertex_t)IGRAPH_VIT_GET(vit);
+    printf("Traverse %d\n", vertex_id);
+
+    // Call user-defined function
+    (*CALL_BACK_FUNC)(this, vertex_id, extra);
+
+    IGRAPH_VIT_NEXT(vit);
+  }
+  printf("\n");
+
+  igraph_vit_destroy(&vit);
+  igraph_vs_destroy(&vs);
+  printf("Function %s End\n", this->GetGraphAttributeString("name"));
+}
+
+int ProgramGraph::SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char *vertex_name) {
+  //
+  // SetVertexAttributeNum("type", vertex_id, (igraph_real_t)vertex_type);
+  SETVAN(&ipag_->graph, "type", vertex_id, (igraph_real_t)vertex_type);
+  SETVAS(&ipag_->graph, "name", vertex_id, vertex_name);
+  return 0;
+}
+
+int ProgramGraph::SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr) {
+  //
+  SETVAN(&ipag_->graph, "s_addr", vertex_id, (igraph_real_t)entry_addr);
+  SETVAN(&ipag_->graph, "e_addr", vertex_id, (igraph_real_t)exit_addr);
+  return 0;
+}
+
+
+int ProgramGraph::GetVertexType(vertex_t vertex) {
+  return this->GetVertexAttributeNum("type", vertex);
+} // function GetVertexType
+
+vertex_t ProgramGraph::GetChildVertexWithAddr(vertex_t root_vertex, unsigned long long addr) {
+  std::vector<vertex_t> children = GetChildVertexSet(root_vertex);
+  if (0 == children.size()) {
+    return -1;
+  }
+
+  for (auto child : children) {
+    unsigned long long int s_addr = GetVertexAttributeNum("s_addr", child);
+    unsigned long long int e_addr = GetVertexAttributeNum("e_addr", child);
+    if (addr >= s_addr && addr <= e_addr) {
+      return child;
+    }
+  }
+
+  std::vector<vertex_t>().swap(children);
+
+  // Not found
+  return -1;
+}  // function GetChildVertexWithAddr
+
+vertex_t ProgramGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<unsigned long long>&
+call_path_stack ) {
+  // if call path stack is empty, it means the call path points to current vertex, so return it.
+  if (call_path_stack.empty()) {
+    return root_vertex;
+  }
+
+  // Get the top addr of the stack
+  unsigned long long addr = call_path_stack.top();
+
+  // while (addr > 0x40000000) {
+  //   call_path_stack.pop();
+  //   addr = call_path_stack.top();
+  // }
+
+  // Find the CALL vertex of current addr, addr is from calling context
+  vertex_t found_vertex = root_vertex;
+  while (1) {
+    vertex_t child_vertex = GetChildVertexWithAddr(found_vertex, addr);
+
+    found_vertex = child_vertex;
+    // if child_vertex is not found
+    if (-1 == child_vertex) {
+      //vertex_t new_vertex = this->AddVertex();
+      //this->AddEdge(root_vertex, new_vertex);
+      //this->SetVertexBasicInfo();
+      //found_vertex = new_vertex;
+      break;
+    }
+
+    // If found_vertex is FUNC_NODE or LOOP_NODE, then continue searching child_vertex
+    auto found_vertex_type = GetVertexType(found_vertex);
+    if (FUNC_NODE != found_vertex_type && LOOP_NODE != found_vertex_type && BB_NODE != found_vertex_type) {
+      break;
+    }
+  }
+
+  if (-1 == found_vertex) {
+    return root_vertex;
+  }
+
+  // if find the corresponding child vertex, then pop a addr from the stack.
+  call_path_stack.pop();
+
+  // From the found_vertex, recursively search vertex with current call path
+  return GetVertexWithCallPath(found_vertex, call_path_stack);
+
+}  // function GetVertexWithCallPath
+
+// void 
+typedef struct CallVertexWithAddrArg {
+  unsigned long long addr; // input
+  vertex_t vertex_id; // output
+  bool find_flag = false; // find flag
+} CVWAArg;
+
+void CallVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
+  CVWAArg* arg = (CVWAArg*)extra;
+  if (arg->find_flag) {return ;}
+  unsigned long long addr = arg->addr;
+  if (pg->GetVertexAttributeNum("type", vertex_id) == CALL_NODE || pg->GetVertexAttributeNum("type", vertex_id) == CALL_IND_NODE || pg->GetVertexAttributeNum("type", vertex_id) == CALL_REC_NODE) {
+    unsigned long long s_addr = pg->GetVertexAttributeNum("s_addr", vertex_id);
+    unsigned long long e_addr = pg->GetVertexAttributeNum("e_addr", vertex_id);
+    if (addr >= s_addr && addr <= e_addr) {
+      arg->vertex_id = vertex_id;
+      return ;
+    }
+  }
+  return ;
+}
+
+vertex_t ProgramGraph::GetCallVertexWithAddr(unsigned long long addr) {
+  CVWAArg* arg = new CVWAArg();
+  this->VertexTraversal(&CallVertexWithAddr, arg);
+  return arg->vertex_id;
+}
+
+void FuncVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
+  CVWAArg* arg = (CVWAArg*)extra;
+  if (arg->find_flag) {return ;}
+  unsigned long long addr = arg->addr;
+  if (pg->GetVertexAttributeNum("type", vertex_id) == FUNC_NODE) {
+    unsigned long long s_addr = pg->GetVertexAttributeNum("s_addr", vertex_id);
+    unsigned long long e_addr = pg->GetVertexAttributeNum("e_addr", vertex_id);
+    if (addr >= s_addr && addr <= e_addr) {
+      arg->vertex_id = vertex_id;
+      return ;
+    }
+  }
+  return ;
+}
+
+vertex_t ProgramGraph::GetFuncVertexWithAddr(unsigned long long addr) {
+  CVWAArg* arg = new CVWAArg();
+  this->VertexTraversal(&FuncVertexWithAddr, arg);
+  return arg->vertex_id;
+}
+
+int ProgramGraph::AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr) {
+  vertex_t call_vertex = GetCallVertexWithAddr(call_addr);
+  vertex_t callee_vertex = GetFuncVertexWithAddr(callee_addr);
+  if (!this->QueryEdge(call_vertex, callee_vertex)) {
+    edge_t edge_id = this->AddEdge(call_vertex, callee_vertex);
+    return edge_id;
+  }
+  return -1;
+}
+
+}

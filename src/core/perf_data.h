@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <stack>
 #include "common/tprintf.h"
 #include "common/utils.h"
 
@@ -47,6 +48,9 @@ class PerfData {
   void Record();
   void Read(std::string&);
   void Dump();
+  unsigned long int GetSize();
+  void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  int GetSamplingCount(unsigned long int data_index);
 };
 
 }  // namespace baguatool::core

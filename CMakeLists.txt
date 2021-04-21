@@ -32,6 +32,7 @@ add_library(
   
   src/common/utils.cpp
   src/core/graph.cpp
+  src/core/pg.cpp
   src/core/pag.cpp
   src/core/pcg.cpp
   src/core/cfg.cpp

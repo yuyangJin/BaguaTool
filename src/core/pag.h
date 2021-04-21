@@ -7,7 +7,7 @@
 
 #include <igraph.h>
 #include "common/common.h"
-#include "core/graph.h"
+#include "core/pg.h"
 #include "vertex_type.h"
 
 namespace baguatool::core {

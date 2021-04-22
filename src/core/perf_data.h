@@ -5,8 +5,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <string>
 #include <stack>
+#include <string>
 #include "common/tprintf.h"
 #include "common/utils.h"
 

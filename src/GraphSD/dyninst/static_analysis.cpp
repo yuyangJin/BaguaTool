@@ -62,7 +62,7 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
   for (auto func : func_list) {
     this->addr_2_func_name[func->addr()] = func->name();
     auto blist = func->blocks();
-    Address exit_addr = blist.back() -> last();
+    Address exit_addr = blist.back()->last();
 
     // Add Function as a vertex
     core::vertex_t func_vertex_id = this->pcg->AddVertex();
@@ -85,7 +85,7 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
       // Add CALL Vertex as child of function vertex
       core::vertex_t call_vertex_id = this->pcg->AddVertex();
       this->pcg->SetVertexBasicInfo(call_vertex_id, core::CALL_NODE, "CALL");
-      this->pcg->SetVertexDebugInfo(call_vertex_id, src_addr, src_addr );
+      this->pcg->SetVertexDebugInfo(call_vertex_id, src_addr, src_addr);
       this->pcg->AddEdge(func_vertex_id, call_vertex_id);
 
       // Add Callee Function Vertex as child of CALL Vertex

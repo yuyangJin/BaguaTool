@@ -95,18 +95,15 @@ void PerfData::Dump() {
   this->sampler_data_size = __sync_and_and_fetch(&this->sampler_data_size, 0);
 }
 
-unsigned long int PerfData::GetSize() {
-  return this->sampler_data_size;
-}
+unsigned long int PerfData::GetSize() { return this->sampler_data_size; }
 
 void PerfData::GetCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path_stack) {
-
   SaStruct* data = &(this->sampler_data[data_index]);
-  for (int i = 0; i < data->call_path_len; i++) { 
+  for (int i = 0; i < data->call_path_len; i++) {
     call_path_stack.push(data->call_path[i]);
-  }  
+  }
 
-  return ;
+  return;
 }
 
 int PerfData::GetSamplingCount(unsigned long int data_index) {

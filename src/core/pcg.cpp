@@ -21,7 +21,6 @@ ProgramCallGraph::~ProgramCallGraph() {}
 //   return 0;
 // }
 
-
 // int ProgramCallGraph::GetVertexType(vertex_t vertex) {
 //   return this->GetVertexAttributeNum("type", vertex);
 // } // function GetVertexType
@@ -95,7 +94,7 @@ ProgramCallGraph::~ProgramCallGraph() {}
 
 // }  // function GetVertexWithCallPath
 
-// // void 
+// // void
 
 // vertex_t ProgramCallGraph::GetVertexWithAddr(unsigned long long addr) {
 //   VertexTraversal();
@@ -108,5 +107,4 @@ ProgramCallGraph::~ProgramCallGraph() {}
 //     this->AddEdge(call_vertex, callee_vertex);
 //   }
 // }
-
 }

@@ -45,10 +45,9 @@ int ProgramGraph::SetVertexDebugInfo(const vertex_t vertex_id, const int entry_a
   return 0;
 }
 
-
 int ProgramGraph::GetVertexType(vertex_t vertex) {
   return this->GetVertexAttributeNum("type", vertex);
-} // function GetVertexType
+}  // function GetVertexType
 
 vertex_t ProgramGraph::GetChildVertexWithAddr(vertex_t root_vertex, unsigned long long addr) {
   std::vector<vertex_t> children = GetChildVertexSet(root_vertex);
@@ -70,8 +69,7 @@ vertex_t ProgramGraph::GetChildVertexWithAddr(vertex_t root_vertex, unsigned lon
   return -1;
 }  // function GetChildVertexWithAddr
 
-vertex_t ProgramGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<unsigned long long>&
-call_path_stack ) {
+vertex_t ProgramGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<unsigned long long> &call_path_stack) {
   // if call path stack is empty, it means the call path points to current vertex, so return it.
   if (call_path_stack.empty()) {
     return root_vertex;
@@ -93,10 +91,10 @@ call_path_stack ) {
     found_vertex = child_vertex;
     // if child_vertex is not found
     if (-1 == child_vertex) {
-      //vertex_t new_vertex = this->AddVertex();
-      //this->AddEdge(root_vertex, new_vertex);
-      //this->SetVertexBasicInfo();
-      //found_vertex = new_vertex;
+      // vertex_t new_vertex = this->AddVertex();
+      // this->AddEdge(root_vertex, new_vertex);
+      // this->SetVertexBasicInfo();
+      // found_vertex = new_vertex;
       break;
     }
 
@@ -119,51 +117,57 @@ call_path_stack ) {
 
 }  // function GetVertexWithCallPath
 
-// void 
+// void
 typedef struct CallVertexWithAddrArg {
-  unsigned long long addr; // input
-  vertex_t vertex_id; // output
-  bool find_flag = false; // find flag
+  unsigned long long addr;  // input
+  vertex_t vertex_id;       // output
+  bool find_flag = false;   // find flag
 } CVWAArg;
 
 void CallVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
-  CVWAArg* arg = (CVWAArg*)extra;
-  if (arg->find_flag) {return ;}
+  CVWAArg *arg = (CVWAArg *)extra;
+  if (arg->find_flag) {
+    return;
+  }
   unsigned long long addr = arg->addr;
-  if (pg->GetVertexAttributeNum("type", vertex_id) == CALL_NODE || pg->GetVertexAttributeNum("type", vertex_id) == CALL_IND_NODE || pg->GetVertexAttributeNum("type", vertex_id) == CALL_REC_NODE) {
+  if (pg->GetVertexAttributeNum("type", vertex_id) == CALL_NODE ||
+      pg->GetVertexAttributeNum("type", vertex_id) == CALL_IND_NODE ||
+      pg->GetVertexAttributeNum("type", vertex_id) == CALL_REC_NODE) {
     unsigned long long s_addr = pg->GetVertexAttributeNum("s_addr", vertex_id);
     unsigned long long e_addr = pg->GetVertexAttributeNum("e_addr", vertex_id);
     if (addr >= s_addr && addr <= e_addr) {
       arg->vertex_id = vertex_id;
-      return ;
+      return;
     }
   }
-  return ;
+  return;
 }
 
 vertex_t ProgramGraph::GetCallVertexWithAddr(unsigned long long addr) {
-  CVWAArg* arg = new CVWAArg();
+  CVWAArg *arg = new CVWAArg();
   this->VertexTraversal(&CallVertexWithAddr, arg);
   return arg->vertex_id;
 }
 
 void FuncVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
-  CVWAArg* arg = (CVWAArg*)extra;
-  if (arg->find_flag) {return ;}
+  CVWAArg *arg = (CVWAArg *)extra;
+  if (arg->find_flag) {
+    return;
+  }
   unsigned long long addr = arg->addr;
   if (pg->GetVertexAttributeNum("type", vertex_id) == FUNC_NODE) {
     unsigned long long s_addr = pg->GetVertexAttributeNum("s_addr", vertex_id);
     unsigned long long e_addr = pg->GetVertexAttributeNum("e_addr", vertex_id);
     if (addr >= s_addr && addr <= e_addr) {
       arg->vertex_id = vertex_id;
-      return ;
+      return;
     }
   }
-  return ;
+  return;
 }
 
 vertex_t ProgramGraph::GetFuncVertexWithAddr(unsigned long long addr) {
-  CVWAArg* arg = new CVWAArg();
+  CVWAArg *arg = new CVWAArg();
   this->VertexTraversal(&FuncVertexWithAddr, arg);
   return arg->vertex_id;
 }
@@ -177,5 +181,4 @@ int ProgramGraph::AddEdgeWithAddr(unsigned long long call_addr, unsigned long lo
   }
   return -1;
 }
-
 }

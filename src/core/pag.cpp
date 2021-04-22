@@ -30,7 +30,8 @@ ProgramAbstractionGraph::~ProgramAbstractionGraph() {
 //   return 0;
 // }
 
-// int ProgramAbstractionGraph::SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr) {
+// int ProgramAbstractionGraph::SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr)
+// {
 //   //
 //   SETVAN(&ipag_->graph, "s_addr", vertex_id, (igraph_real_t)entry_addr);
 //   SETVAN(&ipag_->graph, "e_addr", vertex_id, (igraph_real_t)exit_addr);
@@ -110,10 +111,11 @@ ProgramAbstractionGraph::~ProgramAbstractionGraph() {
 
 // }  // function GetVertexWithCallPath
 
-void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *), void *extra) {
+void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *),
+                                              void *extra) {
   igraph_vs_t vs;
   igraph_vit_t vit;
-  //printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
+  // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
   igraph_vs_all(&vs);
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
@@ -130,7 +132,7 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
 
   igraph_vit_destroy(&vit);
   igraph_vs_destroy(&vs);
-  //printf("Function %s End\n", this->GetGraphAttributeString("name"));
+  // printf("Function %s End\n", this->GetGraphAttributeString("name"));
 }
 
 }  // namespace baguatool::core

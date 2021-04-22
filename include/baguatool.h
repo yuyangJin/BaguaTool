@@ -3,9 +3,9 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <stack>
 #include <string>
 #include <vector>
-#include <stack>
 #include "../src/common/tprintf.h"
 
 // All public APIs are defined here.
@@ -80,7 +80,7 @@ class ProgramGraph : public Graph {
   vertex_t GetCallVertexWithAddr(unsigned long long addr);
   vertex_t GetFuncVertexWithAddr(unsigned long long addr);
   int AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr);
-  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph *, int, void *), void *extra);
+  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
 };
 
 class ProgramAbstractionGraph : public ProgramGraph {
@@ -88,7 +88,7 @@ class ProgramAbstractionGraph : public ProgramGraph {
  public:
   ProgramAbstractionGraph();
   ~ProgramAbstractionGraph();
-  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *), void *extra);
+  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
 };
 
 class ControlFlowGraph : public ProgramGraph {

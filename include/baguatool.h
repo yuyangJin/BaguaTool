@@ -42,15 +42,29 @@ class Graph {
   int GetEdgeDest(edge_t edge_id);
   void QueryEdgeOtherSide();
 
-  void SetVertexAttribute();
-  void SetEdgeAttribute();
-  void GetVertexAttribute();
-
-  int GetVertexAttributeNum(const char* attr_name, vertex_t vertex_id);
-  const char* GetVertexAttributeString(const char* attr_name, vertex_t vertex_id);
-  void GetEdgeAttribute();
+  void SetGraphAttributeString(const char* attr_name, const char* value);
+  void SetGraphAttributeNum(const char* attr_name, const int value);
+  void SetGraphAttributeFlag(const char* attr_name, const bool value);
+  void SetVertexAttributeString(const char* attr_name, vertex_t vertex_id, const char* value);
+  void SetVertexAttributeNum(const char* attr_name, vertex_t vertex_id, const int value);
+  void SetVertexAttributeFlag(const char* attr_name, vertex_t vertex_id, const bool value);
+  void SetEdgeAttributeString(const char* attr_name, edge_t edge_id, const char* value);
+  void SetEdgeAttributeNum(const char* attr_name, edge_t edge_id, const int value);
+  void SetEdgeAttributeFlag(const char* attr_name, edge_t edge_id, const bool value);
 
   const char* GetGraphAttributeString(const char* attr_name);
+  const int GetGraphAttributeNum(const char* attr_name);
+  const bool GetGraphAttributeFlag(const char* attr_name);
+  const char* GetVertexAttributeString(const char* attr_name, vertex_t vertex_id);
+  const int GetVertexAttributeNum(const char* attr_name, vertex_t vertex_id);
+  const bool GetVertexAttributeFlag(const char* attr_name, vertex_t vertex_id);
+  const char* GetEdgeAttributeString(const char* attr_name, edge_t edge_id);
+  const int GetEdgeAttributeNum(const char* attr_name, edge_t edge_id);
+  const bool GetEdgeAttributeFlag(const char* attr_name, edge_t edge_id);
+
+  void RemoveGraphAttribute(const char* attr_name);
+  void RemoveVertexAttribute(const char* attr_name);
+  void RemoveEdgeAttribute(const char* attr_name);
 
   void MergeVertices();
   void SplitVertex();
@@ -64,7 +78,7 @@ class Graph {
   void DumpGraphDot(const char* file_name);
   int GetCurVertexNum();
   void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, vertex_t, void*), void* extra);
-  std::vector<vertex_t> GetChildVertexSet(vertex_t);
+  void GetChildVertexSet(vertex_t, std::vector<vertex_t>&);
 };
 
 class ProgramGraph : public Graph {
@@ -81,6 +95,7 @@ class ProgramGraph : public Graph {
   vertex_t GetFuncVertexWithAddr(unsigned long long addr);
   int AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr);
   void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
+  const char* GetCalleeVertex(vertex_t);
 };
 
 class ProgramAbstractionGraph : public ProgramGraph {
@@ -131,10 +146,10 @@ class PerfData {
 
 class HybridAnalysis {
  private:
-  std::map<std::string, std::unique_ptr<ControlFlowGraph>> func_cfg_vec;
-  std::unique_ptr<ProgramCallGraph> pcg;
-  std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>> func_pag_vec;
-  std::unique_ptr<ProgramAbstractionGraph> pag;
+  std::map<std::string, ControlFlowGraph*> func_cfg_map;
+  ProgramCallGraph* pcg;
+  std::map<std::string, ProgramAbstractionGraph*> func_pag_map;
+  ProgramAbstractionGraph* root_pag;
 
  public:
   HybridAnalysis() {}
@@ -146,25 +161,27 @@ class HybridAnalysis {
 
   void GenerateControlFlowGraphs(const char* dir_name);
 
-  std::unique_ptr<ControlFlowGraph> GetControlFlowGraph(std::string func_name);
+  ControlFlowGraph* GetControlFlowGraph(std::string func_name);
 
-  std::map<std::string, std::unique_ptr<ControlFlowGraph>>& GetControlFlowGraphs();
+  std::map<std::string, ControlFlowGraph*>& GetControlFlowGraphs();
 
   /** Program Call Graph **/
 
-  void ReadStaticProgramCallGraph(std::string static_pcg_file_name);
+  void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
 
   void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
 
-  void GenerateProgramCallGraph();
+  void GenerateProgramCallGraph(const char*);
 
-  std::unique_ptr<ProgramCallGraph> GetProgramCallGraph();
+  ProgramCallGraph* GetProgramCallGraph();
+
+  void ReadFunctionAbstractionGraphs(const char* dir_name);
 
   /** Intra-procedural Analysis **/
 
-  std::unique_ptr<ProgramAbstractionGraph> GetFunctionAbstractionGraph(std::string func_name);
+  ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
 
-  std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>>& GetFunctionAbstractionGraphs();
+  std::map<std::string, ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
 
   void IntraProceduralAnalysis();
 
@@ -174,7 +191,9 @@ class HybridAnalysis {
 
   void GenerateProgramAbstractionGraph();
 
-  void Dataembedding(std::unique_ptr<ProgramAbstractionGraph>, std::unique_ptr<PerfData>);
+  ProgramAbstractionGraph* GetProgramAbstractionGraph();
+
+  void Dataembedding(ProgramAbstractionGraph*, PerfData*);
 
   // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
 };  // class HybridAnalysis

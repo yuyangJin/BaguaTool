@@ -16,10 +16,10 @@ namespace baguatool::core {
 
 // class HybridAnalysis {
 //  private:
-//   std::map<std::string, std::unique_ptr<baguatool::core::ControlFlowGraph>> func_cfg_vec;
-//   std::unique_ptr<ProgramCallGraph> pcg;
-//   std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>> func_pag_vec;
-//   std::unique_ptr<ProgramAbstractionGraph> pag;
+//   std::map<std::string, ControlFlowGraph*> func_cfg_map;
+//   ProgramCallGraph* pcg;
+//   std::map<std::string, ProgramAbstractionGraph*> func_pag_map;
+//   ProgramAbstractionGraph* pag;
 
 //  public:
 //   HybridAnalysis() {}

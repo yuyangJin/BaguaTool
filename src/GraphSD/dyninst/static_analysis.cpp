@@ -33,6 +33,8 @@ using namespace ParseAPI;
 // using namespace SymtabAPI;
 using namespace InstructionAPI;
 
+#define LOOP_GRANULARITY
+
 namespace baguatool::graph_sd {
 
 StaticAnalysis::StaticAnalysis(char *binary_name) { this->sa = std::make_unique<StaticAnalysisImpl>(binary_name); }
@@ -103,8 +105,8 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ControlFlowGraph *func_cfg, 
     if (!this->visited_block_map[b]) {
       this->visited_block_map[b] = true;
 
+#ifndef LOOP_GRANULARITY
       /** Add BasciBlock Node **/
-
       Address bb_entry_addr = b->start();
       Address bb_exit_addr = b->end();
       core::vertex_t bb_vertex_id = func_cfg->AddVertex();
@@ -112,6 +114,7 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ControlFlowGraph *func_cfg, 
       func_cfg->SetVertexDebugInfo(bb_vertex_id, bb_entry_addr, bb_exit_addr);
       // Add an edge
       func_cfg->AddEdge(parent_id, bb_vertex_id);
+#endif
 
       // Traverse through all instructions
       for (auto inst : b->targets()) {
@@ -144,14 +147,20 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ControlFlowGraph *func_cfg, 
 
           func_cfg->SetVertexDebugInfo(call_vertex_id, entry_addr, exit_addr);
 
+#ifndef LOOP_GRANULARITY
           // Add an edge
           func_cfg->AddEdge(bb_vertex_id, call_vertex_id);
+#else
+          func_cfg->AddEdge(parent_id, call_vertex_id);
+#endif
+
 #ifdef DEBUG_COUT
           for (int i = 0; i < 1; i++) cout << "  ";
           std::cout << "Call : " << std::call_name << " addr : " << std::hex << entry_addr << " - " << exit_addr
                     << std::dec << endl;
 #endif
         } else {
+#ifndef LOOP_GRANULARITY
           Address inst_entry_addr = inst->src()->last();
           Address inst_exit_addr = inst->src()->last();
           /** Add all non-call instructions as vertex **/
@@ -159,6 +168,7 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ControlFlowGraph *func_cfg, 
           func_cfg->SetVertexBasicInfo(inst_vertex_id, core::INST_NODE, "INS");
           func_cfg->SetVertexDebugInfo(inst_vertex_id, inst_entry_addr, inst_exit_addr);
           func_cfg->AddEdge(bb_vertex_id, inst_vertex_id);
+#endif
         }
       }
     }
@@ -271,9 +281,14 @@ void StaticAnalysisImpl::DumpFunctionGraph(core::ControlFlowGraph *func_cfg, con
 }
 
 void StaticAnalysisImpl::DumpAllFunctionGraph() {
+#ifdef LOOP_GRANULARITY
+  std::string dir_name =
+      std::string(getcwd(NULL, 0)) + std::string("/") + std::string(this->binary_name) + std::string(".pag");
+
+#else
   std::string dir_name =
       std::string(getcwd(NULL, 0)) + std::string("/") + std::string(this->binary_name) + std::string(".cfg");
-
+#endif
   printf("%s\n", dir_name.c_str());
   // TODO: this syscall needs to be wrapped
   if (access(dir_name.c_str(), F_OK)) {
@@ -288,7 +303,11 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
     std::string func_name = func->name();
     core::ControlFlowGraph *func_cfg = this->func_2_graph[func_name];
     std::stringstream ss;
+#ifdef LOOP_GRANULARITY
+    ss << "./" << this->binary_name << ".pag/" << func_name << ".gml";
+#else
     ss << "./" << this->binary_name << ".cfg/" << func_name << ".gml";
+#endif
     auto file_name = ss.str();
     this->DumpFunctionGraph(func_cfg, file_name.c_str());
   }

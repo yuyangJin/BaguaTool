@@ -60,7 +60,9 @@ edge_t Graph::AddEdge(const vertex_t src_vertex_id, const vertex_t dest_vertex_i
 }
 
 void Graph::AddGraph(Graph *g) {
+  dbg(g->GetCurVertexNum());
   g->DeleteExtraTailVertices();
+  dbg(g->GetCurVertexNum());
 
   std::map<vertex_t, vertex_t> old_vertex_id_2_new_vertex_id;
 
@@ -115,6 +117,7 @@ void Graph::AddGraph(Graph *g) {
 
   igraph_eit_destroy(&eit);
   igraph_es_destroy(&es);
+  FREE_CONTAINER(old_vertex_id_2_new_vertex_id);
 }
 
 void Graph::DeleteVertex() { UNIMPLEMENTED(); }
@@ -138,15 +141,43 @@ int Graph::GetEdgeDest(edge_t edge_id) { return IGRAPH_TO(&ipag_->graph, edge_id
 
 void Graph::QueryEdgeOtherSide() { UNIMPLEMENTED(); }
 
-void Graph::SetVertexAttribute() { UNIMPLEMENTED(); }
+void Graph::SetGraphAttributeString(const char *attr_name, const char *value) {
+  SETGAS(&ipag_->graph, attr_name, value);
+}
+void Graph::SetGraphAttributeNum(const char *attr_name, const int value) { SETGAN(&ipag_->graph, attr_name, value); }
+void Graph::SetGraphAttributeFlag(const char *attr_name, const bool value) { SETGAB(&ipag_->graph, attr_name, value); }
+void Graph::SetVertexAttributeString(const char *attr_name, vertex_t vertex_id, const char *value) {
+  SETVAS(&ipag_->graph, attr_name, vertex_id, value);
+}
+void Graph::SetVertexAttributeNum(const char *attr_name, vertex_t vertex_id, const int value) {
+  SETVAN(&ipag_->graph, attr_name, vertex_id, value);
+}
+void Graph::SetVertexAttributeFlag(const char *attr_name, vertex_t vertex_id, const bool value) {
+  SETVAB(&ipag_->graph, attr_name, vertex_id, value);
+}
+void Graph::SetEdgeAttributeString(const char *attr_name, edge_t edge_id, const char *value) {
+  SETEAS(&ipag_->graph, attr_name, edge_id, value);
+}
+void Graph::SetEdgeAttributeNum(const char *attr_name, edge_t edge_id, const int value) {
+  SETEAN(&ipag_->graph, attr_name, edge_id, value);
+}
+void Graph::SetEdgeAttributeFlag(const char *attr_name, edge_t edge_id, const bool value) {
+  SETEAB(&ipag_->graph, attr_name, edge_id, value);
+}
 
-void Graph::SetEdgeAttribute() { UNIMPLEMENTED(); }
-
-void Graph::GetVertexAttribute() { UNIMPLEMENTED(); }
-
-int Graph::GetVertexAttributeNum(const char *attr_name, vertex_t vertex_id) {
-  int ret_str = VAN(&ipag_->graph, attr_name, vertex_id);
+const char *Graph::GetGraphAttributeString(const char *attr_name) {
+  const char *ret_str = GAS(&ipag_->graph, attr_name);
   return ret_str;
+}
+
+const int Graph::GetGraphAttributeNum(const char *attr_name) {
+  const int ret_num = GAN(&ipag_->graph, attr_name);
+  return ret_num;
+}
+
+const bool Graph::GetGraphAttributeFlag(const char *attr_name) {
+  const bool ret_flag = GAB(&ipag_->graph, attr_name);
+  return ret_flag;
 }
 
 const char *Graph::GetVertexAttributeString(const char *attr_name, vertex_t vertex_id) {
@@ -154,35 +185,36 @@ const char *Graph::GetVertexAttributeString(const char *attr_name, vertex_t vert
   return ret_str;
 }
 
-void Graph::GetEdgeAttribute() { UNIMPLEMENTED(); }
+const int Graph::GetVertexAttributeNum(const char *attr_name, vertex_t vertex_id) {
+  const int ret_num = VAN(&ipag_->graph, attr_name, vertex_id);
+  return ret_num;
+}
 
-const char *Graph::GetGraphAttributeString(const char *attr_name) {
-  // igraph_vector_t gtypes, vtypes, etypes;
-  // igraph_strvector_t gnames, vnames, enames;
-  // long int i;
-  // igraph_vector_init(&gtypes, 0);
-  // igraph_vector_init(&vtypes, 0);
-  // igraph_vector_init(&etypes, 0);
-  // igraph_strvector_init(&gnames, 0);
-  // igraph_strvector_init(&vnames, 0);
-  // igraph_strvector_init(&enames, 0);
-  // igraph_cattribute_list(&ipag_.graph, &gnames, &gtypes, &vnames, &vtypes,
-  //                          &enames, &etypes);
-  // /* Graph attributes */
-  // for (i = 0; i < igraph_strvector_size(&gnames); i++) {
-  //     printf("%s=", STR(gnames, i));
-  //     if (VECTOR(gtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
-  //         igraph_real_printf(GAN(&ipag_.graph, STR(gnames, i)));
-  //         putchar(' ');
-  //     } else {
-  //         printf("\"%s\" ", GAS(&ipag_.graph, STR(gnames, i)));
-  //     }
-  // }
-  // printf("\n");
+const bool Graph::GetVertexAttributeFlag(const char *attr_name, vertex_t vertex_id) {
+  const bool ret_flag = VAB(&ipag_->graph, attr_name, vertex_id);
+  return ret_flag;
+}
 
-  const char *ret_str = GAS(&ipag_->graph, attr_name);
+const char *Graph::GetEdgeAttributeString(const char *attr_name, edge_t edge_id) {
+  const char *ret_str = EAS(&ipag_->graph, attr_name, edge_id);
   return ret_str;
 }
+
+const int Graph::GetEdgeAttributeNum(const char *attr_name, edge_t edge_id) {
+  const int ret_num = EAN(&ipag_->graph, attr_name, edge_id);
+  return ret_num;
+}
+
+const bool Graph::GetEdgeAttributeFlag(const char *attr_name, edge_t edge_id) {
+  const bool ret_flag = EAB(&ipag_->graph, attr_name, edge_id);
+  return ret_flag;
+}
+
+void Graph::RemoveGraphAttribute(const char *attr_name) { DELGA(&ipag_->graph, attr_name); }
+
+void Graph::RemoveVertexAttribute(const char *attr_name) { DELVA(&ipag_->graph, attr_name); }
+
+void Graph::RemoveEdgeAttribute(const char *attr_name) { DELEA(&ipag_->graph, attr_name); }
 
 void Graph::MergeVertices() { UNIMPLEMENTED(); }
 
@@ -224,8 +256,18 @@ void Graph::CopyVertex(vertex_t new_vertex_id, Graph *g, vertex_t vertex_id) {
 void Graph::DeleteVertices(vertex_set_t *vs) { igraph_delete_vertices(&ipag_->graph, vs->vertices); }
 
 void Graph::DeleteExtraTailVertices() {
+  // unnecessary to delete
+  dbg(this->GetGraphAttributeString("name"), this->cur_vertex_num, igraph_vcount(&ipag_->graph));
+  if (this->GetCurVertexNum() - 1 == igraph_vcount(&ipag_->graph)) {
+    return;
+  } else if (this->GetCurVertexNum() - 1 > igraph_vcount(&ipag_->graph)) {
+    dbg("Error: The number of vertices is larger than pre-allocated gragh size");
+    return;
+  }
+
   // Check the number of vertices
   vertex_set_t vs;
+
   igraph_vs_seq(&vs.vertices, this->cur_vertex_num, igraph_vcount(&ipag_->graph) - 1);
   this->DeleteVertices(&vs);
   igraph_vs_destroy(&vs.vertices);
@@ -273,13 +315,14 @@ void Graph::DumpGraphDot(const char *file_name) {
 void Graph::VertexTraversal(void (*CALL_BACK_FUNC)(Graph *, int, void *), void *extra) {
   igraph_vs_t vs;
   igraph_vit_t vit;
-  printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
+  // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
+  dbg(GetGraphAttributeString("name"));
   igraph_vs_all(&vs);
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
     vertex_t vertex_id = (vertex_t)IGRAPH_VIT_GET(vit);
-    printf("Traverse %d\n", vertex_id);
+    dbg(vertex_id);
 
     // Call user-defined function
     (*CALL_BACK_FUNC)(this, vertex_id, extra);
@@ -290,21 +333,24 @@ void Graph::VertexTraversal(void (*CALL_BACK_FUNC)(Graph *, int, void *), void *
 
   igraph_vit_destroy(&vit);
   igraph_vs_destroy(&vs);
-  printf("Function %s End\n", this->GetGraphAttributeString("name"));
+  // printf("Function %s End\n", this->GetGraphAttributeString("name"));
 }
 
 int Graph::GetCurVertexNum() { return this->cur_vertex_num; }
 
-std::vector<vertex_t> Graph::GetChildVertexSet(vertex_t vertex) {
-  std::vector<vertex_t> neighbor_vertices;
+void Graph::GetChildVertexSet(vertex_t vertex, std::vector<vertex_t> &neighbor_vertices) {
+  // std::vector<vertex_t> neighbor_vertices;
   igraph_vector_t v;
+  dbg(this->GetGraphAttributeString("name"), vertex);
+  igraph_vector_init(&v, 0);
   igraph_neighbors(&ipag_->graph, &v, vertex, IGRAPH_OUT);
   long int neighbor_num = igraph_vector_size(&v);
+  dbg(neighbor_num);
   for (long int i = 0; i < neighbor_num; i++) {
     neighbor_vertices.push_back((vertex_t)VECTOR(v)[i]);
   }
   igraph_vector_destroy(&v);
-  return neighbor_vertices;
+  // return neighbor_vertices;
 }
 
 }  // namespace baguatool::core

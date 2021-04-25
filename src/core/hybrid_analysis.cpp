@@ -15,34 +15,30 @@ void HybridAnalysis::ReadStaticControlFlowGraphs(const char *dir_name) {
     dbg(fn);
 
     // Read a ControlFlowGraph from each file
-    std::unique_ptr<baguatool::core::ControlFlowGraph> func_cfg = std::make_unique<ControlFlowGraph>();
+    ControlFlowGraph *func_cfg = new ControlFlowGraph();
     func_cfg->ReadGraphGML(fn.c_str());
     // new_pag->DumpGraph((file_name + std::string(".bak")).c_str());
-    this->func_cfg_vec[fn] = std::move(func_cfg);
+    this->func_cfg_map[std::string(func_cfg->GetGraphAttributeString("name"))] = func_cfg;
   }
 }
 
 void HybridAnalysis::GenerateControlFlowGraphs(const char *dir_name) { this->ReadStaticControlFlowGraphs(dir_name); }
 
-std::unique_ptr<ControlFlowGraph> HybridAnalysis::GetControlFlowGraph(std::string func_name) {
-  return std::move(this->func_cfg_vec[func_name]);
-}
+ControlFlowGraph *HybridAnalysis::GetControlFlowGraph(std::string func_name) { return this->func_cfg_map[func_name]; }
 
-std::map<std::string, std::unique_ptr<ControlFlowGraph>> &HybridAnalysis::GetControlFlowGraphs() {
-  return this->func_cfg_vec;
-}
+std::map<std::string, ControlFlowGraph *> &HybridAnalysis::GetControlFlowGraphs() { return this->func_cfg_map; }
 
-void HybridAnalysis::ReadStaticProgramCallGraph(std::string binary_name) {
+void HybridAnalysis::ReadStaticProgramCallGraph(const char *binary_name) {
   // Get name of static program call graph's file
-  std::string static_pcg_file_name = binary_name + std::string(".pcg");
+  std::string static_pcg_file_name = std::string(binary_name) + std::string(".pcg");
 
   // Read a ProgramCallGraph from each file
-  this->pcg = std::make_unique<ProgramCallGraph>();
+  this->pcg = new ProgramCallGraph();
   this->pcg->ReadGraphGML(static_pcg_file_name.c_str());
 }
 
 void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
-  std::unique_ptr<PerfData> perf_data = std::make_unique<PerfData>();
+  PerfData *perf_data = new PerfData();
   perf_data->Read(perf_data_file);
   auto data_size = perf_data->GetSize();
 
@@ -66,72 +62,128 @@ void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
   }
 }
 
-void HybridAnalysis::GenerateProgramCallGraph() {
-  std::string str = std::string("tmp");
-  this->ReadStaticProgramCallGraph(str);
+void HybridAnalysis::GenerateProgramCallGraph(const char *binary_name) {
+  this->ReadStaticProgramCallGraph(binary_name);
 }
 
-std::unique_ptr<ProgramCallGraph> HybridAnalysis::GetProgramCallGraph() { return std::move(this->pcg); }
+ProgramCallGraph *HybridAnalysis::GetProgramCallGraph() { return this->pcg; }
+
+void HybridAnalysis::ReadFunctionAbstractionGraphs(const char *dir_name) {
+  // Get name of files in this directory
+  std::vector<std::string> file_names;
+  getFiles(std::string(dir_name), file_names);
+
+  // Traverse the files
+  for (const auto &fn : file_names) {
+    dbg(fn);
+
+    // Read a ProgramAbstractionGraph from each file
+    ProgramAbstractionGraph *new_pag = new ProgramAbstractionGraph();
+    new_pag->ReadGraphGML(fn.c_str());
+    // new_pag->DumpGraph((file_name + std::string(".bak")).c_str());
+    func_pag_map[std::string(new_pag->GetGraphAttributeString("name"))] = new_pag;
+  }
+}
 
 /** Intra-procedural Analysis **/
 
-std::unique_ptr<ProgramAbstractionGraph> HybridAnalysis::GetFunctionAbstractionGraph(std::string func_name) {
-  return std::move(this->func_pag_vec[func_name]);
+ProgramAbstractionGraph *HybridAnalysis::GetFunctionAbstractionGraph(std::string func_name) {
+  return this->func_pag_map[func_name];
 }
 
-std::map<std::string, std::unique_ptr<ProgramAbstractionGraph>> &HybridAnalysis::GetFunctionAbstractionGraphs() {
-  return this->func_pag_vec;
+std::map<std::string, ProgramAbstractionGraph *> &HybridAnalysis::GetFunctionAbstractionGraphs() {
+  return this->func_pag_map;
 }
 
 void HybridAnalysis::IntraProceduralAnalysis() {}
 
 /** Inter-procedural Analysis **/
 
+typedef struct InterProceduralAnalysisArg {
+  std::map<std::string, ProgramAbstractionGraph *> *func_pag_map;
+  ProgramCallGraph *pcg;
+} InterPAArg;
+
 // FIXME: `void *` should not appear in cpp
 void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
-  std::map<std::string, ProgramAbstractionGraph *> *func_name_2_pag =
-      (std::map<std::string, ProgramAbstractionGraph *> *)extra;
+  InterPAArg *arg = (InterPAArg *)extra;
+  std::map<std::string, ProgramAbstractionGraph *> *func_name_2_pag = arg->func_pag_map;
+  ProgramCallGraph *pcg = arg->pcg;
 
-  if (pag->GetVertexAttributeNum("type", vertex_id) == CALL_NODE) {
-    ProgramAbstractionGraph *callee_pag =
-        (*func_name_2_pag)[std::string(pag->GetVertexAttributeString("name", vertex_id))];
-    void (*ConnectCallerCalleePointer)(ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
-    callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
+  dbg(pag->GetGraphAttributeString("name"));
+  int type = pag->GetVertexType(vertex_id);
+  if (type == CALL_NODE || type == CALL_IND_NODE || type == CALL_REC_NODE) {
+    int addr = pag->GetVertexAttributeNum("saddr", vertex_id);
+    dbg(vertex_id, addr);
+    vertex_t call_vertex_id = pcg->GetCallVertexWithAddr(addr);
+    dbg(call_vertex_id);
 
-    // Get
-    int vertex_count = pag->GetCurVertexNum();
+    // ProgramAbstractionGraph *callee_pag =
+    //     (*func_name_2_pag)[std::string(pag->GetVertexAttributeString("name", vertex_id))];
+    auto callee_func_name = pcg->GetCalleeVertex(call_vertex_id);
+    // free(callee_func_name);
 
-    pag->AddGraph(callee_pag);
+    string callee_func_name_str = std::string(callee_func_name);
 
-    pag->AddEdge(vertex_id, vertex_count);
+    dbg(callee_func_name_str);
+
+    if (callee_func_name) {
+      ProgramAbstractionGraph *callee_pag = (*func_name_2_pag)[callee_func_name_str];
+
+      if (!callee_pag->GetGraphAttributeFlag("scanned")) {
+        void (*ConnectCallerCalleePointer)(ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
+        dbg(callee_pag->GetGraphAttributeString("name"));
+        callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
+        callee_pag->SetGraphAttributeFlag("scanned", true);
+      }
+
+      // Add Vertex to
+      int vertex_count = pag->GetCurVertexNum();
+
+      pag->AddGraph(callee_pag);
+
+      pag->AddEdge(vertex_id, vertex_count);
+    }
   }
 }
 
 void HybridAnalysis::InterProceduralAnalysis() {
-  // Search root node , "name == main"
-  ProgramAbstractionGraph *root_pag = nullptr;
-  std::map<std::string, ProgramAbstractionGraph *> func_name_2_pag;
+  // Search root node , "name" is "main"
+  // std::map<std::string, ProgramAbstractionGraph *> func_name_2_pag;
 
-  for (auto pag : this->func_pag_vec) {
-    func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
-    if (strcmp(pag->GetGraphAttributeString("name"), "main") == 0) {
-      root_pag = pag;
+  for (auto &kv : this->func_pag_map) {
+    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+    auto pag = kv.second;
+    pag->SetGraphAttributeFlag("scanned", false);
+    if (strcmp(kv.first.c_str(), "main") == 0) {
+      this->root_pag = pag;
       std::cout << "Find 'main'" << std::endl;
       // break;
     }
   }
 
   // DFS From root node
-  void (*ConnectCallerCalleePointer)(Graph *, int, void *) = &ConnectCallerCallee;
-  root_pag->VertexTraversal(ConnectCallerCalleePointer, (void *)&func_name_2_pag);
+  InterPAArg *arg = new InterPAArg();
+  arg->pcg = this->pcg;
+  arg->func_pag_map = &(this->func_pag_map);
 
-  return root_pag;
+  // void (*ConnectCallerCalleePointer)(Graph *, int, void *) = &ConnectCallerCallee;
+  dbg(this->root_pag->GetGraphAttributeString("name"));
+  this->root_pag->VertexTraversal(&ConnectCallerCallee, arg);
+
+  for (auto &kv : this->func_pag_map) {
+    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+    auto pag = kv.second;
+    pag->RemoveGraphAttribute("scanned");
+  }
+
+  return;
 }  // function InterProceduralAnalysis
 
-void HybridAnalysis::GenerateProgramAbstractionGraph() {}
+void HybridAnalysis::GenerateProgramAbstractionGraph() { this->InterProceduralAnalysis(); }
 
-void HybridAnalysis::Dataembedding(std::unique_ptr<ProgramAbstractionGraph>, std::unique_ptr<PerfData>) {
+ProgramAbstractionGraph *HybridAnalysis::GetProgramAbstractionGraph() { return this->root_pag; }
 
-}  // function Dataembedding
+void HybridAnalysis::Dataembedding(ProgramAbstractionGraph *, PerfData *) {}  // function Dataembedding
 
 }  // namespace baguatool::core

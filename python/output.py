@@ -63,48 +63,28 @@ class Output(object):
         value = 0.3
         return Color.hsv(value / 2 + .5, value, 0.5)
 
-    def node_label(self, node):
+    def node_label(self, vertex, vertex_attrs):
+        parts = []
 
-        parts = [
-            '{0.unique_id}: {0.name}'
-            #'Type: {0.type_name}',
-        ]
+        for attr in vertex_attrs:
+            if attr in vertex.attributes().keys():
+                parts += [
+                    '{}: {}'.format(attr, vertex[attr])
+                ]
 
-        # if node.performance_percentage:
-        #      parts += [
-        #          'Percentage: {0.performance_percentage}',
-        #      ]
-        # # if node.comm_time[0]:
-        # #     parts += [
-        # #         'Communication Time: {0.comm_time[0]}ms',
-        # #     ]
+        return r'\n'.join(parts)
 
-        # if node.type_name == "ADDR":
-        #     parts += [
-        #         'addr: {0.entry_addr}',
-        #     ]
-        # else:
-        #     parts += [
-        #         'Entry: {0.entry_addr}'
-        #         ' Exit: {0.exit_addr}',
-        #     # 'Removed: {0.removed}',
-        #     ]
+    def edge_label(self, edge, edge_attrs):
+        parts = []
 
+        for attr in edge_attrs:
+            if attr in edge.attributes().keys():
+                parts += [
+                    '{}: {}'.format(attr, edge[attr])
+                ]
 
-        # if node.ECMmodel:
-        #     parts += [
-        #         'ECM Model: [{0.ECMmodel}]',
-        #     ]
-        # if self.processor.config.memory:
-        #     parts += [
-        #         'memory in: {0.memory_in.value_human_bibyte}',
-        #         'memory out: {0.memory_out.value_human_bibyte}',
-        #     ]
-
-        return r'\n'.join(parts).format(node)
-
-    def edge_label(self, label):
-        return '{0}'.format(label)
+        return r'\n'.join(parts)
+        # return '{0}'.format(label)
 
     def edge_penwidth(self, width):
         return width

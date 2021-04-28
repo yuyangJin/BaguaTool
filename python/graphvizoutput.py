@@ -81,7 +81,7 @@ class GraphvizOutput(Output):
                 'fontcolor': Color(0, 0, 0, 0.5).rgba_web(),
                 'label': generated_message,
             },
-            'vertex': {
+            'node': {
                 'fontname': self.font_name,
                 'fontsize': self.font_size,
                 'fontcolor': Color(0, 0, 0).rgba_web(),
@@ -168,16 +168,11 @@ class GraphvizOutput(Output):
             output.append('%s = "%s"' % (attr, val))
         return ', '.join(output)
 
-
     def vertex(self, key, attr):
         return '"{0}" [{1}];'.format(
             key, self.attrs_from_dict(attr),
         )
 
-    # def edge(self, edge, attr):
-    #     return '"{0.src_func}" -> "{0.dst_func}" [{1}];'.format(
-    #         edge, self.attrs_from_dict(attr),
-    #     )
     def edge(self, edge_src, edge_dest, attr):
         return '"{0}" -> "{1}" [{2}];'.format(
             edge_src, edge_dest, self.attrs_from_dict(attr),
@@ -218,7 +213,6 @@ class GraphvizOutput(Output):
                 'color': self.node_color_func(vertex).rgba_web(),
                 'label': self.node_label_func(vertex, vertex_attrs),
             }
-            print(vertex["id"])
             output.append(self.vertex(int(vertex["id"]), attr))
 
         return output
@@ -231,147 +225,8 @@ class GraphvizOutput(Output):
                 'color': self.edge_color_func(edge).rgba_web(),
                 'label': self.edge_label_func(edge, edge_attrs),
             }
-            print(edge.source, edge.target)
             output.append(self.edge(int(edge.source), int(edge.target), attr))
 
         return output 
 
 
-
-    # def generateNodesEdgesGroups(self, vertex):
-    #     global group_id
-
-    #     if vertex.generated_nodes_edges_groups:
-    #         return
-    #     vertex.generated_nodes_edges_groups = True
-    #     # Add vertices
-    #     attr = {
-    #         'color': self.node_color_func(vertex).rgba_web(),
-    #         'label': self.node_label_func(vertex),
-    #     }
-    #     #if vertex.removed == False:
-    #     #    self.vertices.append(self.vertex(vertex.unique_id, attr))
-    #     self.vertices.append(self.vertex(vertex.unique_id, attr))
-    #     #self.percentage_sum += vertex.performance_percentage
-
-    #     #Add group 
-    #     if vertex.group_flag == True:
-    #         funcs = []
-    #         #for child in vertex.children:
-    #         #    if child.removed == False:
-    #         #        funcs.append(str(child.unique_id))
-    #         funcs = [str(vertex.unique_id)] # for child in vertex.children]
-    #         funcs = '" "'.join(funcs)
-    #         group_color = self.group_border_color.rgba_web()
-    #         group_font_size = self.group_font_size
-    #         group = self.group_id
-    #         self.groups.append(
-    #             'subgraph "cluster_{group}" {{ '
-    #             '"{funcs}"; '
-    #             'label = "{group}"; '
-    #             'fontsize = "{group_font_size}"; '
-    #             'fontcolor = "black"; '
-    #             'style = "bold"; '
-    #             'color="{group_color}"; }}'.format(**locals()))
-    #         self.group_id += 1
-    #     # if vertex.type == "CALL_IND":
-    #     #     funcs = []
-    #     #     funcs = [str(child.unique_id) for child in vertex.children]
-    #     #     funcs = '" "'.join(funcs)
-    #     #     group_color = self.group_border_color.rgba_web()
-    #     #     group_font_size = self.group_font_size
-    #     #     #group = self.group_id
-    #     #     group = vertex.unique_id
-    #     #     self.groups.append(
-    #     #         'subgraph "cluster_{group}" {{ '
-    #     #         '"{funcs}"; '
-    #     #         'label = "{group}"; '
-    #     #         'fontsize = "{group_font_size}"; '
-    #     #         'fontcolor = "black"; '
-    #     #         'style = "bold"; '
-    #     #         'color="{group_color}"; }}'.format(**locals()))
-    #     #     self.group_id += 1
-
-    #     #Add edges
-    #     for child in vertex.children:
-    #         attr = {
-    #             'color': self.edge_color_func(vertex.unique_id).rgba_web(),
-    #             'label': self.edge_label_func(""),
-    #         }
-    #         # if child.removed == False:
-    #         #     self.edges.append(self.edge(vertex.unique_id, child.unique_id, attr))
-    #         #     self.generateNodesEdgesGroups(child)
-    #         self.edges.append(self.edge(vertex.unique_id, child.unique_id, attr))
-    #         self.generateNodesEdgesGroups(child)
-
-    # def generateNodesEdgesGroupsByNodeEdges(self, input_nodes, input_edges):
-    #     global group_id
-
-    #     # Add vertices
-
-    #     for k, v in input_nodes.items():
-    #         attr = {
-    #             'color': Color.hsv(0,0.02,0.9).rgba_web(),
-    #             'label': str(k),
-    #         }
-    #         self.vertices.append(self.vertex(k, attr))
-
-    #     #Add group 
-    #     # if vertex.group_flag == True:
-    #     #     funcs = []
-    #     #     #for child in vertex.children:
-    #     #     #    if child.removed == False:
-    #     #     #        funcs.append(str(child.unique_id))
-    #     #     funcs = [str(vertex.unique_id)] # for child in vertex.children]
-    #     #     funcs = '" "'.join(funcs)
-    #     #     group_color = self.group_border_color.rgba_web()
-    #     #     group_font_size = self.group_font_size
-    #     #     group = self.group_id
-    #     #     self.groups.append(
-    #     #         'subgraph "cluster_{group}" {{ '
-    #     #         '"{funcs}"; '
-    #     #         'label = "{group}"; '
-    #     #         'fontsize = "{group_font_size}"; '
-    #     #         'fontcolor = "black"; '
-    #     #         'style = "bold"; '
-    #     #         'color="{group_color}"; }}'.format(**locals()))
-    #     #     self.group_id += 1
-    #     # if vertex.type == "CALL_IND":
-    #     #     funcs = []
-    #     #     funcs = [str(child.unique_id) for child in vertex.children]
-    #     #     funcs = '" "'.join(funcs)
-    #     #     group_color = self.group_border_color.rgba_web()
-    #     #     group_font_size = self.group_font_size
-    #     #     #group = self.group_id
-    #     #     group = vertex.unique_id
-    #     #     self.groups.append(
-    #     #         'subgraph "cluster_{group}" {{ '
-    #     #         '"{funcs}"; '
-    #     #         'label = "{group}"; '
-    #     #         'fontsize = "{group_font_size}"; '
-    #     #         'fontcolor = "black"; '
-    #     #         'style = "bold"; '
-    #     #         'color="{group_color}"; }}'.format(**locals()))
-    #     #     self.group_id += 1
-
-    #     #Add edges
-    #     for k,v in input_edges.items():
-    #         for child in v:
-    #             attr = {
-    #                 'color': self.edge_color_func(k).rgba_web(),
-    #                 'label': self.edge_label_func(""),
-    #             }
-    #             self.edges.append(self.edge(k, child, attr))
-        
-    # def generateEdgeFromEdgeList(self):
-    #     print(self.edge_list)
-    #     for edge_ in self.edge_list:
-    #         attr = {
-    #             'color': self.edge_color_func(edge_[2]).rgba_web(),
-    #             'label': self.edge_label_func(str(edge_[2])),
-    #             'penwidth':self.edge_penwidth_func((math.log(edge_[2], 10)) * 2 - 1 ),
-    #         }
-    #         # if child.removed == False:
-    #         #     self.edges.append(self.edge(vertex.unique_id, child.unique_id, attr))
-    #         #     self.generateNodesEdgesGroups(child)
-    #         self.edges.append(self.edge(edge_[0], edge_[1], attr))

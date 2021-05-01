@@ -3,10 +3,13 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <stack>
 #include <string>
 #include <vector>
 #include "../src/common/tprintf.h"
+
+using namespace nlohmann;
 
 // All public APIs are defined here.
 
@@ -122,6 +125,10 @@ class ProgramCallGraph : public ProgramGraph {
 
 typedef struct SAMPLER_STRUCT SaStruct;
 
+#ifndef MAX_LINE_LEN
+#define MAX_LINE_LEN 256
+#endif
+
 class PerfData {
  private:
   SaStruct* sampler_data = nullptr;
@@ -129,7 +136,8 @@ class PerfData {
   FILE* sampler_data_fp = nullptr;
   std::ifstream sampler_data_in;
   bool has_open_output_file = false;
-  char* file_name = nullptr;
+  char file_name[MAX_LINE_LEN] = {0};
+  std::string metric_name = std::string("TOT_CYC");
 
  public:
   PerfData();
@@ -137,12 +145,37 @@ class PerfData {
   // int SetAttribute();
   int Query();
   void Record();
-  void Read(std::string&);
+  void Read(const char*);
   void Dump();
   unsigned long int GetSize();
+  std::string& GetMetricName();
   void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
   int GetSamplingCount(unsigned long int data_index);
+  int GetProcessId(unsigned long int data_index);
+  int GetThreadId(unsigned long int data_index);
 };
+
+typedef double perf_data_t;
+
+class GraphPerfData {
+ private:
+  json j_perf_data;
+
+ public:
+  GraphPerfData();
+  ~GraphPerfData();
+
+  void Read(std::string&);
+  void Dump(std::string&);
+
+  void SetPerfData(vertex_t vertex_id, std::string& metric, int process_id, int thread_id, perf_data_t value);
+  perf_data_t GetPerfData(vertex_t vertex_id, std::string& metric, int process_id, int thread_id);
+
+  bool HasMetric(vertex_t vertex_id, std::string& metric);
+  void GetVertexPerfDataMetrics(vertex_t, std::vector<std::string>&);
+  void GetProcessPerfData(vertex_t vertex_id, std::string& metric, int process_id, perf_data_t* proc_perf_data);
+
+};  // class GraphPerfData
 
 class HybridAnalysis {
  private:
@@ -150,6 +183,7 @@ class HybridAnalysis {
   ProgramCallGraph* pcg;
   std::map<std::string, ProgramAbstractionGraph*> func_pag_map;
   ProgramAbstractionGraph* root_pag;
+  GraphPerfData* graph_perf_data;
 
  public:
   HybridAnalysis() {}
@@ -158,44 +192,35 @@ class HybridAnalysis {
   /** Control Flow Graph of Each Function **/
 
   void ReadStaticControlFlowGraphs(const char* dir_name);
-
   void GenerateControlFlowGraphs(const char* dir_name);
-
   ControlFlowGraph* GetControlFlowGraph(std::string func_name);
-
   std::map<std::string, ControlFlowGraph*>& GetControlFlowGraphs();
 
   /** Program Call Graph **/
 
   void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
-
   void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
-
   void GenerateProgramCallGraph(const char*);
-
   ProgramCallGraph* GetProgramCallGraph();
-
-  void ReadFunctionAbstractionGraphs(const char* dir_name);
 
   /** Intra-procedural Analysis **/
 
   ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
-
   std::map<std::string, ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
-
   void IntraProceduralAnalysis();
+  void ReadFunctionAbstractionGraphs(const char* dir_name);
 
   /** Inter-procedural Analysis **/
 
   void InterProceduralAnalysis();
-
   void GenerateProgramAbstractionGraph();
-
+  void SetProgramAbstractionGraph(ProgramAbstractionGraph*);
   ProgramAbstractionGraph* GetProgramAbstractionGraph();
 
-  void Dataembedding(ProgramAbstractionGraph*, PerfData*);
+  /** DataEmbedding **/
+  void DataEmbedding(PerfData*);
+  GraphPerfData* GetGraphPerfData();
 
-  // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
 };  // class HybridAnalysis
 
 }  // namespace core

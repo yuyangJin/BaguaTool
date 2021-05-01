@@ -12,14 +12,14 @@ void ProgramGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph *, int, v
   igraph_vs_t vs;
   igraph_vit_t vit;
   // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
-  dbg(this->GetGraphAttributeString("name"));
+  // dbg(this->GetGraphAttributeString("name"));
   igraph_vs_all(&vs);
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
     vertex_t vertex_id = (vertex_t)IGRAPH_VIT_GET(vit);
     // printf("Traverse %d\n", vertex_id);
-    dbg(vertex_id);
+    // dbg(vertex_id);
 
     // Call user-defined function
     (*CALL_BACK_FUNC)(this, vertex_id, extra);
@@ -63,8 +63,15 @@ vertex_t ProgramGraph::GetChildVertexWithAddr(vertex_t root_vertex, unsigned lon
   for (auto &child : children) {
     unsigned long long int s_addr = GetVertexAttributeNum("saddr", child);
     unsigned long long int e_addr = GetVertexAttributeNum("eaddr", child);
-    if (addr >= s_addr && addr <= e_addr) {
-      return child;
+    int type = GetVertexType(child);
+    if (type == CALL_NODE || type == CALL_REC_NODE || type == CALL_IND_NODE) {
+      if (addr >= s_addr - 4 && addr <= e_addr + 4) {
+        return child;
+      }
+    } else {
+      if (addr >= s_addr && addr <= e_addr) {
+        return child;
+      }
     }
   }
 
@@ -84,25 +91,30 @@ vertex_t ProgramGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<un
   // Get the top addr of the stack
   unsigned long long addr = call_path_stack.top();
 
-  // while (addr > 0x40000000) {
-  //   call_path_stack.pop();
-  //   addr = call_path_stack.top();
-  // }
+  dbg(addr);
+
+  if (addr > 0x40000000) {
+    call_path_stack.pop();
+    return GetVertexWithCallPath(root_vertex, call_path_stack);
+  }
 
   // Find the CALL vertex of current addr, addr is from calling context
   vertex_t found_vertex = root_vertex;
+  vertex_t child_vertex = -1;
   while (1) {
-    vertex_t child_vertex = GetChildVertexWithAddr(found_vertex, addr);
+    child_vertex = GetChildVertexWithAddr(found_vertex, addr);
+    dbg(child_vertex);
 
-    found_vertex = child_vertex;
     // if child_vertex is not found
     if (-1 == child_vertex) {
       // vertex_t new_vertex = this->AddVertex();
       // this->AddEdge(root_vertex, new_vertex);
       // this->SetVertexBasicInfo();
       // found_vertex = new_vertex;
+
       break;
     }
+    found_vertex = child_vertex;
 
     // If found_vertex is FUNC_NODE or LOOP_NODE, then continue searching child_vertex
     auto found_vertex_type = GetVertexType(found_vertex);
@@ -111,8 +123,8 @@ vertex_t ProgramGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<un
     }
   }
 
-  if (-1 == found_vertex) {
-    return root_vertex;
+  if (-1 == child_vertex) {
+    return found_vertex;
   }
 
   // if find the corresponding child vertex, then pop a addr from the stack.
@@ -142,7 +154,7 @@ void CallVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
     unsigned long long s_addr = pg->GetVertexAttributeNum("saddr", vertex_id);
     unsigned long long e_addr = pg->GetVertexAttributeNum("eaddr", vertex_id);
     dbg(addr, s_addr, e_addr);
-    if (addr >= s_addr && addr <= e_addr) {
+    if (addr >= s_addr - 4 && addr <= e_addr + 4) {
       arg->vertex_id = vertex_id;
       arg->find_flag = true;
       return;

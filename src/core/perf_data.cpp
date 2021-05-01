@@ -1,10 +1,14 @@
 #include "perf_data.h"
+#include "dbg.h"
 
 namespace baguatool::core {
 
 PerfData::PerfData() {
-  unsigned long int size = MAX_TRACE_MEM / sizeof(SaStruct);
-  this->sampler_data = new SaStruct[size]();
+  // unsigned long int size = MAX_TRACE_MEM / 432;
+  long int size = 10000;
+  // printf("%lu\n", size);
+  // dbg(size);
+  this->sampler_data = new SaStruct[size];
   this->sampler_data_size = 0;
   strcpy(this->file_name, "SAMPLE.TXT");
 }
@@ -22,13 +26,16 @@ int PerfData::Query() {
   return -1;
 }
 void PerfData::Record() { this->sampler_data_size++; }
-void PerfData::Read(std::string& infile_name) {
+void PerfData::Read(const char* infile_name) {
   // Open a file
-  // this->sampler_data_in.open(this->file_name.c_str(), std::ios::in);
-  this->sampler_data_in.open(infile_name.c_str(), std::ios::in);
+  // this->sampler_data_in.open(this->file_name, std::ios::in);
+  // dbg(infile_name);
+  char infile_name_str[MAX_STR_LEN];
+  strcpy(infile_name_str, std::string(infile_name).c_str());
+  this->sampler_data_in.open(infile_name_str, std::ios::in);
   if (!(this->sampler_data_in.is_open())) {
     // LOG_INFO("Failed to open %s\n", this->file_name.c_str());
-    LOG_INFO("Failed to open %s\n", infile_name.c_str());
+    LOG_INFO("Failed to open %s\n", infile_name_str);
     this->sampler_data_size = __sync_and_and_fetch(&this->sampler_data_size, 0);
     return;
   }
@@ -46,7 +53,7 @@ void PerfData::Read(std::string& infile_name) {
     std::vector<std::string> line_vec = split(line, delim);
     int cnt = line_vec.size();
 
-    LOG_INFO("LINE CNT = %d\n", cnt);
+    // dbg(cnt);
 
     if (cnt == 3) {
       this->sampler_data[this->sampler_data_size].count = atoi(line_vec[1].c_str());
@@ -61,6 +68,7 @@ void PerfData::Read(std::string& infile_name) {
       this->sampler_data[this->sampler_data_size].call_path_len = call_path_len;
       for (int i = 0; i < call_path_len; i++) {
         this->sampler_data[this->sampler_data_size].call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
+        dbg(this->sampler_data[this->sampler_data_size].call_path[i]);
       }
 
       LOG_INFO("DATA[%lu]: %s | %d | %d\n", this->sampler_data_size, line_vec[0].c_str(),
@@ -97,6 +105,8 @@ void PerfData::Dump() {
 
 unsigned long int PerfData::GetSize() { return this->sampler_data_size; }
 
+std::string& PerfData::GetMetricName() { return this->metric_name; }
+
 void PerfData::GetCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path_stack) {
   SaStruct* data = &(this->sampler_data[data_index]);
   for (int i = 0; i < data->call_path_len; i++) {
@@ -109,6 +119,15 @@ void PerfData::GetCallPath(unsigned long int data_index, std::stack<unsigned lon
 int PerfData::GetSamplingCount(unsigned long int data_index) {
   SaStruct* data = &(this->sampler_data[data_index]);
   return data->count;
+}
+
+int PerfData::GetProcessId(unsigned long int data_index) {
+  SaStruct* data = &(this->sampler_data[data_index]);
+  return data->procs_id;
+}
+int PerfData::GetThreadId(unsigned long int data_index) {
+  SaStruct* data = &(this->sampler_data[data_index]);
+  return data->thread_id;
 }
 
 }  // namespace baguatool::core

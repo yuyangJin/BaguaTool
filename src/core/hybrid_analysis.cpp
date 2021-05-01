@@ -1,5 +1,7 @@
 #include "core/hybrid_analysis.h"
 
+#include "core/graph_perf_data.h"
+
 #include "common/utils.h"
 #include "core/vertex_type.h"
 
@@ -39,7 +41,7 @@ void HybridAnalysis::ReadStaticProgramCallGraph(const char *binary_name) {
 
 void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
   PerfData *perf_data = new PerfData();
-  perf_data->Read(perf_data_file);
+  perf_data->Read(perf_data_file.c_str());
   auto data_size = perf_data->GetSize();
 
   /** Optimization: First scan all call path and store <call_addr, callee_addr> pairs,
@@ -110,13 +112,13 @@ void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extr
   std::map<std::string, ProgramAbstractionGraph *> *func_name_2_pag = arg->func_pag_map;
   ProgramCallGraph *pcg = arg->pcg;
 
-  dbg(pag->GetGraphAttributeString("name"));
+  // dbg(pag->GetGraphAttributeString("name"));
   int type = pag->GetVertexType(vertex_id);
   if (type == CALL_NODE || type == CALL_IND_NODE || type == CALL_REC_NODE) {
     int addr = pag->GetVertexAttributeNum("saddr", vertex_id);
-    dbg(vertex_id, addr);
+    // dbg(vertex_id, addr);
     vertex_t call_vertex_id = pcg->GetCallVertexWithAddr(addr);
-    dbg(call_vertex_id);
+    // dbg(call_vertex_id);
 
     // ProgramAbstractionGraph *callee_pag =
     //     (*func_name_2_pag)[std::string(pag->GetVertexAttributeString("name", vertex_id))];
@@ -125,14 +127,14 @@ void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extr
 
     string callee_func_name_str = std::string(callee_func_name);
 
-    dbg(callee_func_name_str);
+    // dbg(callee_func_name_str);
 
     if (callee_func_name) {
       ProgramAbstractionGraph *callee_pag = (*func_name_2_pag)[callee_func_name_str];
 
       if (!callee_pag->GetGraphAttributeFlag("scanned")) {
         void (*ConnectCallerCalleePointer)(ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
-        dbg(callee_pag->GetGraphAttributeString("name"));
+        // dbg(callee_pag->GetGraphAttributeString("name"));
         callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
         callee_pag->SetGraphAttributeFlag("scanned", true);
       }
@@ -176,14 +178,60 @@ void HybridAnalysis::InterProceduralAnalysis() {
     auto pag = kv.second;
     pag->RemoveGraphAttribute("scanned");
   }
+  delete arg;
 
   return;
 }  // function InterProceduralAnalysis
 
 void HybridAnalysis::GenerateProgramAbstractionGraph() { this->InterProceduralAnalysis(); }
 
+void HybridAnalysis::SetProgramAbstractionGraph(ProgramAbstractionGraph *pag) { this->root_pag = pag; }
+
 ProgramAbstractionGraph *HybridAnalysis::GetProgramAbstractionGraph() { return this->root_pag; }
 
-void HybridAnalysis::Dataembedding(ProgramAbstractionGraph *, PerfData *) {}  // function Dataembedding
+void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
+  this->graph_perf_data = new GraphPerfData();
+
+  // Query for each call path
+  auto data_size = perf_data->GetSize();
+  for (unsigned long int i = 0; i < data_size; i++) {
+    std::stack<unsigned long long> call_path;
+    perf_data->GetCallPath(i, call_path);
+    if (!call_path.empty()) {
+      call_path.pop();
+    }
+    auto count = perf_data->GetSamplingCount(i);
+    auto process_id = perf_data->GetProcessId(i);
+    auto thread_id = perf_data->GetThreadId(i);
+
+    vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
+    dbg(queried_vertex_id);
+    perf_data_t data =
+        this->graph_perf_data->GetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id);
+    data += count;
+    this->graph_perf_data->SetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id, data);
+  }
+
+}  // function Dataembedding
+
+GraphPerfData *HybridAnalysis::GetGraphPerfData() { return this->graph_perf_data; }
+
+// typedef struct ReducePerfDataArg {
+//   std::string op;
+
+// } RPDArg;
+
+// void ReducePerfData(ProgramAbstractionGraph *pag, void* extra) {
+
+//   perf_data_t data
+
+// }
+
+// void HybridAnalysis::ReduceVertexPerfData(std::string& op) {
+//   // Reduce each vertex's perf data
+
+//   pag->VertexTraversal(&ReducePerfData, arg);
+
+// }
 
 }  // namespace baguatool::core

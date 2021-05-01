@@ -37,6 +37,7 @@ add_library(
   src/core/pcg.cpp
   src/core/cfg.cpp
   src/core/perf_data.cpp
+  src/core/graph_perf_data.cpp
   src/core/hybrid_analysis.cpp
 
   #src/GraphPerf/preprocessing/preprocess.cpp
@@ -75,7 +76,6 @@ target_include_directories(baguatool PRIVATE ${PROJECT_SOURCE_DIR}/third_party/d
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/json)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/toml)
 target_include_directories(baguatool PRIVATE igraph)
-#target_include_directories(baguatool PRIVATE json)
 target_include_directories(baguatool PRIVATE ${DYNINST_INCLUDE_DIR})
 target_include_directories(baguatool PRIVATE ${PAPI_INCLUDE_DIRS})
 

@@ -24,11 +24,13 @@
 
 namespace baguatool::core {
 
+// size : 8 * 50 + 4 + 4 + 4 + 4 = 432
 typedef struct SAMPLER_STRUCT {
   unsigned long long int call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = 0;
   int count = 0;
-  int thread_id = -1;
+  int procs_id = 0;
+  int thread_id = 0;
 } SaStruct;
 
 class PerfData {
@@ -38,7 +40,9 @@ class PerfData {
   FILE* sampler_data_fp = nullptr;
   std::ifstream sampler_data_in;
   bool has_open_output_file = false;
-  char file_name[MAX_LINE_LEN];
+  char file_name[MAX_LINE_LEN] = {0};
+  // TODO: design a method to make metric_name portable
+  std::string metric_name = std::string("TOT_CYC");
 
  public:
   PerfData();
@@ -46,11 +50,14 @@ class PerfData {
   // int SetAttribute();
   int Query();
   void Record();
-  void Read(std::string&);
+  void Read(const char*);
   void Dump();
   unsigned long int GetSize();
+  std::string& GetMetricName();
   void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
   int GetSamplingCount(unsigned long int data_index);
+  int GetProcessId(unsigned long int data_index);
+  int GetThreadId(unsigned long int data_index);
 };
 
 }  // namespace baguatool::core

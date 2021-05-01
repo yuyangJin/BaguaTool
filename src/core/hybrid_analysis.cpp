@@ -7,6 +7,10 @@
 
 namespace baguatool::core {
 
+HybridAnalysis::HybridAnalysis() { this->graph_perf_data = new GraphPerfData(); }
+
+HybridAnalysis::~HybridAnalysis() { delete this->graph_perf_data; }
+
 void HybridAnalysis::ReadStaticControlFlowGraphs(const char *dir_name) {
   // Get name of files in this directory
   std::vector<std::string> file_names;
@@ -170,7 +174,7 @@ void HybridAnalysis::InterProceduralAnalysis() {
   arg->func_pag_map = &(this->func_pag_map);
 
   // void (*ConnectCallerCalleePointer)(Graph *, int, void *) = &ConnectCallerCallee;
-  dbg(this->root_pag->GetGraphAttributeString("name"));
+  // dbg(this->root_pag->GetGraphAttributeString("name"));
   this->root_pag->VertexTraversal(&ConnectCallerCallee, arg);
 
   for (auto &kv : this->func_pag_map) {
@@ -190,8 +194,6 @@ void HybridAnalysis::SetProgramAbstractionGraph(ProgramAbstractionGraph *pag) { 
 ProgramAbstractionGraph *HybridAnalysis::GetProgramAbstractionGraph() { return this->root_pag; }
 
 void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
-  this->graph_perf_data = new GraphPerfData();
-
   // Query for each call path
   auto data_size = perf_data->GetSize();
   for (unsigned long int i = 0; i < data_size; i++) {
@@ -205,7 +207,7 @@ void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
     auto thread_id = perf_data->GetThreadId(i);
 
     vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
-    dbg(queried_vertex_id);
+    // dbg(queried_vertex_id);
     perf_data_t data =
         this->graph_perf_data->GetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id);
     data += count;
@@ -216,22 +218,81 @@ void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
 
 GraphPerfData *HybridAnalysis::GetGraphPerfData() { return this->graph_perf_data; }
 
-// typedef struct ReducePerfDataArg {
-//   std::string op;
+perf_data_t ReduceOperation(std::vector<perf_data_t> &perf_data, int num, string &op) {
+  if (num == 0) {
+    return 0.0;
+  }
+  if (!strcmp(op.c_str(), "AVG")) {
+    perf_data_t avg = 0.0;
+    for (int i = 0; i < num; i++) {
+      avg += perf_data[i];
+    }
+    avg /= (perf_data_t)num;
+    return avg;
+  } else {
+    return perf_data[0];
+  }
+}
 
-// } RPDArg;
+typedef struct ReducePerfDataArg {
+  // input
+  GraphPerfData *graph_perf_data = nullptr;
+  std::string metric;
+  std::string op;
+  // output
+  perf_data_t reduced_data = 0;
+} RPDArg;
 
-// void ReducePerfData(ProgramAbstractionGraph *pag, void* extra) {
+void ReducePerfData(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  RPDArg *arg = (RPDArg *)extra;
+  GraphPerfData *graph_perf_data = arg->graph_perf_data;
+  std::string metric(arg->metric);
+  std::string op(arg->op);
 
-//   perf_data_t data
+  int num_procs = graph_perf_data->GetMetricsPerfDataProcsNum(vertex_id, metric);
 
-// }
+  std::vector<perf_data_t> im_reduced_data;
 
-// void HybridAnalysis::ReduceVertexPerfData(std::string& op) {
-//   // Reduce each vertex's perf data
+  for (int i = 0; i < num_procs; i++) {
+    // perf_data_t* procs_perf_data = nullptr;
+    std::vector<perf_data_t> procs_perf_data;
+    graph_perf_data->GetProcsPerfData(vertex_id, metric, i, procs_perf_data);
+    // int num_thread = graph_perf_data->GetProcsPerfDataThreadNum(vertex_id, metric, i);
+    int num_thread = procs_perf_data.size();
 
-//   pag->VertexTraversal(&ReducePerfData, arg);
+    if (num_thread > 0) {
+      im_reduced_data.push_back(ReduceOperation(procs_perf_data, num_thread, op));
+      // dbg(im_reduced_data[i]);
+    } else {
+      im_reduced_data[i] = 0.0;
+    }
 
-// }
+    FREE_CONTAINER(procs_perf_data);
+  }
+
+  perf_data_t reduced_data = ReduceOperation(im_reduced_data, num_procs, op);
+  // dbg(reduced_data);
+
+  FREE_CONTAINER(im_reduced_data);
+
+  pag->SetVertexAttributeString(std::string(metric + std::string("_") + op).c_str(), (vertex_t)vertex_id,
+                                std::to_string(reduced_data).c_str());
+
+  arg->reduced_data = reduced_data;
+}
+
+// Reduce each vertex's perf data
+void HybridAnalysis::ReduceVertexPerfData(std::string &metric, std::string &op) {
+  RPDArg *arg = new RPDArg();
+  arg->graph_perf_data = this->graph_perf_data;
+  arg->metric = std::string(metric);
+  arg->op = std::string(op);
+
+  this->root_pag->VertexTraversal(&ReducePerfData, arg);
+
+  dbg(arg->reduced_data);
+
+  delete arg;
+}
 
 }  // namespace baguatool::core

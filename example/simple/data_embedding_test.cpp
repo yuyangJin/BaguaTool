@@ -17,8 +17,13 @@ int main(int argc, char** argv) {
 
   hybrid_analysis->SetProgramAbstractionGraph(pag);
   hybrid_analysis->DataEmbedding(perf_data);
+  std::string metric("TOT_CYC");
+  std::string op("AVG");
+  hybrid_analysis->ReduceVertexPerfData(metric, op);
 
   auto graph_perf_data = hybrid_analysis->GetGraphPerfData();
   std::string output_file_name_str("output.json");
   graph_perf_data->Dump(output_file_name_str);
+
+  hybrid_analysis->GetProgramAbstractionGraph()->DumpGraph("root_3.gml");
 }

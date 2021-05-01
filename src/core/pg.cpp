@@ -69,7 +69,7 @@ vertex_t ProgramGraph::GetChildVertexWithAddr(vertex_t root_vertex, unsigned lon
         return child;
       }
     } else {
-      if (addr >= s_addr && addr <= e_addr) {
+      if (addr >= s_addr - 4 && addr <= e_addr + 4) {
         return child;
       }
     }
@@ -181,7 +181,7 @@ void FuncVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
   if (pg->GetVertexAttributeNum("type", vertex_id) == FUNC_NODE) {
     unsigned long long s_addr = pg->GetVertexAttributeNum("s_addr", vertex_id);
     unsigned long long e_addr = pg->GetVertexAttributeNum("e_addr", vertex_id);
-    if (addr >= s_addr && addr <= e_addr) {
+    if (addr >= s_addr - 4 && addr <= e_addr + 4) {
       arg->vertex_id = vertex_id;
       arg->find_flag = true;
       return;

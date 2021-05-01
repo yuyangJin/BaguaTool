@@ -1,5 +1,6 @@
 #include "graph_perf_data.h"
 #include <string>
+#include <vector>
 #include "dbg.h"
 
 namespace baguatool::core {
@@ -45,8 +46,6 @@ perf_data_t GraphPerfData::GetPerfData(vertex_t vertex_id, std::string& metric, 
   std::string process_id_str = std::to_string(process_id);
   std::string thread_id_str = std::to_string(thread_id);
 
-  dbg(this->j_perf_data.contains(vertex_id_str));
-
   if (this->j_perf_data.contains(vertex_id_str)) {
     if (this->j_perf_data[vertex_id_str].contains(metric_str)) {
       if (this->j_perf_data[vertex_id_str][metric_str].size() > (unsigned int)process_id) {
@@ -81,24 +80,47 @@ void GraphPerfData::GetVertexPerfDataMetrics(vertex_t vertex_id, std::vector<std
   }
   return;
 }
+
+int GraphPerfData::GetMetricsPerfDataProcsNum(vertex_t vertex_id, std::string& metric) {
+  std::string vertex_id_str = std::to_string(vertex_id);
+  std::string metric_str = std::string(metric);
+
+  int size = this->j_perf_data[vertex_id_str][metric_str].size();
+
+  return size;
+}
+
+int GraphPerfData::GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& metric, int process_id) {
+  std::string vertex_id_str = std::to_string(vertex_id);
+  std::string metric_str = std::string(metric);
+  std::string process_id_str = std::to_string(process_id);
+
+  int size = this->j_perf_data[vertex_id_str][metric_str][process_id_str].size();
+
+  return size;
+}
+
 // perf_data_t** GraphPerfData::GetMetricPerfData(vertex_t vertex_id, std::string& metric) {}
-void GraphPerfData::GetProcessPerfData(vertex_t vertex_id, std::string& metric, int process_id,
-                                       perf_data_t* proc_perf_data) {
+void GraphPerfData::GetProcsPerfData(vertex_t vertex_id, std::string& metric, int process_id,
+                                     std::vector<perf_data_t>& proc_perf_data) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
   std::string process_id_str = std::to_string(process_id);
   std::string thread_id_str;
 
   int size = this->j_perf_data[vertex_id_str][metric_str][process_id_str].size();
-  proc_perf_data = new perf_data_t[size]();
-  for (int i = 0; i < size; i++) {
-    // memset();
-    thread_id_str = std::to_string(i);
-    if (this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str] != nullptr) {
-      proc_perf_data[i] =
-          this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<perf_data_t>();
-    } else {
-      proc_perf_data[i] = 0.0;
+  if (size > 0) {
+    // proc_perf_data = new perf_data_t[size]();
+    for (int i = 0; i < size; i++) {
+      // memset();
+      thread_id_str = std::to_string(i);
+      if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
+        proc_perf_data.push_back(
+            this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<perf_data_t>());
+        dbg(proc_perf_data[i]);
+      } else {
+        proc_perf_data.push_back(0.0);
+      }
     }
   }
   return;

@@ -173,7 +173,10 @@ class GraphPerfData {
 
   bool HasMetric(vertex_t vertex_id, std::string& metric);
   void GetVertexPerfDataMetrics(vertex_t, std::vector<std::string>&);
-  void GetProcessPerfData(vertex_t vertex_id, std::string& metric, int process_id, perf_data_t* proc_perf_data);
+  int GetMetricsPerfDataProcsNum(vertex_t vertex_id, std::string& metric);
+  int GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& metric, int process_id);
+  void GetProcsPerfData(vertex_t vertex_id, std::string& metric, int process_id,
+                        std::vector<perf_data_t>& proc_perf_data);
 
 };  // class GraphPerfData
 
@@ -186,8 +189,8 @@ class HybridAnalysis {
   GraphPerfData* graph_perf_data;
 
  public:
-  HybridAnalysis() {}
-  ~HybridAnalysis() {}
+  HybridAnalysis();
+  ~HybridAnalysis();
 
   /** Control Flow Graph of Each Function **/
 
@@ -220,6 +223,7 @@ class HybridAnalysis {
   /** DataEmbedding **/
   void DataEmbedding(PerfData*);
   GraphPerfData* GetGraphPerfData();
+  void ReduceVertexPerfData(std::string& metric, std::string& op);
 
 };  // class HybridAnalysis
 

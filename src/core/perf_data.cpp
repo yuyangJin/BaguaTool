@@ -4,11 +4,11 @@
 namespace baguatool::core {
 
 PerfData::PerfData() {
-  // unsigned long int size = MAX_TRACE_MEM / 432;
-  long int size = 10000;
+  this->sampler_data_space_size = MAX_TRACE_MEM / sizeof(SaStruct);
+  //long int size = 10000;
   // printf("%lu\n", size);
   // dbg(size);
-  this->sampler_data = new SaStruct[size];
+  this->sampler_data = new SaStruct[this->sampler_data_space_size];
   this->sampler_data_size = 0;
   strcpy(this->file_name, "SAMPLE.TXT");
 }
@@ -18,14 +18,55 @@ PerfData::~PerfData() {
     fclose(this->sampler_data_fp);
   }
 }
-// int SetAttribute(){}
-int PerfData::Query() {
-  for (unsigned long int i = 0; i < this->sampler_data_size; i++) {
-    UNIMPLEMENTED();
+
+bool CallPathCmp(addr_t* cp_1, int cp_1_len, addr_t* cp_2, int cp_2_len) {
+  if (cp_1_len != cp_2_len) {
+    return false;
+  } else {
+    for (int i = 0; i < cp_1_len; i++) {
+      if (cp_1[i] != cp_2[i]) {
+        return false;
+      }
+    }
   }
+  return true;
+}
+
+int PerfData::Query(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
+  for (unsigned long int i = 0; i < this->sampler_data_size; i++) {
+    //call_path
+    if (CallPathCmp(call_path, call_path_len, this->sampler_data[i].call_path, this->sampler_data[i].call_path_len) == true && this->sampler_data[i].thread_id == thread_id && this->sampler_data[i].procs_id == procs_id){
+      return i;
+    }
+  }
+
   return -1;
 }
-void PerfData::Record() { this->sampler_data_size++; }
+void PerfData::Record(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
+
+  int index = this->Query(call_path, call_path_len, procs_id, thread_id);
+
+  if (index >= 0) {
+    this->sampler_data[index].count ++;
+  } else {
+    // Thread-safe, first fetch a index, then record data
+    unsigned long long int x = __sync_fetch_and_add(&this->sampler_data_size, 1);
+    
+    this->sampler_data[this->sampler_data_size - 1].call_path_len = call_path_len;
+    for (int i = 0; i < call_path_len; i++) {
+      this->sampler_data[this->sampler_data_size - 1].call_path[i] = call_path[i];
+    }
+    this->sampler_data[this->sampler_data_size - 1].count = 1;
+    this->sampler_data[this->sampler_data_size - 1].thread_id = thread_id;
+    this->sampler_data[this->sampler_data_size - 1].procs_id = procs_id;
+  }
+
+  if (this->sampler_data_size >= this->sampler_data_space_size - 5) {
+    // TODO: asynchronous dump
+    this->Dump();
+  }
+
+}
 void PerfData::Read(const char* infile_name) {
   // Open a file
   // this->sampler_data_in.open(this->file_name, std::ios::in);
@@ -82,6 +123,7 @@ void PerfData::Read(const char* infile_name) {
 
   this->sampler_data_in.close();
 }
+
 void PerfData::Dump() {
   if (!has_open_output_file) {
     this->sampler_data_fp = fopen(this->file_name, "w");
@@ -92,7 +134,7 @@ void PerfData::Dump() {
     }
   }
 
-  // OG_INFO("Rank %d : WRITE %d ADDR to %d TXT\n", mpiRank, call_path_addr_log_pointer[i], i);
+  // LOG_INFO("Rank %d : WRITE %d ADDR to %d TXT\n", mpiRank, call_path_addr_log_pointer[i], i);
   for (unsigned long int i = 0; i < this->sampler_data_size; i++) {
     for (int j = 0; j < this->sampler_data[i].call_path_len; j++) {
       fprintf(this->sampler_data_fp, "%llx ", this->sampler_data[i].call_path[j]);
@@ -106,6 +148,10 @@ void PerfData::Dump() {
 unsigned long int PerfData::GetSize() { return this->sampler_data_size; }
 
 std::string& PerfData::GetMetricName() { return this->metric_name; }
+
+void PerfData::SetMetricName(std::string& metric_name) {
+  this->metric_name = std::string(metric_name);
+}
 
 void PerfData::GetCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path_stack) {
   SaStruct* data = &(this->sampler_data[data_index]);

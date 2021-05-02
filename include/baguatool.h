@@ -129,25 +129,29 @@ typedef struct SAMPLER_STRUCT SaStruct;
 #define MAX_LINE_LEN 256
 #endif
 
+typedef unsigned long long int addr_t;
+
 class PerfData {
  private:
   SaStruct* sampler_data = nullptr;
+  unsigned long int sampler_data_space_size = 0;
   unsigned long int sampler_data_size = 0;
   FILE* sampler_data_fp = nullptr;
   std::ifstream sampler_data_in;
   bool has_open_output_file = false;
   char file_name[MAX_LINE_LEN] = {0};
+  // TODO: design a method to make metric_name portable
   std::string metric_name = std::string("TOT_CYC");
 
  public:
   PerfData();
   ~PerfData();
-  // int SetAttribute();
-  int Query();
-  void Record();
+  int Query(addr_t* call_path, int call_path_len, int process_id, int thread_id);
+  void Record(addr_t* call_path, int call_path_len, int process_id, int thread_id);
   void Read(const char*);
   void Dump();
   unsigned long int GetSize();
+  void SetMetricName(std::string& metric_name);
   std::string& GetMetricName();
   void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
   int GetSamplingCount(unsigned long int data_index);
@@ -263,7 +267,9 @@ class StaticAnalysis {
   void DumpAllControlFlowGraph();
   void DumpProgramCallGraph();
   void GetBinaryName();
-};
+}; // class StaticAnalysis
+
+typedef unsigned long long int addr_t;
 
 class LongLongVec;
 class SamplerImpl;
@@ -281,10 +287,8 @@ class Sampler {
   void Start();
   void Stop();
   int GetOverflowEvent(LongLongVec* overflow_vector);
-  void GetBacktrace(char* call_path_str, int max_call_path_str_len);
-  // int my_backtrace(unw_word_t *buffer, int max_depth);
-  // static void papi_handler(int EventSet, void *address, long_long overflow_vector, void *context);
-};
+  int GetBacktrace(addr_t* call_path, int max_call_path_depth);
+}; // class Sampler
 
 }  // namespace graph_sd
 }  // namespace baguatool

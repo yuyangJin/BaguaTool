@@ -24,6 +24,8 @@
 
 namespace baguatool::core {
 
+typedef unsigned long long int addr_t;
+
 // size : 8 * 50 + 4 + 4 + 4 + 4 = 432
 typedef struct SAMPLER_STRUCT {
   unsigned long long int call_path[MAX_CALL_PATH_DEPTH] = {0};
@@ -36,6 +38,7 @@ typedef struct SAMPLER_STRUCT {
 class PerfData {
  private:
   SaStruct* sampler_data = nullptr;
+  unsigned long int sampler_data_space_size = 0;
   unsigned long int sampler_data_size = 0;
   FILE* sampler_data_fp = nullptr;
   std::ifstream sampler_data_in;
@@ -47,12 +50,12 @@ class PerfData {
  public:
   PerfData();
   ~PerfData();
-  // int SetAttribute();
-  int Query();
-  void Record();
+  int Query(addr_t* call_path, int call_path_len, int process_id, int thread_id);
+  void Record(addr_t* call_path, int call_path_len, int process_id, int thread_id);
   void Read(const char*);
   void Dump();
   unsigned long int GetSize();
+  void SetMetricName(std::string& metric_name);
   std::string& GetMetricName();
   void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
   int GetSamplingCount(unsigned long int data_index);

@@ -57,6 +57,8 @@
 
 namespace baguatool::graph_sd {
 
+typedef unsigned long long int addr_t;
+
 struct LongLongVec {
   long_long overflow_vector;
 };
@@ -83,7 +85,7 @@ class SamplerImpl {
   void Start();
   void Stop();
   int GetOverflowEvent(LongLongVec* overflow_vector);
-  void GetBacktrace(char* call_path_str, int max_call_path_str_len);
+  int GetBacktrace(addr_t* call_path, int max_call_path_depth);
 };
 
 int my_backtrace(unw_word_t* buffer, int max_depth);

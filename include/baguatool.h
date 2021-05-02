@@ -223,7 +223,8 @@ class HybridAnalysis {
   /** DataEmbedding **/
   void DataEmbedding(PerfData*);
   GraphPerfData* GetGraphPerfData();
-  void ReduceVertexPerfData(std::string& metric, std::string& op);
+  perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
+  void ConvertVertexReducedDataToPercent(std::string& metric, perf_data_t total, std::string& new_metric);
 
 };  // class HybridAnalysis
 

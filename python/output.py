@@ -31,9 +31,9 @@ class Output(object):
                 continue
             setattr(self, k, v)
 
-    def node_color(self, node):
+    def node_color(self, node, percent):
         #value = float(node.id * 2) / 3
-        value = 0.0
+        #value = 0.0
         color = 0.0
         # if node.type_name == "MPI":
         #     color = 0.3
@@ -42,7 +42,7 @@ class Output(object):
         # elif node.type_name == "LOOP":
         #     color = 0.8
         # if node.performance_percentage > 0.0:
-        #     value = float(math.sqrt(math.sqrt(math.sqrt(math.sqrt(node.performance_percentage * 100) * 10 ) * 10) * 10) / 10) ** 4
+        value = float(math.sqrt(math.sqrt(percent * 100) * 10) / 10) ** 2
         #     #value = (node.sampling_count / self.total_sample_count) ** 2
         #     #print(performance_percentage)
             
@@ -56,7 +56,7 @@ class Output(object):
         # #     #print(node.comm_time, self.total_comm_time)
         # #     return Color.hsv(color, value, 0.9)
         # else:
-        return Color.hsv(color,0.02,0.9)
+        return Color.hsv(color, value, 0.9)
 
     def edge_color(self, edge_src):
         #value = float(edge_src * 2) / 3

@@ -19,7 +19,10 @@ int main(int argc, char** argv) {
   hybrid_analysis->DataEmbedding(perf_data);
   std::string metric("TOT_CYC");
   std::string op("AVG");
-  hybrid_analysis->ReduceVertexPerfData(metric, op);
+  baguatool::core::perf_data_t total = hybrid_analysis->ReduceVertexPerfData(metric, op);
+  std::string avg_metric("TOT_CYC_AVG");
+  std::string new_metric("CYC_AVG_PERCENT");
+  hybrid_analysis->ConvertVertexReducedDataToPercent(avg_metric, total, new_metric);
 
   auto graph_perf_data = hybrid_analysis->GetGraphPerfData();
   std::string output_file_name_str("output.json");

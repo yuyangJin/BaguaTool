@@ -1,8 +1,7 @@
 #include "core/hybrid_analysis.h"
-
-#include "core/graph_perf_data.h"
-
+#include <stdlib.h>
 #include "common/utils.h"
+#include "core/graph_perf_data.h"
 #include "core/vertex_type.h"
 
 namespace baguatool::core {
@@ -240,7 +239,7 @@ typedef struct ReducePerfDataArg {
   std::string metric;
   std::string op;
   // output
-  perf_data_t reduced_data = 0;
+  perf_data_t total_reduced_data = 0.0;
 } RPDArg;
 
 void ReducePerfData(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
@@ -278,19 +277,53 @@ void ReducePerfData(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   pag->SetVertexAttributeString(std::string(metric + std::string("_") + op).c_str(), (vertex_t)vertex_id,
                                 std::to_string(reduced_data).c_str());
 
-  arg->reduced_data = reduced_data;
+  arg->total_reduced_data += reduced_data;
 }
 
 // Reduce each vertex's perf data
-void HybridAnalysis::ReduceVertexPerfData(std::string &metric, std::string &op) {
+perf_data_t HybridAnalysis::ReduceVertexPerfData(std::string &metric, std::string &op) {
   RPDArg *arg = new RPDArg();
   arg->graph_perf_data = this->graph_perf_data;
   arg->metric = std::string(metric);
   arg->op = std::string(op);
+  arg->total_reduced_data = 0.0;
 
   this->root_pag->VertexTraversal(&ReducePerfData, arg);
 
-  dbg(arg->reduced_data);
+  perf_data_t total = arg->total_reduced_data;
+  delete arg;
+  return total;
+}
+
+typedef struct PerfDataToPercentArg {
+  // input
+  std::string new_metric;
+  std::string metric;
+  perf_data_t total;
+  // output
+  //...
+} PDTPArg;
+
+void PerfDataToPercent(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  PDTPArg *arg = (PDTPArg *)extra;
+  std::string new_metric(arg->new_metric);
+  std::string metric(arg->metric);
+  perf_data_t total = arg->total;
+
+  perf_data_t data = strtod(pag->GetVertexAttributeString(metric.c_str(), (vertex_t)vertex_id), NULL);
+  perf_data_t percent = data / total;
+  pag->SetVertexAttributeString(new_metric.c_str(), (vertex_t)vertex_id, std::to_string(percent).c_str());
+}
+
+// convert vertex's reduced data to percent
+void HybridAnalysis::ConvertVertexReducedDataToPercent(std::string &metric, perf_data_t total,
+                                                       std::string &new_metric) {
+  PDTPArg *arg = new PDTPArg();
+  arg->new_metric = std::string(new_metric);
+  arg->metric = std::string(metric);
+  arg->total = total;
+
+  this->root_pag->VertexTraversal(&PerfDataToPercent, arg);
 
   delete arg;
 }

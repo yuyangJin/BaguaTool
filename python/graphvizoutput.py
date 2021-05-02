@@ -126,11 +126,11 @@ class GraphvizOutput(Output):
         #    self.output_file, len(self.processor.func_count),
         #))
     
-    def draw(self, graph, vertex_attrs = [], edge_attrs = []):
+    def draw(self, graph, vertex_attrs = [], edge_attrs = [], vertex_color_depth_attr = ""):
         ''' Add vertices and edges into self.vertices and self.edges
         '''
 
-        self.vertices = self.generate_vertices(graph.vs, vertex_attrs)
+        self.vertices = self.generate_vertices(graph.vs, vertex_attrs, vertex_color_depth_attr)
 
         self.edges = self.generate_edges(graph.es, edge_attrs)
 
@@ -206,13 +206,19 @@ class GraphvizOutput(Output):
     #             'color="{group_color}"; }}'.format(**locals()))
     #     return output
 
-    def generate_vertices(self, vertices, vertex_attrs):
+    def generate_vertices(self, vertices, vertex_attrs, vertex_color_depth_attr):
         output = []
         for vertex in vertices:
-            attr = {
-                'color': self.node_color_func(vertex).rgba_web(),
-                'label': self.node_label_func(vertex, vertex_attrs),
-            }
+            if vertex_color_depth_attr != "" and vertex.attributes().__contains__(vertex_color_depth_attr):
+                attr = {
+                    'color': self.node_color_func(vertex, float(vertex[vertex_color_depth_attr])).rgba_web(),
+                    'label': self.node_label_func(vertex, vertex_attrs),
+                }
+            else:
+                attr = {
+                    'color': self.node_color_func(vertex, 0.1).rgba_web(),
+                    'label': self.node_label_func(vertex, vertex_attrs),
+                }
             output.append(self.vertex(int(vertex["id"]), attr))
 
         return output

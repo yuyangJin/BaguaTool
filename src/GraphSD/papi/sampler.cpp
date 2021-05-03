@@ -9,35 +9,20 @@ Sampler::~Sampler() {}
 
 void Sampler::SetSamplingFreq(int freq) { sa->SetSamplingFreq(freq); }
 void Sampler::Setup() { sa->Setup(); }
+void Sampler::AddThread() { sa->AddThread(); }
+void Sampler::RemoveThread() { sa->RemoveThread(); }
+void Sampler::UnsetOverflow() { sa->UnsetOverflow(); }
 void Sampler::SetOverflow(void (*FUNC_AT_OVERFLOW)(int)) { sa->SetOverflow(FUNC_AT_OVERFLOW); }
 void Sampler::Start() { sa->Start(); }
 void Sampler::Stop() { sa->Stop(); }
 int Sampler::GetOverflowEvent(LongLongVec* overflow_vector) { return sa->GetOverflowEvent(overflow_vector); }
 int Sampler::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
-  sa->GetBacktrace(call_path, max_call_path_depth);
+  return sa->GetBacktrace(call_path, max_call_path_depth);
 }
 // int Sampler::my_backtrace(unw_word_t *buffer, int max_depth) {my_backtrace(buffer, max_depth); }
 // static void Sampler:: papi_handler(int EventSet, void *address, long_long overflow_vector, void *context) {}
 
 void (*func_at_overflow_1)(int) = nullptr;
-
-static void* resolve_symbol(const char* symbol_name, int config) {
-  void* result;
-  if (config == RESOLVE_SYMBOL_VERSIONED) {
-    result = dlvsym(RTLD_NEXT, symbol_name, PTHREAD_VERSION);
-    if (result == NULL) {
-      LOG_ERROR("Unable to resolve symbol %s@%s\n", symbol_name, PTHREAD_VERSION);
-      // exit(1);
-    }
-  } else if (config == RESOLVE_SYMBOL_UNVERSIONED) {
-    result = dlsym(RTLD_NEXT, symbol_name);
-    if (result == NULL) {
-      LOG_ERROR("Unable to resolve symbol %s\n", symbol_name);
-      // exit(1);
-    }
-  }
-  return result;
-}
 
 void SamplerImpl::SetSamplingFreq(int freq) {
   // PAPI setup for main thread
@@ -84,6 +69,27 @@ void SamplerImpl::SetOverflow(void (*FUNC_AT_OVERFLOW)(int)) {
   func_at_overflow_1 = FUNC_AT_OVERFLOW;
 }
 
+void SamplerImpl::AddThread() { TRY(PAPI_register_thread(), PAPI_OK); }
+
+void SamplerImpl::RemoveThread() { TRY(PAPI_unregister_thread(), PAPI_OK); }
+
+void SamplerImpl::UnsetOverflow() {
+  int Events[NUM_EVENTS];
+
+  Events[0] = PAPI_TOT_CYC;
+  // Events[1] = PAPI_L2_DCM;
+  // Events[1] = PAPI_L1_DCM;
+  // Events[1] = PAPI_TOT_INS;
+  // Events[1] = PAPI_LD_INS;
+  // Events[2] = PAPI_SR_INS;
+  // Events[3] = PAPI_L1_DCM;
+  // Events[3] = PAPI_L3_DCA;
+
+  TRY(PAPI_overflow(this->EventSet, PAPI_TOT_CYC, 0, 0, papi_handler), PAPI_OK);
+  TRY(PAPI_remove_events(EventSet, (int*)Events, NUM_EVENTS), PAPI_OK);
+  TRY(PAPI_destroy_eventset(&(this->EventSet)), PAPI_OK);
+}
+
 void SamplerImpl::Start() { TRY(PAPI_start(this->EventSet), PAPI_OK); }
 
 void SamplerImpl::Stop() { TRY(PAPI_stop(this->EventSet, NULL), PAPI_OK); }
@@ -125,7 +131,7 @@ int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
 // #else
 //   void* address_log[MAX_STACK_DEPTH] = {0};
 // #endif
-  int offset = 0;
+//  int offset = 0;
 
 #ifdef MY_BT
   for (i = 4; i < depth; ++i) {
@@ -136,13 +142,13 @@ int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
     }
   }
 
-  // if (addr_log_pointer > 0) {
-  //   for (i = 0; i < addr_log_pointer; ++i) {
-  //     offset += snprintf(call_path_str + offset, max_call_path_str_len - offset - 4, "%lx ",
-  //                        (long unsigned int)address_log[i]);
-  //     // LOG_INFO("%08x\n",address_log[i]);
-  //   }
-  // }
+// if (addr_log_pointer > 0) {
+//   for (i = 0; i < addr_log_pointer; ++i) {
+//     offset += snprintf(call_path_str + offset, max_call_path_str_len - offset - 4, "%lx ",
+//                        (long unsigned int)address_log[i]);
+//     // LOG_INFO("%08x\n",address_log[i]);
+//   }
+// }
 #else
   for (i = 4; i < depth; ++i) {
     // if( (void*)buffer[i] != NULL && (char*)buffer[i] < addr_threshold ){
@@ -153,13 +159,13 @@ int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
     }
   }
 
-  // if (addr_log_pointer > 0) {
-  //   for (i = 0; i < addr_log_pointer; ++i) {
-  //     offset += snprintf(call_path_str + offset, max_call_path_str_len - offset - 4, "%lx ",
-  //                        (long unsigned int)address_log[i]);
-  //     // LOG_INFO("%08x\n",address_log[i]);
-  //   }
-  // }
+// if (addr_log_pointer > 0) {
+//   for (i = 0; i < addr_log_pointer; ++i) {
+//     offset += snprintf(call_path_str + offset, max_call_path_str_len - offset - 4, "%lx ",
+//                        (long unsigned int)address_log[i]);
+//     // LOG_INFO("%08x\n",address_log[i]);
+//   }
+// }
 #endif
 
   return addr_log_pointer;

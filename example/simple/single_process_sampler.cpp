@@ -12,20 +12,16 @@ std::unique_ptr<baguatool::core::PerfData> perf_data = nullptr;
 
 std::unique_ptr<baguatool::graph_sd::Sampler> sampler = nullptr;
 
-
 static int CYC_SAMPLE_COUNT = 0;
 static int module_init = 0;
 
 int mpiRank = 0;
-
 
 void RecordCallPath(int y) {
   baguatool::graph_sd::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
   perf_data->Record(call_path, call_path_len, 0 /* process_id */, 0 /* thread_id */);
 }
-
-
 
 static void init_mock() __attribute__((constructor));
 static void fini_mock() __attribute__((destructor));

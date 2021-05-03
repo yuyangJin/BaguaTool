@@ -5,7 +5,7 @@ namespace baguatool::core {
 
 PerfData::PerfData() {
   this->sampler_data_space_size = MAX_TRACE_MEM / sizeof(SaStruct);
-  //long int size = 10000;
+  // long int size = 10000;
   // printf("%lu\n", size);
   // dbg(size);
   this->sampler_data = new SaStruct[this->sampler_data_space_size];
@@ -34,8 +34,10 @@ bool CallPathCmp(addr_t* cp_1, int cp_1_len, addr_t* cp_2, int cp_2_len) {
 
 int PerfData::Query(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
   for (unsigned long int i = 0; i < this->sampler_data_size; i++) {
-    //call_path
-    if (CallPathCmp(call_path, call_path_len, this->sampler_data[i].call_path, this->sampler_data[i].call_path_len) == true && this->sampler_data[i].thread_id == thread_id && this->sampler_data[i].procs_id == procs_id){
+    // call_path
+    if (CallPathCmp(call_path, call_path_len, this->sampler_data[i].call_path, this->sampler_data[i].call_path_len) ==
+            true &&
+        this->sampler_data[i].thread_id == thread_id && this->sampler_data[i].procs_id == procs_id) {
       return i;
     }
   }
@@ -43,15 +45,14 @@ int PerfData::Query(addr_t* call_path, int call_path_len, int procs_id, int thre
   return -1;
 }
 void PerfData::Record(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
-
   int index = this->Query(call_path, call_path_len, procs_id, thread_id);
 
   if (index >= 0) {
-    this->sampler_data[index].count ++;
+    this->sampler_data[index].count++;
   } else {
     // Thread-safe, first fetch a index, then record data
     unsigned long long int x = __sync_fetch_and_add(&this->sampler_data_size, 1);
-    
+
     this->sampler_data[this->sampler_data_size - 1].call_path_len = call_path_len;
     for (int i = 0; i < call_path_len; i++) {
       this->sampler_data[this->sampler_data_size - 1].call_path[i] = call_path[i];
@@ -65,7 +66,6 @@ void PerfData::Record(addr_t* call_path, int call_path_len, int procs_id, int th
     // TODO: asynchronous dump
     this->Dump();
   }
-
 }
 void PerfData::Read(const char* infile_name) {
   // Open a file
@@ -149,9 +149,7 @@ unsigned long int PerfData::GetSize() { return this->sampler_data_size; }
 
 std::string& PerfData::GetMetricName() { return this->metric_name; }
 
-void PerfData::SetMetricName(std::string& metric_name) {
-  this->metric_name = std::string(metric_name);
-}
+void PerfData::SetMetricName(std::string& metric_name) { this->metric_name = std::string(metric_name); }
 
 void PerfData::GetCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path_stack) {
   SaStruct* data = &(this->sampler_data[data_index]);

@@ -81,6 +81,9 @@ class SamplerImpl {
 
   void SetSamplingFreq(int freq);
   void Setup();
+  void AddThread();
+  void RemoveThread();
+  void UnsetOverflow();
   void SetOverflow(void (*FUNC_AT_OVERFLOW)(int));
   void Start();
   void Stop();
@@ -90,7 +93,7 @@ class SamplerImpl {
 
 int my_backtrace(unw_word_t* buffer, int max_depth);
 
-static void* resolve_symbol(const char* symbol_name, int config);
+// static void* resolve_symbol(const char* symbol_name, int config);
 
 static void papi_handler(int EventSet, void* address, long_long overflow_vector, void* context);
 

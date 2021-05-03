@@ -267,7 +267,7 @@ class StaticAnalysis {
   void DumpAllControlFlowGraph();
   void DumpProgramCallGraph();
   void GetBinaryName();
-}; // class StaticAnalysis
+};  // class StaticAnalysis
 
 typedef unsigned long long int addr_t;
 
@@ -283,12 +283,17 @@ class Sampler {
 
   void SetSamplingFreq(int freq);
   void Setup();
+  void AddThread();
+  void RemoveThread();
+  void UnsetOverflow();
   void SetOverflow(void (*FUNC_AT_OVERFLOW)(int));
   void Start();
   void Stop();
   int GetOverflowEvent(LongLongVec* overflow_vector);
   int GetBacktrace(addr_t* call_path, int max_call_path_depth);
-}; // class Sampler
+};  // class Sampler
+
+// static void* resolve_symbol(const char* symbol_name, int config);
 
 }  // namespace graph_sd
 }  // namespace baguatool

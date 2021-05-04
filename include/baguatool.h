@@ -32,11 +32,12 @@ class Graph {
   ~Graph();
   void GraphInit(const char* graph_name);
   vertex_t AddVertex();
+  void SwapVertex(vertex_t vertex_id_1, vertex_t vertex_id_2);
   edge_t AddEdge(const vertex_t src_vertex_id, const vertex_t dest_vertex_id);
   void AddGraph(Graph* g);
 
-  void DeleteVertex();
-  void DeleteEdge();
+  void DeleteVertex(vertex_t vertex_id);
+  void DeleteEdge(vertex_t src_id, vertex_t dest_id);
 
   void QueryVertex();
   int QueryEdge(vertex_t, vertex_t);
@@ -71,6 +72,7 @@ class Graph {
 
   void MergeVertices();
   void SplitVertex();
+  void DeepCopyVertex(vertex_t new_vertex_id, Graph* g, vertex_t vertex_id);
   void CopyVertex(vertex_t new_vertex_id, Graph* g, vertex_t vertex_id);
   // TODO: do not expose inner igraph
   void DeleteVertices(vertex_set_t* vs);
@@ -82,6 +84,7 @@ class Graph {
   int GetCurVertexNum();
   void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, vertex_t, void*), void* extra);
   void GetChildVertexSet(vertex_t, std::vector<vertex_t>&);
+  void PreOrderTraversal(vertex_t root, std::vector<vertex_t>& pre_order_vertex_vec);
 };
 
 class ProgramGraph : public Graph {
@@ -99,6 +102,7 @@ class ProgramGraph : public Graph {
   int AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr);
   void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
   const char* GetCalleeVertex(vertex_t);
+  void VertexSortChild();
 };
 
 class ProgramAbstractionGraph : public ProgramGraph {

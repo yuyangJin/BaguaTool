@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "baguatool.h"
+#include "dbg.h"
 
 #define MODULE_INITED 1
 #define RESOLVE_SYMBOL_VERSIONED 1
@@ -123,12 +124,14 @@ static void *start_routine_wrapper(void *arg) {
   sampler->SetOverflow(&RecordCallPath);
   sampler->Start();
 
+  dbg(start_routine);
+
   void *ret = start_routine(real_arg);  // acutally launch new thread
 
   sampler->Stop();
   sampler->UnsetOverflow();
   sampler->RemoveThread();
-  close_thread_gid();
+  // close_thread_gid();
   LOG_INFO("Thread Finish, thread_gid = %d\n", thread_gid);
 
   return ret;
@@ -142,6 +145,17 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   auto *arg = (start_routine_wrapper_arg *)malloc(sizeof(struct start_routine_wrapper_arg));
   arg->start_routine = start_routine;
   arg->real_arg = real_arg;
+  // dbg(&start_routine, start_routine, *start_routine, *(*start_routine));
 
   return (*original_pthread_create)(thread, attr, start_routine_wrapper, arg);
+}
+
+int pthread_mutex_lock(pthread_mutex_t *thread) {
+  if (module_init != MODULE_INITED) {
+    init_mock();
+  }
+  dbg(thread_gid, thread, &thread);
+  int ret = (*original_pthread_mutex_unlock)(thread);
+
+  return ret;
 }

@@ -183,6 +183,8 @@ void HybridAnalysis::InterProceduralAnalysis() {
   }
   delete arg;
 
+  this->root_pag->VertexSortChild();
+
   return;
 }  // function InterProceduralAnalysis
 
@@ -327,5 +329,9 @@ void HybridAnalysis::ConvertVertexReducedDataToPercent(std::string &metric, perf
 
   delete arg;
 }
+
+// void HybridAnalysis::GenerateMultiProgramAbstractionGraph(){
+
+// }
 
 }  // namespace baguatool::core

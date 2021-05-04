@@ -72,7 +72,7 @@ endif()
 
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(baguatool PRIVATE src)
-target_include_directories(baguatool PRIVATE ${PROJECT_SOURCE_DIR}/third_party/dbg)
+target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/dbg)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/json)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/toml)
 target_include_directories(baguatool PRIVATE igraph)

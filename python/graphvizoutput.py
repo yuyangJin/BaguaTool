@@ -208,7 +208,8 @@ class GraphvizOutput(Output):
 
     def generate_vertices(self, vertices, vertex_attrs, vertex_color_depth_attr):
         output = []
-        for vertex in vertices:
+        for i in range(len(vertices)):
+            vertex = vertices[i]
             if vertex_color_depth_attr != "" and vertex.attributes().__contains__(vertex_color_depth_attr):
                 attr = {
                     'color': self.node_color_func(vertex, float(vertex[vertex_color_depth_attr])).rgba_web(),
@@ -219,7 +220,7 @@ class GraphvizOutput(Output):
                     'color': self.node_color_func(vertex, 0.1).rgba_web(),
                     'label': self.node_label_func(vertex, vertex_attrs),
                 }
-            output.append(self.vertex(int(vertex["id"]), attr))
+            output.append(self.vertex(i, attr))
 
         return output
 

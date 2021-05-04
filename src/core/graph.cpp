@@ -49,6 +49,36 @@ vertex_t Graph::AddVertex() {
   return (vertex_t)new_vertex_id;
 }
 
+void Graph::SwapVertex(vertex_t vertex_id_1, vertex_t vertex_id_2) {
+  // Swap all attributes, including id
+  igraph_vector_t vtypes;
+  igraph_strvector_t vnames;
+  int i;
+
+  igraph_vector_init(&vtypes, 0);
+  igraph_strvector_init(&vnames, 0);
+
+  igraph_cattribute_list(&this->ipag_->graph, nullptr, nullptr, &vnames, &vtypes, nullptr, nullptr);
+  /* Graph attributes */
+  for (i = 0; i < igraph_strvector_size(&vnames); i++) {
+    const char *vname = STR(vnames, i);
+    printf("%s=", vname);
+    if (VECTOR(vtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
+      igraph_integer_t swap_num = VAN(&this->ipag_->graph, STR(vnames, i), vertex_id_1);
+      SETVAN(&this->ipag_->graph, vname, vertex_id_1, VAN(&this->ipag_->graph, STR(vnames, i), vertex_id_2));
+      SETVAN(&this->ipag_->graph, vname, vertex_id_2, swap_num);
+      // igraph_real_printf(VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
+    } else {
+      const char *swap_num = VAS(&this->ipag_->graph, STR(vnames, i), vertex_id_1);
+      SETVAS(&this->ipag_->graph, vname, vertex_id_1, VAS(&this->ipag_->graph, STR(vnames, i), vertex_id_2));
+      SETVAS(&this->ipag_->graph, vname, vertex_id_2, swap_num);
+      // SETVAS(&ipag_->graph, vname, new_vertex_id, VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
+      // printf("\"%s\" ", VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
+    }
+  }
+  // printf("\n");
+}
+
 edge_t Graph::AddEdge(const vertex_t src_vertex_id, const vertex_t dest_vertex_id) {
   // Add a new edge
   // printf("Add an edge: %d, %d\n", src_vertex_id, dest_vertex_id);
@@ -120,9 +150,22 @@ void Graph::AddGraph(Graph *g) {
   FREE_CONTAINER(old_vertex_id_2_new_vertex_id);
 }
 
-void Graph::DeleteVertex() { UNIMPLEMENTED(); }
+void Graph::DeleteVertex(vertex_t vertex_id) {
+  igraph_delete_vertices(&this->ipag_->graph, igraph_vss_1(vertex_id));
+  this->cur_vertex_num--;
+}
 
-void Graph::DeleteEdge() { UNIMPLEMENTED(); }
+void Graph::DeleteEdge(vertex_t src_id, vertex_t dest_id) {
+  edge_t edge_id = QueryEdge(src_id, dest_id);
+  if (edge_id != -1) {
+    igraph_es_t es;
+    igraph_es_1(&es, edge_id);
+    igraph_delete_edges(&this->ipag_->graph, es);
+    igraph_es_destroy(&es);
+  } else {
+    ;  // std::cout << "E"<<"do not exs"
+  }
+}
 
 void Graph::QueryVertex() { UNIMPLEMENTED(); }
 
@@ -220,6 +263,39 @@ void Graph::MergeVertices() { UNIMPLEMENTED(); }
 
 void Graph::SplitVertex() { UNIMPLEMENTED(); }
 
+void Graph::DeepCopyVertex(vertex_t new_vertex_id, Graph *g, vertex_t vertex_id) {
+  igraph_vector_t gtypes, vtypes, etypes;
+  igraph_strvector_t gnames, vnames, enames;
+  int i;
+  // igraph_vector_init(&gtypes, 0);
+  igraph_vector_init(&vtypes, 0);
+  // igraph_vector_init(&etypes, 0);
+  // igraph_strvector_init(&gnames, 0);
+  igraph_strvector_init(&vnames, 0);
+  // igraph_strvector_init(&enames, 0);
+  igraph_cattribute_list(&g->ipag_->graph, nullptr, nullptr, &vnames, &vtypes, nullptr, nullptr);
+  /* Graph attributes */
+  for (i = 0; i < igraph_strvector_size(&vnames); i++) {
+    const char *vname = STR(vnames, i);
+    printf("%s=", vname);
+    if (VECTOR(vtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
+      // if (strcmp(vname, "id") == 0) {
+      //   SETVAN(&ipag_->graph, vname, new_vertex_id, new_vertex_id);
+      //   printf("%d", new_vertex_id);
+      // } else {
+      SETVAN(&ipag_->graph, vname, new_vertex_id, VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
+      igraph_real_printf(VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
+      // }
+
+      // putchar(' ');
+    } else {
+      SETVAS(&ipag_->graph, vname, new_vertex_id, VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
+      printf("\"%s\" ", VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
+    }
+  }
+  printf("\n");
+}
+
 void Graph::CopyVertex(vertex_t new_vertex_id, Graph *g, vertex_t vertex_id) {
   igraph_vector_t gtypes, vtypes, etypes;
   igraph_strvector_t gnames, vnames, enames;
@@ -244,7 +320,7 @@ void Graph::CopyVertex(vertex_t new_vertex_id, Graph *g, vertex_t vertex_id) {
         igraph_real_printf(VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
       }
 
-      // putchar(' ');
+      printf(" ");
     } else {
       SETVAS(&ipag_->graph, vname, new_vertex_id, VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
       printf("\"%s\" ", VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
@@ -313,6 +389,7 @@ void Graph::DumpGraphDot(const char *file_name) {
 }
 
 void Graph::VertexTraversal(void (*CALL_BACK_FUNC)(Graph *, int, void *), void *extra) {
+  this->DeleteExtraTailVertices();
   igraph_vs_t vs;
   igraph_vit_t vit;
   // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
@@ -341,16 +418,32 @@ int Graph::GetCurVertexNum() { return this->cur_vertex_num; }
 void Graph::GetChildVertexSet(vertex_t vertex, std::vector<vertex_t> &neighbor_vertices) {
   // std::vector<vertex_t> neighbor_vertices;
   igraph_vector_t v;
-  dbg(this->GetGraphAttributeString("name"), vertex);
+  // dbg(this->GetGraphAttributeString("name"), vertex);
   igraph_vector_init(&v, 0);
   igraph_neighbors(&ipag_->graph, &v, vertex, IGRAPH_OUT);
   long int neighbor_num = igraph_vector_size(&v);
-  dbg(neighbor_num);
+  // dbg(neighbor_num);
   for (long int i = 0; i < neighbor_num; i++) {
     neighbor_vertices.push_back((vertex_t)VECTOR(v)[i]);
   }
   igraph_vector_destroy(&v);
   // return neighbor_vertices;
+}
+
+igraph_bool_t dfs_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
+  std::vector<vertex_t> *pre_order_vertex_vec = (std::vector<vertex_t> *)extra;
+  pre_order_vertex_vec->push_back(vid);
+  return 0;
+}
+
+void Graph::PreOrderTraversal(vertex_t root, std::vector<vertex_t> &pre_order_vertex_vec) {
+  // Graph* new_graph = new Graph();
+  // new_graph->GraphInit();
+
+  igraph_dfs(&(this->ipag_->graph), /*root=*/root, /*neimode=*/IGRAPH_OUT,
+             /*unreachable=*/1, /*order=*/0, /*order_out=*/0,
+             /*father=*/0, /*dist=*/0,
+             /*in_callback=*/dfs_callback, /*out_callback=*/0, /*extra=*/&pre_order_vertex_vec);
 }
 
 }  // namespace baguatool::core

@@ -6,6 +6,12 @@
 //#ifndef N
 //#define N 5000000
 //#endif
+
+void print_thread_id(pthread_t id) {
+  size_t i;
+  for (i = sizeof(i); i; --i) printf("%02x", *(((unsigned char *)&id) + i - 1));
+}
+
 int N = 5000000;
 typedef struct ct_sum {
   int sum;
@@ -71,8 +77,14 @@ int main(int argc, char **argv) {
     cnt.sum += i;
   }
 
+  print_thread_id(ptid1);
+  printf("\n");
+
   pthread_create(&ptid1, NULL, add1, &cnt);
   pthread_create(&ptid2, NULL, add2, &cnt);
+
+  print_thread_id(ptid1);
+  printf("\n");
 
   pthread_mutex_lock(&(cnt.lock));
   printf("sum %d\n", cnt.sum);
@@ -80,6 +92,9 @@ int main(int argc, char **argv) {
 
   pthread_join(ptid1, NULL);
   pthread_join(ptid2, NULL);
+
+  print_thread_id(ptid1);
+  printf("\n");
 
   printf("sum %d\n", cnt.sum);
 

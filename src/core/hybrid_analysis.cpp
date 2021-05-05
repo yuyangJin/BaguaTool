@@ -330,8 +330,83 @@ void HybridAnalysis::ConvertVertexReducedDataToPercent(std::string &metric, perf
   delete arg;
 }
 
-// void HybridAnalysis::GenerateMultiProgramAbstractionGraph(){
+void HybridAnalysis::GenerateMultiProgramAbstractionGraph() {
+  root_mpag = new ProgramAbstractionGraph();
+  root_mpag->GraphInit("Multi-process Program Abstraction Graph");
 
-// }
+  std::vector<vertex_t> pre_order_vertex_seq;
+  root_pag->PreOrderTraversal(0, pre_order_vertex_seq);
+
+  vertex_t last_new_vertex_id = -1;
+  for (auto &vertex_id : pre_order_vertex_seq) {
+    vertex_t new_vertex_id = root_mpag->AddVertex();
+    root_mpag->CopyVertex(new_vertex_id, root_pag, vertex_id);
+    if (last_new_vertex_id != -1) {
+      root_mpag->AddEdge(last_new_vertex_id, new_vertex_id);
+    }
+    last_new_vertex_id = new_vertex_id;
+  }
+}
+
+ProgramAbstractionGraph *HybridAnalysis::GetMultiProgramAbstractionGraph() { return root_mpag; }
+
+void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
+  // Query for each call path
+  auto data_size = pthread_data->GetSize();
+  for (unsigned long int i = 0; i < data_size; i++) {
+    std::stack<unsigned long long> call_path;
+    pthread_data->GetCallPath(i, call_path);
+    if (!call_path.empty()) {
+      call_path.pop();
+    }
+    auto time = pthread_data->GetSamplingCount(i);
+    auto create_thread_id = pthread_data->GetProcessId(i);
+    auto thread_id = pthread_data->GetThreadId(i);
+
+    // Need to judge if it is in current thread
+    // if thread_id == cur_thread
+
+    if (time == (baguatool::core::perf_data_t)(-1)) {
+      vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
+      addr_t addr = call_path.top();
+      dbg(addr);
+      vertex_t pthread_vertex_id = root_pag->AddVertex();
+      root_pag->SetVertexBasicInfo(pthread_vertex_id, core::CALL_NODE, "pthread_create");
+      root_pag->SetVertexDebugInfo(pthread_vertex_id, addr, addr);
+      root_pag->SetVertexAttributeNum("id", pthread_vertex_id, pthread_vertex_id);
+      root_pag->AddEdge(queried_vertex_id, pthread_vertex_id);
+      for (unsigned long int j = 0; j < data_size; j++) {
+        if (j != i) {
+          if (create_thread_id == pthread_data->GetProcessId(j)) {
+            dbg(create_thread_id, pthread_data->GetProcessId(j));
+            std::stack<unsigned long long> call_path_j;
+            pthread_data->GetCallPath(j, call_path_j);
+            if (!call_path_j.empty()) {
+              call_path_j.pop();
+            }
+            auto time_j = pthread_data->GetSamplingCount(j);
+            auto create_thread_id_j = pthread_data->GetProcessId(j);
+            auto thread_id_j = pthread_data->GetThreadId(j);
+
+            vertex_t queried_vertex_id_j = this->root_pag->GetVertexWithCallPath(0, call_path_j);
+            addr_t addr_j = call_path_j.top();
+            dbg(addr_j);
+            vertex_t pthread_join_vertex_id = root_pag->AddVertex();
+            dbg(pthread_join_vertex_id);
+            root_pag->SetVertexBasicInfo(pthread_join_vertex_id, core::CALL_NODE, "pthread_join");
+            root_pag->SetVertexDebugInfo(pthread_join_vertex_id, addr_j, addr_j);
+            root_pag->SetVertexAttributeNum("id", pthread_join_vertex_id, pthread_join_vertex_id);
+            root_pag->AddEdge(queried_vertex_id_j, pthread_join_vertex_id);
+            FREE_CONTAINER(call_path_j);
+            break;
+          }
+        }
+      }
+    }
+    FREE_CONTAINER(call_path);
+  }
+
+  root_pag->VertexSortChild();
+}
 
 }  // namespace baguatool::core

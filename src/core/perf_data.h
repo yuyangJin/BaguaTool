@@ -24,15 +24,17 @@
 
 namespace baguatool::core {
 
+typedef double perf_data_t;
 typedef unsigned long long int addr_t;
 
 // size : 8 * 50 + 4 + 4 + 4 + 4 = 432
 typedef struct SAMPLER_STRUCT {
   unsigned long long int call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = 0;
-  int count = 0;
+  perf_data_t count = 0;
   int procs_id = 0;
   int thread_id = 0;
+  // unsigned long created_thread_id = 0;
 } SaStruct;
 
 class PerfData {
@@ -51,14 +53,14 @@ class PerfData {
   PerfData();
   ~PerfData();
   int Query(addr_t* call_path, int call_path_len, int process_id, int thread_id);
-  void Record(addr_t* call_path, int call_path_len, int process_id, int thread_id);
+  void Record(addr_t* call_path, int call_path_len, int process_id, int thread_id, perf_data_t count);
   void Read(const char*);
-  void Dump();
+  void Dump(const char*);
   unsigned long int GetSize();
   void SetMetricName(std::string& metric_name);
   std::string& GetMetricName();
   void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
-  int GetSamplingCount(unsigned long int data_index);
+  perf_data_t GetSamplingCount(unsigned long int data_index);
   int GetProcessId(unsigned long int data_index);
   int GetThreadId(unsigned long int data_index);
 };

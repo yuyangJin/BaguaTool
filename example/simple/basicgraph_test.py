@@ -9,7 +9,7 @@ from graphvizoutput import *
 
 g = ProgramAbstractionGraph.Read_GML("root_3.gml")                                                                                                         
 graphviz_output = GraphvizOutput(output_file = "root_single_process")
-graphviz_output.draw(g, vertex_attrs = ["id", "name", "type", "saddr", "eaddr", "TOTCYCAVG", "CYCAVGPERCENT"], edge_attrs = ["id"], vertex_color_depth_attr = "CYCAVGPERCENT")
+graphviz_output.draw(g, vertex_attrs = ["id", "name", "type", "saddr", "eaddr" ''', "TOTCYCAVG", "CYCAVGPERCENT"'''], edge_attrs = ["id"], vertex_color_depth_attr = "CYCAVGPERCENT")
 graphviz_output.show()
 
 #g.write_dot("test.dot")

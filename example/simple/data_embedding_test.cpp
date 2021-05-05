@@ -29,5 +29,8 @@ int main(int argc, char** argv) {
   graph_perf_data->Dump(output_file_name_str);
 
   hybrid_analysis->GetProgramAbstractionGraph()->DumpGraph("root_3.gml");
-  // hybrid_analysis->GetProgramAbstractionGraph()->PreOrderTraversal(0);
+  hybrid_analysis->GenerateMultiProgramAbstractionGraph();
+
+  auto mpag = hybrid_analysis->GetMultiProgramAbstractionGraph();
+  mpag->DumpGraph("root_3.gml");
 }

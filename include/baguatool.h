@@ -134,6 +134,7 @@ typedef struct SAMPLER_STRUCT SaStruct;
 #endif
 
 typedef unsigned long long int addr_t;
+typedef double perf_data_t;
 
 class PerfData {
  private:
@@ -151,19 +152,17 @@ class PerfData {
   PerfData();
   ~PerfData();
   int Query(addr_t* call_path, int call_path_len, int process_id, int thread_id);
-  void Record(addr_t* call_path, int call_path_len, int process_id, int thread_id);
+  void Record(addr_t* call_path, int call_path_len, int process_id, int thread_id, perf_data_t count);
   void Read(const char*);
-  void Dump();
+  void Dump(const char*);
   unsigned long int GetSize();
   void SetMetricName(std::string& metric_name);
   std::string& GetMetricName();
   void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
-  int GetSamplingCount(unsigned long int data_index);
+  perf_data_t GetSamplingCount(unsigned long int data_index);
   int GetProcessId(unsigned long int data_index);
   int GetThreadId(unsigned long int data_index);
 };
-
-typedef double perf_data_t;
 
 class GraphPerfData {
  private:
@@ -194,6 +193,7 @@ class HybridAnalysis {
   ProgramCallGraph* pcg;
   std::map<std::string, ProgramAbstractionGraph*> func_pag_map;
   ProgramAbstractionGraph* root_pag;
+  ProgramAbstractionGraph* root_mpag;
   GraphPerfData* graph_perf_data;
 
  public:
@@ -233,6 +233,11 @@ class HybridAnalysis {
   GraphPerfData* GetGraphPerfData();
   perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
   void ConvertVertexReducedDataToPercent(std::string& metric, perf_data_t total, std::string& new_metric);
+
+  void GenerateMultiProgramAbstractionGraph();
+  ProgramAbstractionGraph* GetMultiProgramAbstractionGraph();
+
+  void PthreadAnalysis(PerfData* pthread_data);
 
 };  // class HybridAnalysis
 

@@ -96,7 +96,7 @@ vertex_t ProgramGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<un
   // Get the top addr of the stack
   unsigned long long addr = call_path_stack.top();
 
-  dbg(addr);
+  // dbg(addr);
 
   if (addr > 0x40000000) {
     call_path_stack.pop();
@@ -237,33 +237,60 @@ const char *ProgramGraph::GetCalleeVertex(vertex_t vertex_id) {
 }
 
 struct compare_addr {
-  compare_addr(const std::vector<unsigned long long> &v) : _v(v) {}
-  bool operator()(const size_t i, const size_t j) const { return _v[i] < _v[j]; }
   const std::vector<unsigned long long> &_v;
+  compare_addr(const std::vector<unsigned long long> &v) : _v(v) {}
+  inline bool operator()(std::size_t i, std::size_t j) const { return _v[i] > _v[j]; }
+};
+
+// template <typename T, typename Compare>
+// std::vector<std::size_t> sort_permutation(
+//     const std::vector<T>& vec,
+//     Compare& compare)
+// {
+//     std::vector<std::size_t> p(vec.size());
+//     std::iota(p.begin(), p.end(), 0);
+//     std::sort(p.begin(), p.end(),
+//         [&](std::size_t i, std::size_t j){ return compare(vec[i], vec[j]); });
+//     return p;
+// }
+
+struct IdAndAddr {
+  vertex_t vertex_id;
+  unsigned long long addr;
+  IdAndAddr(vertex_t vid, unsigned long long a) : vertex_id(vid), addr(a) {}
+  bool operator<(const IdAndAddr &iaa) const { return (addr < iaa.addr); }
 };
 
 void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
   std::vector<vertex_t> children;
   pg->GetChildVertexSet(vertex_id, children);
 
+  // If this vertex has no child, return now
   if (0 == children.size()) {
     return;
   }
 
-  std::vector<vertex_t> children_id = children;
-
-  std::vector<unsigned long long> children_s_addr;
+  /* Sort pairs <id, s_addr> with s_addr as key */
+  std::vector<IdAndAddr> children_id_addr;
+  // make pair
   for (auto &child : children) {
     unsigned long long s_addr = pg->GetVertexAttributeNum("saddr", child);
-    children_s_addr.push_back(s_addr);
+    children_id_addr.push_back(IdAndAddr(child, s_addr));
   }
-
   // Sort by s_addr
-  std::sort(children_id.begin(), children_id.end(), compare_addr(children_s_addr));
+  std::sort(children_id_addr.begin(), children_id_addr.end());
+  // Convert pair <id, s_addr> to two vector
+  std::vector<vertex_t> children_id;
+  std::vector<unsigned long long> children_s_addr;
+
+  for (auto &iaa : children_id_addr) {
+    children_id.push_back(iaa.vertex_id);
+    children_s_addr.push_back(iaa.addr);
+  }
   dbg(children, children_id);
+  /* Sorting complete */
 
-  // Swap vertex, children is original sequence, children_id is sorted sequence
-
+  /* Swap vertices, children is original sequence, children_id is sorted sequence */
   int num_children = children.size();
   std::map<vertex_t, vertex_t> vertex_id_to_tmp_vertex_id;
   std::map<vertex_t, std::vector<edge_t>> vertex_id_to_tmp_edge_id_vec;
@@ -320,8 +347,10 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
     dbg(vertex.second);
     pg->DeleteVertex(vertex.second);
   }
+  /* Swapping complete */
 
   FREE_CONTAINER(children);
+  FREE_CONTAINER(children_id_addr);
   FREE_CONTAINER(children_id);
   FREE_CONTAINER(children_s_addr);
   FREE_CONTAINER(vertex_id_to_tmp_vertex_id);

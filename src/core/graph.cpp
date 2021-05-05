@@ -35,10 +35,13 @@ void Graph::GraphInit(const char *graph_name) {
 
 vertex_t Graph::AddVertex() {
   if (this->cur_vertex_num >= igraph_vcount(&ipag_->graph)) {
+    dbg(this->cur_vertex_num, igraph_vcount(&ipag_->graph));
     igraph_add_vertices(&ipag_->graph, TRUNK_SIZE, 0);
   }
   // Add a new vertex
   igraph_integer_t new_vertex_id = this->cur_vertex_num++;
+
+  dbg(new_vertex_id, this->cur_vertex_num);
 
   // igraph_integer_t new_vertex_id = igraph_vcount(&ipag_.graph);
   // printf("Add a vertex: %d %s\n", new_vertex_id, vertex_name);

@@ -134,7 +134,7 @@ int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
 //  int offset = 0;
 
 #ifdef MY_BT
-  for (i = 4; i < depth; ++i) {
+  for (i = 1; i < depth; ++i) {
     // if( (void*)buffer[i] != NULL && (char*)buffer[i] < addr_threshold ){
     if (buffer[i] != 0) {
       call_path[addr_log_pointer] = (addr_t)(buffer[i]) - 2;
@@ -150,7 +150,7 @@ int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
 //   }
 // }
 #else
-  for (i = 4; i < depth; ++i) {
+  for (i = 1; i < depth; ++i) {
     // if( (void*)buffer[i] != NULL && (char*)buffer[i] < addr_threshold ){
     if ((void*)buffer[i] != NULL) {
       call_path[addr_log_pointer] = (addr_t)(buffer[i]) - 2;

@@ -44,11 +44,11 @@ int PerfData::Query(addr_t* call_path, int call_path_len, int procs_id, int thre
 
   return -1;
 }
-void PerfData::Record(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
+void PerfData::Record(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t count) {
   int index = this->Query(call_path, call_path_len, procs_id, thread_id);
 
   if (index >= 0) {
-    this->sampler_data[index].count++;
+    this->sampler_data[index].count += count;
   } else {
     // Thread-safe, first fetch a index, then record data
     unsigned long long int x = __sync_fetch_and_add(&this->sampler_data_size, 1);
@@ -57,14 +57,14 @@ void PerfData::Record(addr_t* call_path, int call_path_len, int procs_id, int th
     for (int i = 0; i < call_path_len; i++) {
       this->sampler_data[this->sampler_data_size - 1].call_path[i] = call_path[i];
     }
-    this->sampler_data[this->sampler_data_size - 1].count = 1;
+    this->sampler_data[this->sampler_data_size - 1].count = count;
     this->sampler_data[this->sampler_data_size - 1].thread_id = thread_id;
     this->sampler_data[this->sampler_data_size - 1].procs_id = procs_id;
   }
 
   if (this->sampler_data_size >= this->sampler_data_space_size - 5) {
     // TODO: asynchronous dump
-    this->Dump();
+    this->Dump(this->file_name);
   }
 }
 void PerfData::Read(const char* infile_name) {
@@ -96,9 +96,10 @@ void PerfData::Read(const char* infile_name) {
 
     // dbg(cnt);
 
-    if (cnt == 3) {
-      this->sampler_data[this->sampler_data_size].count = atoi(line_vec[1].c_str());
-      this->sampler_data[this->sampler_data_size].thread_id = atoi(line_vec[2].c_str());
+    if (cnt == 4) {
+      this->sampler_data[this->sampler_data_size].count = atof(line_vec[1].c_str());
+      this->sampler_data[this->sampler_data_size].procs_id = atoi(line_vec[2].c_str());
+      this->sampler_data[this->sampler_data_size].thread_id = atoi(line_vec[3].c_str());
 
       // Then parse call path
       char delim_cp[] = " ";
@@ -112,8 +113,8 @@ void PerfData::Read(const char* infile_name) {
         dbg(this->sampler_data[this->sampler_data_size].call_path[i]);
       }
 
-      LOG_INFO("DATA[%lu]: %s | %d | %d\n", this->sampler_data_size, line_vec[0].c_str(),
-               this->sampler_data[this->sampler_data_size].count,
+      LOG_INFO("DATA[%lu]: %s | %lf | %d |%d\n", this->sampler_data_size, line_vec[0].c_str(),
+               this->sampler_data[this->sampler_data_size].count, this->sampler_data[this->sampler_data_size].procs_id,
                this->sampler_data[this->sampler_data_size].thread_id);
 
       // size ++
@@ -124,7 +125,10 @@ void PerfData::Read(const char* infile_name) {
   this->sampler_data_in.close();
 }
 
-void PerfData::Dump() {
+void PerfData::Dump(const char* output_file_name) {
+  if (output_file_name != nullptr) {
+    strcpy(this->file_name, output_file_name);
+  }
   if (!has_open_output_file) {
     this->sampler_data_fp = fopen(this->file_name, "w");
     if (!this->sampler_data_fp) {
@@ -139,7 +143,8 @@ void PerfData::Dump() {
     for (int j = 0; j < this->sampler_data[i].call_path_len; j++) {
       fprintf(this->sampler_data_fp, "%llx ", this->sampler_data[i].call_path[j]);
     }
-    fprintf(this->sampler_data_fp, " | %d | %d\n", this->sampler_data[i].count, this->sampler_data[i].thread_id);
+    fprintf(this->sampler_data_fp, " | %lf | %d | %d\n", this->sampler_data[i].count, this->sampler_data[i].procs_id,
+            this->sampler_data[i].thread_id);
     fflush(this->sampler_data_fp);
   }
   this->sampler_data_size = __sync_and_and_fetch(&this->sampler_data_size, 0);
@@ -160,7 +165,7 @@ void PerfData::GetCallPath(unsigned long int data_index, std::stack<unsigned lon
   return;
 }
 
-int PerfData::GetSamplingCount(unsigned long int data_index) {
+perf_data_t PerfData::GetSamplingCount(unsigned long int data_index) {
   SaStruct* data = &(this->sampler_data[data_index]);
   return data->count;
 }

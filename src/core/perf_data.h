@@ -37,13 +37,15 @@ typedef struct VERTEX_DATA_STRUCT {
 } VDS;
 
 typedef struct EDGE_DATA_STRUCT {
-  addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};  //
-  int call_path_len = 0;                        //
-  perf_data_t value = 0;                        //
-  int procs_id = 0;                             // process id
-  int out_procs_id = 0;                         // process id of communication process
-  int thread_id = 0;                            // user-defined thread id
-  unsigned long out_thread_id = 0;              // user-defined thread id of a created thread
+  addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};      //
+  int call_path_len = 0;                            //
+  addr_t out_call_path[MAX_CALL_PATH_DEPTH] = {0};  //
+  int out_call_path_len = 0;                        //
+  perf_data_t value = 0;                            //
+  int procs_id = 0;                                 // process id
+  int out_procs_id = 0;                             // process id of communication process
+  int thread_id = 0;                                // user-defined thread id
+  int out_thread_id = 0;                            // user-defined thread id of a created thread
 } EDS;
 
 class PerfData {
@@ -64,17 +66,34 @@ class PerfData {
  public:
   PerfData();
   ~PerfData();
-  int QueryVertexData(addr_t* call_path, int call_path_len, int process_id, int thread_id);
-  void RecordVertexData(addr_t* call_path, int call_path_len, int process_id, int thread_id, perf_data_t value);
   void Read(const char*);
   void Dump(const char*);
   unsigned long int GetVertexDataSize();
   void SetMetricName(std::string& metric_name);
   std::string& GetMetricName();
+
+  int QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id);
+  int QueryEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
+                    int out_procs_id, int thread_id, int out_thread_id);
+
+  void RecordVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t value);
+  void RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
+                      int out_procs_id, int thread_id, int out_thread_id, perf_data_t value);
+
   void GetVertexDataCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  void GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  void GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+
   perf_data_t GetVertexDataValue(unsigned long int data_index);
+  perf_data_t GetEdgeDataValue(unsigned long int data_index);
+
   int GetVertexDataProcsId(unsigned long int data_index);
+  int GetEdgeDataSrcProcsId(unsigned long int data_index);
+  int GetEdgeDataDestProcsId(unsigned long int data_index);
+
   int GetVertexDataThreadId(unsigned long int data_index);
+  int GetEdgeDataSrcThreadId(unsigned long int data_index);
+  int GetEdgeDataDestThreadId(unsigned long int data_index);
 };
 
 }  // namespace baguatool::core

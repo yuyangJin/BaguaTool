@@ -32,41 +32,6 @@ bool CallPathCmp(addr_t* cp_1, int cp_1_len, addr_t* cp_2, int cp_2_len) {
   return true;
 }
 
-int PerfData::QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
-  for (unsigned long int i = 0; i < this->vertex_perf_data_count; i++) {
-    // call_path
-    if (CallPathCmp(call_path, call_path_len, this->vertex_perf_data[i].call_path,
-                    this->vertex_perf_data[i].call_path_len) == true &&
-        this->vertex_perf_data[i].thread_id == thread_id && this->vertex_perf_data[i].procs_id == procs_id) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-void PerfData::RecordVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t value) {
-  int index = this->QueryVertexData(call_path, call_path_len, procs_id, thread_id);
-
-  if (index >= 0) {
-    this->vertex_perf_data[index].value += value;
-  } else {
-    // Thread-safe, first fetch a index, then record data
-    unsigned long long int x = __sync_fetch_and_add(&this->vertex_perf_data_count, 1);
-
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].call_path_len = call_path_len;
-    for (int i = 0; i < call_path_len; i++) {
-      this->vertex_perf_data[this->vertex_perf_data_count - 1].call_path[i] = call_path[i];
-    }
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].value = value;
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].thread_id = thread_id;
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].procs_id = procs_id;
-  }
-
-  if (this->vertex_perf_data_count >= this->vertex_perf_data_space_size - 5) {
-    // TODO: asynchronous dump
-    this->Dump(this->file_name);
-  }
-}
 void PerfData::Read(const char* infile_name) {
   // Open a file
   // this->perf_data_in_file.open(this->file_name, std::ios::in);
@@ -157,10 +122,110 @@ std::string& PerfData::GetMetricName() { return this->metric_name; }
 
 void PerfData::SetMetricName(std::string& metric_name) { this->metric_name = std::string(metric_name); }
 
-void PerfData::GetVertexDataCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path_stack) {
+int PerfData::QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
+  for (unsigned long int i = 0; i < this->vertex_perf_data_count; i++) {
+    // call_path
+    if (CallPathCmp(call_path, call_path_len, this->vertex_perf_data[i].call_path,
+                    this->vertex_perf_data[i].call_path_len) == true &&
+        this->vertex_perf_data[i].thread_id == thread_id && this->vertex_perf_data[i].procs_id == procs_id) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+int PerfData::QueryEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len,
+                            int procs_id, int out_procs_id, int thread_id, int out_thread_id) {
+  for (unsigned long int i = 0; i < this->edge_perf_data_count; i++) {
+    // call_path
+    if (CallPathCmp(call_path, call_path_len, this->edge_perf_data[i].call_path,
+                    this->edge_perf_data[i].call_path_len) == true &&
+        CallPathCmp(out_call_path, out_call_path_len, this->edge_perf_data[i].out_call_path,
+                    this->edge_perf_data[i].out_call_path_len) == true &&
+        this->edge_perf_data[i].thread_id == thread_id && this->edge_perf_data[i].procs_id == procs_id &&
+        this->edge_perf_data[i].out_thread_id == out_thread_id &&
+        this->edge_perf_data[i].out_procs_id == out_procs_id) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+// TODO: Modify current aggregation mode to non-aggregation mode, users can do aggregation with our APIs
+void PerfData::RecordVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t value) {
+  int index = this->QueryVertexData(call_path, call_path_len, procs_id, thread_id);
+
+  if (index >= 0) {
+    this->vertex_perf_data[index].value += value;
+  } else {
+    // Thread-safe, first fetch a index, then record data
+    unsigned long long int x = __sync_fetch_and_add(&this->vertex_perf_data_count, 1);
+
+    this->vertex_perf_data[this->vertex_perf_data_count - 1].call_path_len = call_path_len;
+    for (int i = 0; i < call_path_len; i++) {
+      this->vertex_perf_data[this->vertex_perf_data_count - 1].call_path[i] = call_path[i];
+    }
+    this->vertex_perf_data[this->vertex_perf_data_count - 1].value = value;
+    this->vertex_perf_data[this->vertex_perf_data_count - 1].thread_id = thread_id;
+    this->vertex_perf_data[this->vertex_perf_data_count - 1].procs_id = procs_id;
+  }
+
+  if (this->vertex_perf_data_count >= this->vertex_perf_data_space_size - 5) {
+    // TODO: asynchronous dump
+    this->Dump(this->file_name);
+  }
+}
+
+void PerfData::RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len,
+                              int procs_id, int out_procs_id, int thread_id, int out_thread_id, perf_data_t value) {
+  // Thread-safe, first fetch a index, then record data
+  unsigned long long int x = __sync_fetch_and_add(&this->edge_perf_data_count, 1);
+
+  this->edge_perf_data[this->edge_perf_data_count - 1].call_path_len = call_path_len;
+  for (int i = 0; i < call_path_len; i++) {
+    this->edge_perf_data[this->edge_perf_data_count - 1].call_path[i] = call_path[i];
+  }
+  this->edge_perf_data[this->edge_perf_data_count - 1].out_call_path_len = out_call_path_len;
+  for (int i = 0; i < out_call_path_len; i++) {
+    this->edge_perf_data[this->edge_perf_data_count - 1].out_call_path[i] = out_call_path[i];
+  }
+
+  this->edge_perf_data[this->edge_perf_data_count - 1].value = value;
+  this->edge_perf_data[this->edge_perf_data_count - 1].thread_id = thread_id;
+  this->edge_perf_data[this->edge_perf_data_count - 1].procs_id = procs_id;
+  this->edge_perf_data[this->edge_perf_data_count - 1].out_thread_id = out_thread_id;
+  this->edge_perf_data[this->edge_perf_data_count - 1].out_procs_id = out_procs_id;
+
+  if (this->edge_perf_data_count >= this->edge_perf_data_space_size - 5) {
+    // TODO: asynchronous dump
+    this->Dump(this->file_name);
+  }
+}
+
+void PerfData::GetVertexDataCallPath(unsigned long int data_index, std::stack<addr_t>& call_path_stack) {
   VDS* data = &(this->vertex_perf_data[data_index]);
   for (int i = 0; i < data->call_path_len; i++) {
     call_path_stack.push(data->call_path[i]);
+  }
+
+  return;
+}
+
+void PerfData::GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<addr_t>& call_path_stack) {
+  EDS* data = &(this->edge_perf_data[data_index]);
+  for (int i = 0; i < data->call_path_len; i++) {
+    call_path_stack.push(data->call_path[i]);
+  }
+
+  return;
+}
+
+void PerfData::GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<addr_t>& call_path_stack) {
+  EDS* data = &(this->edge_perf_data[data_index]);
+  for (int i = 0; i < data->out_call_path_len; i++) {
+    call_path_stack.push(data->out_call_path[i]);
   }
 
   return;
@@ -171,13 +236,39 @@ perf_data_t PerfData::GetVertexDataValue(unsigned long int data_index) {
   return data->value;
 }
 
+perf_data_t PerfData::GetEdgeDataValue(unsigned long int data_index) {
+  EDS* data = &(this->edge_perf_data[data_index]);
+  return data->value;
+}
+
 int PerfData::GetVertexDataProcsId(unsigned long int data_index) {
   VDS* data = &(this->vertex_perf_data[data_index]);
   return data->procs_id;
 }
+
+int PerfData::GetEdgeDataSrcProcsId(unsigned long int data_index) {
+  EDS* data = &(this->edge_perf_data[data_index]);
+  return data->procs_id;
+}
+
+int PerfData::GetEdgeDataDestProcsId(unsigned long int data_index) {
+  EDS* data = &(this->edge_perf_data[data_index]);
+  return data->out_procs_id;
+}
+
 int PerfData::GetVertexDataThreadId(unsigned long int data_index) {
   VDS* data = &(this->vertex_perf_data[data_index]);
   return data->thread_id;
+}
+
+int PerfData::GetEdgeDataSrcThreadId(unsigned long int data_index) {
+  EDS* data = &(this->edge_perf_data[data_index]);
+  return data->thread_id;
+}
+
+int PerfData::GetEdgeDataDestThreadId(unsigned long int data_index) {
+  EDS* data = &(this->edge_perf_data[data_index]);
+  return data->out_thread_id;
 }
 
 }  // namespace baguatool::core

@@ -127,7 +127,8 @@ class ProgramCallGraph : public ProgramGraph {
   ~ProgramCallGraph();
 };
 
-typedef struct SAMPLER_STRUCT VDS;
+typedef struct VERTEX_DATA_STRUCT VDS;
+typedef struct EDGE_DATA_STRUCT EDS;
 
 #ifndef MAX_LINE_LEN
 #define MAX_LINE_LEN 256
@@ -151,17 +152,34 @@ class PerfData {
  public:
   PerfData();
   ~PerfData();
-  int QueryVertexData(addr_t* call_path, int call_path_len, int process_id, int thread_id);
-  void RecordVertexData(addr_t* call_path, int call_path_len, int process_id, int thread_id, perf_data_t value);
   void Read(const char*);
   void Dump(const char*);
   unsigned long int GetVertexDataSize();
   void SetMetricName(std::string& metric_name);
   std::string& GetMetricName();
+
+  int QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id);
+  int QueryEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
+                    int out_procs_id, int thread_id, int out_thread_id);
+
+  void RecordVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t value);
+  void RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
+                      int out_procs_id, int thread_id, int out_thread_id, perf_data_t value);
+
   void GetVertexDataCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  void GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  void GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+
   perf_data_t GetVertexDataValue(unsigned long int data_index);
+  perf_data_t GetEdgeDataValue(unsigned long int data_index);
+
   int GetVertexDataProcsId(unsigned long int data_index);
+  int GetEdgeDataSrcProcsId(unsigned long int data_index);
+  int GetEdgeDataDestProcsId(unsigned long int data_index);
+
   int GetVertexDataThreadId(unsigned long int data_index);
+  int GetEdgeDataSrcThreadId(unsigned long int data_index);
+  int GetEdgeDataDestThreadId(unsigned long int data_index);
 };
 
 class GraphPerfData {
@@ -175,14 +193,14 @@ class GraphPerfData {
   void Read(std::string&);
   void Dump(std::string&);
 
-  void SetPerfData(vertex_t vertex_id, std::string& metric, int process_id, int thread_id, perf_data_t value);
-  perf_data_t GetPerfData(vertex_t vertex_id, std::string& metric, int process_id, int thread_id);
+  void SetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id, perf_data_t value);
+  perf_data_t GetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id);
 
   bool HasMetric(vertex_t vertex_id, std::string& metric);
   void GetVertexPerfDataMetrics(vertex_t, std::vector<std::string>&);
   int GetMetricsPerfDataProcsNum(vertex_t vertex_id, std::string& metric);
-  int GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& metric, int process_id);
-  void GetProcsPerfData(vertex_t vertex_id, std::string& metric, int process_id,
+  int GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& metric, int procs_id);
+  void GetProcsPerfData(vertex_t vertex_id, std::string& metric, int procs_id,
                         std::vector<perf_data_t>& proc_perf_data);
 
 };  // class GraphPerfData

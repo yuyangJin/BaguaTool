@@ -127,7 +127,7 @@ class ProgramCallGraph : public ProgramGraph {
   ~ProgramCallGraph();
 };
 
-typedef struct SAMPLER_STRUCT SaStruct;
+typedef struct SAMPLER_STRUCT VDS;
 
 #ifndef MAX_LINE_LEN
 #define MAX_LINE_LEN 256
@@ -138,11 +138,11 @@ typedef double perf_data_t;
 
 class PerfData {
  private:
-  SaStruct* sampler_data = nullptr;
-  unsigned long int sampler_data_space_size = 0;
-  unsigned long int sampler_data_size = 0;
-  FILE* sampler_data_fp = nullptr;
-  std::ifstream sampler_data_in;
+  VDS* vertex_perf_data = nullptr;
+  unsigned long int vertex_perf_data_space_size = 0;
+  unsigned long int vertex_perf_data_count = 0;
+  FILE* perf_data_fp = nullptr;
+  std::ifstream perf_data_in_file;
   bool has_open_output_file = false;
   char file_name[MAX_LINE_LEN] = {0};
   // TODO: design a method to make metric_name portable
@@ -151,17 +151,17 @@ class PerfData {
  public:
   PerfData();
   ~PerfData();
-  int Query(addr_t* call_path, int call_path_len, int process_id, int thread_id);
-  void Record(addr_t* call_path, int call_path_len, int process_id, int thread_id, perf_data_t count);
+  int QueryVertexData(addr_t* call_path, int call_path_len, int process_id, int thread_id);
+  void RecordVertexData(addr_t* call_path, int call_path_len, int process_id, int thread_id, perf_data_t value);
   void Read(const char*);
   void Dump(const char*);
-  unsigned long int GetSize();
+  unsigned long int GetVertexDataSize();
   void SetMetricName(std::string& metric_name);
   std::string& GetMetricName();
-  void GetCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
-  perf_data_t GetSamplingCount(unsigned long int data_index);
-  int GetProcessId(unsigned long int data_index);
-  int GetThreadId(unsigned long int data_index);
+  void GetVertexDataCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  perf_data_t GetVertexDataValue(unsigned long int data_index);
+  int GetVertexDataProcsId(unsigned long int data_index);
+  int GetVertexDataThreadId(unsigned long int data_index);
 };
 
 class GraphPerfData {

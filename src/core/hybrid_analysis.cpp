@@ -45,7 +45,7 @@ void HybridAnalysis::ReadStaticProgramCallGraph(const char *binary_name) {
 void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
   PerfData *perf_data = new PerfData();
   perf_data->Read(perf_data_file.c_str());
-  auto data_size = perf_data->GetSize();
+  auto data_size = perf_data->GetVertexDataSize();
 
   /** Optimization: First scan all call path and store <call_addr, callee_addr> pairs,
    * then AddEdgeWithAddr. It can reduce redundant graph query **/
@@ -53,10 +53,10 @@ void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
   // AddEdgeWithAddr for each <call_addr, callee_addr> pair of each call path
   for (unsigned long int i = 0; i < data_size; i++) {
     std::stack<unsigned long long> call_path;
-    perf_data->GetCallPath(i, call_path);
-    auto count = perf_data->GetSamplingCount(i);
-    // auto process_id = perf_data->GetProcessId(i);
-    // auto thread_id = perf_data->GetThreadId(i, process_id);
+    perf_data->GetVertexDataCallPath(i, call_path);
+    auto value = perf_data->GetVertexDataValue(i);
+    // auto process_id = perf_data->GetVertexDataProcsId(i);
+    // auto thread_id = perf_data->GetVertexDataThreadId(i, process_id);
 
     while (!call_path.empty()) {
       auto call_addr = call_path.top();
@@ -196,22 +196,22 @@ ProgramAbstractionGraph *HybridAnalysis::GetProgramAbstractionGraph() { return t
 
 void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
   // Query for each call path
-  auto data_size = perf_data->GetSize();
+  auto data_size = perf_data->GetVertexDataSize();
   for (unsigned long int i = 0; i < data_size; i++) {
     std::stack<unsigned long long> call_path;
-    perf_data->GetCallPath(i, call_path);
+    perf_data->GetVertexDataCallPath(i, call_path);
     if (!call_path.empty()) {
       call_path.pop();
     }
-    auto count = perf_data->GetSamplingCount(i);
-    auto process_id = perf_data->GetProcessId(i);
-    auto thread_id = perf_data->GetThreadId(i);
+    auto value = perf_data->GetVertexDataValue(i);
+    auto process_id = perf_data->GetVertexDataProcsId(i);
+    auto thread_id = perf_data->GetVertexDataThreadId(i);
 
     vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
     // dbg(queried_vertex_id);
     perf_data_t data =
         this->graph_perf_data->GetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id);
-    data += count;
+    data += value;
     this->graph_perf_data->SetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id, data);
   }
 
@@ -352,16 +352,16 @@ ProgramAbstractionGraph *HybridAnalysis::GetMultiProgramAbstractionGraph() { ret
 
 void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
   // Query for each call path
-  auto data_size = pthread_data->GetSize();
+  auto data_size = pthread_data->GetVertexDataSize();
   for (unsigned long int i = 0; i < data_size; i++) {
     std::stack<unsigned long long> call_path;
-    pthread_data->GetCallPath(i, call_path);
+    pthread_data->GetVertexDataCallPath(i, call_path);
     if (!call_path.empty()) {
       call_path.pop();
     }
-    auto time = pthread_data->GetSamplingCount(i);
-    auto create_thread_id = pthread_data->GetProcessId(i);
-    auto thread_id = pthread_data->GetThreadId(i);
+    auto time = pthread_data->GetVertexDataValue(i);
+    auto create_thread_id = pthread_data->GetVertexDataProcsId(i);
+    auto thread_id = pthread_data->GetVertexDataThreadId(i);
 
     // Need to judge if it is in current thread
     // if thread_id == cur_thread
@@ -377,16 +377,16 @@ void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
       root_pag->AddEdge(queried_vertex_id, pthread_vertex_id);
       for (unsigned long int j = 0; j < data_size; j++) {
         if (j != i) {
-          if (create_thread_id == pthread_data->GetProcessId(j)) {
-            dbg(create_thread_id, pthread_data->GetProcessId(j));
+          if (create_thread_id == pthread_data->GetVertexDataProcsId(j)) {
+            dbg(create_thread_id, pthread_data->GetVertexDataProcsId(j));
             std::stack<unsigned long long> call_path_j;
-            pthread_data->GetCallPath(j, call_path_j);
+            pthread_data->GetVertexDataCallPath(j, call_path_j);
             if (!call_path_j.empty()) {
               call_path_j.pop();
             }
-            auto time_j = pthread_data->GetSamplingCount(j);
-            auto create_thread_id_j = pthread_data->GetProcessId(j);
-            auto thread_id_j = pthread_data->GetThreadId(j);
+            auto time_j = pthread_data->GetVertexDataValue(j);
+            auto create_thread_id_j = pthread_data->GetVertexDataProcsId(j);
+            auto thread_id_j = pthread_data->GetVertexDataThreadId(j);
 
             vertex_t queried_vertex_id_j = this->root_pag->GetVertexWithCallPath(0, call_path_j);
             addr_t addr_j = call_path_j.top();

@@ -35,13 +35,13 @@ void Graph::GraphInit(const char *graph_name) {
 
 vertex_t Graph::AddVertex() {
   if (this->cur_vertex_num >= igraph_vcount(&ipag_->graph)) {
-    dbg(this->cur_vertex_num, igraph_vcount(&ipag_->graph));
+    // dbg(this->cur_vertex_num, igraph_vcount(&ipag_->graph));
     igraph_add_vertices(&ipag_->graph, TRUNK_SIZE, 0);
   }
   // Add a new vertex
   igraph_integer_t new_vertex_id = this->cur_vertex_num++;
 
-  dbg(new_vertex_id, this->cur_vertex_num);
+  // dbg(new_vertex_id, this->cur_vertex_num);
 
   // igraph_integer_t new_vertex_id = igraph_vcount(&ipag_.graph);
   // printf("Add a vertex: %d %s\n", new_vertex_id, vertex_name);
@@ -93,9 +93,9 @@ edge_t Graph::AddEdge(const vertex_t src_vertex_id, const vertex_t dest_vertex_i
 }
 
 void Graph::AddGraph(Graph *g) {
-  dbg(g->GetCurVertexNum());
+  // dbg(g->GetCurVertexNum());
   g->DeleteExtraTailVertices();
-  dbg(g->GetCurVertexNum());
+  // dbg(g->GetCurVertexNum());
 
   std::map<vertex_t, vertex_t> old_vertex_id_2_new_vertex_id;
 
@@ -336,7 +336,7 @@ void Graph::DeleteVertices(vertex_set_t *vs) { igraph_delete_vertices(&ipag_->gr
 
 void Graph::DeleteExtraTailVertices() {
   // unnecessary to delete
-  dbg(this->GetGraphAttributeString("name"), this->cur_vertex_num, igraph_vcount(&ipag_->graph));
+  // dbg(this->GetGraphAttributeString("name"), this->cur_vertex_num, igraph_vcount(&ipag_->graph));
   if (this->GetCurVertexNum() - 1 == igraph_vcount(&ipag_->graph)) {
     return;
   } else if (this->GetCurVertexNum() - 1 > igraph_vcount(&ipag_->graph)) {
@@ -396,13 +396,13 @@ void Graph::VertexTraversal(void (*CALL_BACK_FUNC)(Graph *, int, void *), void *
   igraph_vs_t vs;
   igraph_vit_t vit;
   // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
-  dbg(GetGraphAttributeString("name"));
+  // dbg(GetGraphAttributeString("name"));
   igraph_vs_all(&vs);
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
     vertex_t vertex_id = (vertex_t)IGRAPH_VIT_GET(vit);
-    dbg(vertex_id);
+    // dbg(vertex_id);
 
     // Call user-defined function
     (*CALL_BACK_FUNC)(this, vertex_id, extra);

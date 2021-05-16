@@ -60,7 +60,7 @@ void RecordCallPath(int y) {
 
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
 
-  perf_data->Record(call_path, call_path_len, 0, thread_gid, 1);
+  perf_data->RecordVertexData(call_path, call_path_len, 0, thread_gid, 1);
 }
 
 static void *resolve_symbol(const char *symbol_name, int config) {
@@ -168,7 +168,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
   dbg("create", *thread);
 
-  perf_data_pthread->Record(call_path, call_path_len, (int)*thread, thread_gid, -1);
+  perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)*thread, thread_gid, -1);
 
   return ret;
 }
@@ -195,7 +195,7 @@ int pthread_join(pthread_t thread, void **value_ptr) {
 
   baguatool::core::perf_data_t time = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
 
-  perf_data_pthread->Record(call_path, call_path_len, (int)thread, thread_gid, time);
+  perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)thread, thread_gid, time);
   return ret;
 }
 

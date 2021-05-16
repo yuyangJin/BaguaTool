@@ -64,10 +64,10 @@ vertex_t ProgramGraph::GetChildVertexWithAddr(vertex_t root_vertex, unsigned lon
   }
 
   for (auto &child : children) {
-    dbg(child);
+    // dbg(child);
     unsigned long long int s_addr = GetVertexAttributeNum("saddr", child);
     unsigned long long int e_addr = GetVertexAttributeNum("eaddr", child);
-    dbg(addr, s_addr, e_addr);
+    // dbg(addr, s_addr, e_addr);
     int type = GetVertexType(child);
     if (type == CALL_NODE || type == CALL_REC_NODE || type == CALL_IND_NODE) {
       if (addr >= s_addr - 4 && addr <= e_addr + 4) {
@@ -108,7 +108,7 @@ vertex_t ProgramGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<un
   vertex_t child_vertex = -1;
   while (1) {
     child_vertex = GetChildVertexWithAddr(found_vertex, addr);
-    dbg(child_vertex);
+    // dbg(child_vertex);
 
     // if child_vertex is not found
     if (-1 == child_vertex) {
@@ -158,7 +158,7 @@ void CallVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
       pg->GetVertexAttributeNum("type", vertex_id) == CALL_REC_NODE) {
     unsigned long long s_addr = pg->GetVertexAttributeNum("saddr", vertex_id);
     unsigned long long e_addr = pg->GetVertexAttributeNum("eaddr", vertex_id);
-    dbg(addr, s_addr, e_addr);
+    // dbg(addr, s_addr, e_addr);
     if (addr >= s_addr - 4 && addr <= e_addr + 4) {
       arg->vertex_id = vertex_id;
       arg->find_flag = true;
@@ -287,7 +287,7 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
     children_id.push_back(iaa.vertex_id);
     children_s_addr.push_back(iaa.addr);
   }
-  dbg(children, children_id);
+  // dbg(children, children_id);
   /* Sorting complete */
 
   /* Swap vertices, children is original sequence, children_id is sorted sequence */
@@ -314,23 +314,23 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
       vertex_id_to_tmp_edge_id_vec[children[i]] = children_children;
       // Delete all edges of children[i]
       for (auto &child_child : children_children) {
-        dbg(children[i], child_child);
+        // dbg(children[i], child_child);
         pg->DeleteEdge(children[i], child_child);
       }
       if (vertex_id_to_tmp_edge_id_vec.count(children_id[i]) > 0) {
         std::vector<vertex_t> &tmp_children_children = vertex_id_to_tmp_edge_id_vec[children_id[i]];
         for (auto &child_child : tmp_children_children) {
-          dbg(children[i], child_child);
+          // dbg(children[i], child_child);
           pg->AddEdge(children[i], child_child);
         }
       } else {
         // Get children of children_id[i]
         std::vector<vertex_t> children_id_children;
         pg->GetChildVertexSet(children_id[i], children_id_children);
-        dbg(children_id[i], children_id_children);
+        // dbg(children_id[i], children_id_children);
 
         for (auto &child_child : children_id_children) {
-          dbg(children[i], child_child);
+          // dbg(children[i], child_child);
           pg->AddEdge(children[i], child_child);
         }
         FREE_CONTAINER(children_id_children);
@@ -344,7 +344,7 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
   // }
 
   for (auto &vertex : vertex_id_to_tmp_vertex_id) {
-    dbg(vertex.second);
+    // dbg(vertex.second);
     pg->DeleteVertex(vertex.second);
   }
   /* Swapping complete */

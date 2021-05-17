@@ -15,12 +15,6 @@
 
 #define MAX_CALL_PATH_DEPTH 100
 
-// struct for pthread instrumentation start_routine
-struct start_routine_wrapper_arg {
-  void *(*start_routine)(void *);
-  void *real_arg;
-};
-
 static int (*original_pthread_create)(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *),
                                       void *arg) = NULL;
 static int (*original_pthread_mutex_lock)(pthread_mutex_t *thread) = NULL;
@@ -31,6 +25,8 @@ std::unique_ptr<baguatool::graph_sd::Sampler> sampler = nullptr;
 std::unique_ptr<baguatool::core::PerfData> perf_data = nullptr;
 std::unique_ptr<baguatool::core::PerfData> perf_data_pthread = nullptr;
 std::map<pthread_mutex_t *, std::string> mutex_to_lock_callsite;
+
+std::map<int, int> pthread_t_to_create_thread_id;
 
 static int CYC_SAMPLE_COUNT = 0;
 static int module_init = 0;
@@ -126,6 +122,14 @@ static void fini_mock() {
   perf_data_pthread->Dump("PTHREAD.TXT");
 }
 
+// struct for pthread instrumentation start_routine
+struct start_routine_wrapper_arg {
+  void *(*start_routine)(void *);
+  void *real_arg;
+  int create_thread_id;
+  // addr_t* fn_backtrace;
+};
+
 static void *start_routine_wrapper(void *arg) {
   auto args_ = (start_routine_wrapper_arg *)arg;
   void *(*start_routine)(void *) = args_->start_routine;
@@ -133,6 +137,7 @@ static void *start_routine_wrapper(void *arg) {
 
   thread_gid = new_thread_gid();
   LOG_INFO("Thread Start, thread_gid = %d\n", thread_gid);
+  args_->create_thread_id = thread_gid;
   sampler->AddThread();
   sampler->SetOverflow(&RecordCallPath);
   sampler->Start();
@@ -164,11 +169,19 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 
   // dbg(&start_routine, start_routine, *start_routine, *(*start_routine));
   int ret = (*original_pthread_create)(thread, attr, start_routine_wrapper, arg);
+
   baguatool::graph_sd::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
   dbg("create", *thread);
 
-  perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)*thread, thread_gid, -1);
+  baguatool::graph_sd::addr_t *out_call_path = nullptr;
+  // perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)*thread, thread_gid, -1);
+  perf_data_pthread->RecordEdgeData(call_path, call_path_len, out_call_path, 0, 0, 0, thread_gid, arg->create_thread_id,
+                                    -1);
+
+  pthread_t_to_create_thread_id[(int)*thread] = arg->create_thread_id;
+
+  free(arg);
 
   return ret;
 }
@@ -181,21 +194,25 @@ int pthread_join(pthread_t thread, void **value_ptr) {
   // print_thread_id(thread);
   dbg("join", thread);
 
-  baguatool::graph_sd::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
-  int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
+  // struct timeval start;
+  // struct timeval end;
 
-  struct timeval start;
-  struct timeval end;
-
-  gettimeofday(&start, NULL);
+  // gettimeofday(&start, NULL);
 
   int ret = (*original_pthread_join)(thread, value_ptr);
 
-  gettimeofday(&end, NULL);
+  // gettimeofday(&end, NULL);
+  // baguatool::core::perf_data_t time = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
 
-  baguatool::core::perf_data_t time = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
+  baguatool::graph_sd::addr_t out_call_path[MAX_CALL_PATH_DEPTH] = {0};
+  int out_call_path_len = sampler->GetBacktrace(out_call_path, MAX_CALL_PATH_DEPTH);
 
-  perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)thread, thread_gid, time);
+  baguatool::graph_sd::addr_t *call_path = nullptr;
+  int create_thread_id = pthread_t_to_create_thread_id[(int)thread];
+  // perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)thread, thread_gid, time);
+  perf_data_pthread->RecordEdgeData(call_path, 0, out_call_path, out_call_path_len, 0, 0, create_thread_id, thread_gid,
+                                    -1);
+
   return ret;
 }
 

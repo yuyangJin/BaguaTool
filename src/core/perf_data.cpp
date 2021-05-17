@@ -5,31 +5,22 @@ namespace baguatool::core {
 
 PerfData::PerfData() {
   this->vertex_perf_data_space_size = MAX_TRACE_MEM / sizeof(VDS);
-  // long int size = 10000;
-  // printf("%lu\n", size);
-  // dbg(size);
+  // dbg(this->vertex_perf_data_space_size);
   this->vertex_perf_data = new VDS[this->vertex_perf_data_space_size];
   this->vertex_perf_data_count = 0;
+
+  this->edge_perf_data_space_size = MAX_TRACE_MEM / sizeof(EDS);
+  this->edge_perf_data = new EDS[this->edge_perf_data_space_size];
+  this->edge_perf_data_count = 0;
+
   strcpy(this->file_name, "SAMPLE.TXT");
 }
 PerfData::~PerfData() {
   delete[] this->vertex_perf_data;
+  delete[] this->edge_perf_data;
   if (this->has_open_output_file) {
     fclose(this->perf_data_fp);
   }
-}
-
-bool CallPathCmp(addr_t* cp_1, int cp_1_len, addr_t* cp_2, int cp_2_len) {
-  if (cp_1_len != cp_2_len) {
-    return false;
-  } else {
-    for (int i = 0; i < cp_1_len; i++) {
-      if (cp_1[i] != cp_2[i]) {
-        return false;
-      }
-    }
-  }
-  return true;
 }
 
 void PerfData::Read(const char* infile_name) {
@@ -121,6 +112,19 @@ unsigned long int PerfData::GetVertexDataSize() { return this->vertex_perf_data_
 std::string& PerfData::GetMetricName() { return this->metric_name; }
 
 void PerfData::SetMetricName(std::string& metric_name) { this->metric_name = std::string(metric_name); }
+
+bool CallPathCmp(addr_t* cp_1, int cp_1_len, addr_t* cp_2, int cp_2_len) {
+  if (cp_1_len != cp_2_len) {
+    return false;
+  } else {
+    for (int i = 0; i < cp_1_len; i++) {
+      if (cp_1[i] != cp_2[i]) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 int PerfData::QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
   for (unsigned long int i = 0; i < this->vertex_perf_data_count; i++) {

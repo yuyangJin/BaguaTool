@@ -9,8 +9,8 @@
 #include <execinfo.h>
 #include <libunwind.h>
 #include <malloc.h>
-#include <omp.h>
 #include <papi.h>
+#include <pthread.h>
 #include <pthread.h>
 #include <pthread.h>
 #include <stdint.h>
@@ -66,15 +66,15 @@ struct LongLongVec {
 class SamplerImpl {
  private:
   int mpiRank = -1;
-  // static __thread int EventSet;
-  int EventSet;
-  void (*func_at_overflow)(int);
+
+  // thread_local static int EventSet;
+  // void (*func_at_overflow)(int);
   int cyc_sample_count;
 
  public:
   SamplerImpl() {
-    EventSet = PAPI_NULL;
-    func_at_overflow = nullptr;
+    // EventSet = PAPI_NULL;
+    // func_at_overflow = nullptr;
     cyc_sample_count = 0;
   };
   ~SamplerImpl(){};

@@ -22,7 +22,8 @@ int Sampler::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
 // int Sampler::my_backtrace(unw_word_t *buffer, int max_depth) {my_backtrace(buffer, max_depth); }
 // static void Sampler:: papi_handler(int EventSet, void *address, long_long overflow_vector, void *context) {}
 
-void (*func_at_overflow_1)(int) = nullptr;
+static __thread void (*func_at_overflow_1)(int) = nullptr;
+static __thread int EventSet;
 
 void SamplerImpl::SetSamplingFreq(int freq) {
   // PAPI setup for main thread
@@ -40,8 +41,8 @@ void SamplerImpl::Setup() {
 void SamplerImpl::SetOverflow(void (*FUNC_AT_OVERFLOW)(int)) {
   int Events[NUM_EVENTS];
 
-  this->EventSet = PAPI_NULL;
-  TRY(PAPI_create_eventset(&(this->EventSet)), PAPI_OK);
+  EventSet = PAPI_NULL;
+  TRY(PAPI_create_eventset(&(EventSet)), PAPI_OK);
 
   Events[0] = PAPI_TOT_CYC;
   // Events[1] = PAPI_L2_DCM;
@@ -52,20 +53,20 @@ void SamplerImpl::SetOverflow(void (*FUNC_AT_OVERFLOW)(int)) {
   // Events[3] = PAPI_L1_DCM;
   // Events[3] = PAPI_L3_DCA;
 
-  TRY(PAPI_add_events(this->EventSet, (int*)Events, NUM_EVENTS), PAPI_OK);
+  TRY(PAPI_add_events(EventSet, (int*)Events, NUM_EVENTS), PAPI_OK);
 
   // PAPI_overflow_handler_t *_papi_overflow_handler = (PAPI_overflow_handler_t*) &(this->papi_handler) (int EventSet,
   // void *address, long_long overflow_vector, void *context );
   // void (*)(int, void*, long long int, void*)
   // PAPI_overflow_handler_t _papi_overflow_handler = void (*)(int, void*, long long int, void*) &(papi_handler);
   PAPI_overflow_handler_t _papi_overflow_handler = (PAPI_overflow_handler_t) & (papi_handler);
-  TRY(PAPI_overflow(this->EventSet, PAPI_TOT_CYC, this->cyc_sample_count, 0, _papi_overflow_handler), PAPI_OK);
+  TRY(PAPI_overflow(EventSet, PAPI_TOT_CYC, this->cyc_sample_count, 0, _papi_overflow_handler), PAPI_OK);
   // TRY(PAPI_overflow(EventSet, PAPI_LD_INS, INS_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
   // TRY(PAPI_overflow(EventSet, PAPI_SR_INS, INS_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
   // TRY(PAPI_overflow(EventSet, PAPI_L1_DCM, CM_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
   // TRY(PAPI_overflow(EventSet, PAPI_L3_DCA, CM_SAMPLE_COUNT, 0, papi_handler), PAPI_OK);
 
-  this->func_at_overflow = FUNC_AT_OVERFLOW;
+  // this->func_at_overflow = FUNC_AT_OVERFLOW;
   func_at_overflow_1 = FUNC_AT_OVERFLOW;
 }
 
@@ -85,20 +86,20 @@ void SamplerImpl::UnsetOverflow() {
   // Events[3] = PAPI_L1_DCM;
   // Events[3] = PAPI_L3_DCA;
 
-  TRY(PAPI_overflow(this->EventSet, PAPI_TOT_CYC, 0, 0, papi_handler), PAPI_OK);
+  TRY(PAPI_overflow(EventSet, PAPI_TOT_CYC, 0, 0, papi_handler), PAPI_OK);
   TRY(PAPI_remove_events(EventSet, (int*)Events, NUM_EVENTS), PAPI_OK);
-  TRY(PAPI_destroy_eventset(&(this->EventSet)), PAPI_OK);
+  TRY(PAPI_destroy_eventset(&(EventSet)), PAPI_OK);
 }
 
-void SamplerImpl::Start() { TRY(PAPI_start(this->EventSet), PAPI_OK); }
+void SamplerImpl::Start() { TRY(PAPI_start(EventSet), PAPI_OK); }
 
-void SamplerImpl::Stop() { TRY(PAPI_stop(this->EventSet, NULL), PAPI_OK); }
+void SamplerImpl::Stop() { TRY(PAPI_stop(EventSet, NULL), PAPI_OK); }
 
 int SamplerImpl::GetOverflowEvent(LongLongVec* overflow_vector) {
   int Events[NUM_EVENTS], number, x, y;
   number = NUM_EVENTS;
 
-  TRY(PAPI_get_overflow_event_index(this->EventSet, overflow_vector->overflow_vector, Events, &number), PAPI_OK);
+  TRY(PAPI_get_overflow_event_index(EventSet, overflow_vector->overflow_vector, Events, &number), PAPI_OK);
 
   for (x = 0; x < number; x++) {
     for (y = 0; y < NUM_EVENTS; y++) {

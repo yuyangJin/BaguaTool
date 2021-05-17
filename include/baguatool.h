@@ -142,6 +142,9 @@ class PerfData {
   VDS* vertex_perf_data = nullptr;
   unsigned long int vertex_perf_data_space_size = 0;
   unsigned long int vertex_perf_data_count = 0;
+  EDS* edge_perf_data = nullptr;
+  unsigned long int edge_perf_data_space_size = 0;
+  unsigned long int edge_perf_data_count = 0;
   FILE* perf_data_fp = nullptr;
   std::ifstream perf_data_in_file;
   bool has_open_output_file = false;

@@ -23,6 +23,7 @@ PerfData::~PerfData() {
   }
 }
 
+// Sequential read
 void PerfData::Read(const char* infile_name) {
   // Open a file
   // this->perf_data_in_file.open(this->file_name, std::ios::in);
@@ -37,9 +38,14 @@ void PerfData::Read(const char* infile_name) {
     return;
   }
 
-  // Read lines, each line is an VDS
   char line[MAX_LINE_LEN];
-  while (!(this->perf_data_in_file.eof())) {
+  // Read a line for VDS counts
+  this->perf_data_in_file.getline(line, MAX_STR_LEN);
+  unsigned long int count = strtoul(line, nullptr, 10);
+
+  // Read lines, each line is a VDS
+
+  while (count-- && !(this->perf_data_in_file.eof())) {
     // Read a line
     this->perf_data_in_file.getline(line, MAX_STR_LEN);
 
@@ -53,9 +59,11 @@ void PerfData::Read(const char* infile_name) {
     // dbg(cnt);
 
     if (cnt == 4) {
-      this->vertex_perf_data[this->vertex_perf_data_count].value = atof(line_vec[1].c_str());
-      this->vertex_perf_data[this->vertex_perf_data_count].procs_id = atoi(line_vec[2].c_str());
-      this->vertex_perf_data[this->vertex_perf_data_count].thread_id = atoi(line_vec[3].c_str());
+      unsigned long int x = __sync_fetch_and_add(&this->vertex_perf_data_count, 1);
+
+      this->vertex_perf_data[x].value = atof(line_vec[1].c_str());
+      this->vertex_perf_data[x].procs_id = atoi(line_vec[2].c_str());
+      this->vertex_perf_data[x].thread_id = atoi(line_vec[3].c_str());
 
       // Then parse call path
       char delim_cp[] = " ";
@@ -63,19 +71,73 @@ void PerfData::Read(const char* infile_name) {
       std::vector<std::string> addr_vec = split(line_vec[0], delim_cp);
       // int cnt = split(line_vec[0], delim_cp, addr_vec);
       int call_path_len = addr_vec.size();
-      this->vertex_perf_data[this->vertex_perf_data_count].call_path_len = call_path_len;
+      this->vertex_perf_data[x].call_path_len = call_path_len;
       for (int i = 0; i < call_path_len; i++) {
-        this->vertex_perf_data[this->vertex_perf_data_count].call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
-        dbg(this->vertex_perf_data[this->vertex_perf_data_count].call_path[i]);
+        this->vertex_perf_data[x].call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
+        dbg(this->vertex_perf_data[x].call_path[i]);
       }
 
-      LOG_INFO("DATA[%lu]: %s | %lf | %d |%d\n", this->vertex_perf_data_count, line_vec[0].c_str(),
-               this->vertex_perf_data[this->vertex_perf_data_count].value,
-               this->vertex_perf_data[this->vertex_perf_data_count].procs_id,
-               this->vertex_perf_data[this->vertex_perf_data_count].thread_id);
+      LOG_INFO("DATA[%lu]: %s | %lf | %d |%d\n", x, line_vec[0].c_str(), this->vertex_perf_data[x].value,
+               this->vertex_perf_data[x].procs_id, this->vertex_perf_data[x].thread_id);
 
       // size ++
-      __sync_fetch_and_add(&this->vertex_perf_data_count, 1);
+    }
+  }
+
+  // Read a line for EDS counts
+  this->perf_data_in_file.getline(line, MAX_STR_LEN);
+  count = strtoul(line, nullptr, 10);
+
+  while (count-- && !(this->perf_data_in_file.eof())) {
+    // Read a line
+    this->perf_data_in_file.getline(line, MAX_STR_LEN);
+
+    // Parse the line
+    // First '|'
+    char delim[] = "|";
+    // line_vec[4][MAX_STR_LEN];
+    std::vector<std::string> line_vec = split(line, delim);
+    int cnt = line_vec.size();
+
+    // dbg(cnt);
+
+    if (cnt == 7) {
+      // First fetch as x, then add 1
+      unsigned long int x = __sync_fetch_and_add(&this->edge_perf_data_count, 1);
+
+      this->edge_perf_data[x].value = atof(line_vec[2].c_str());
+      this->edge_perf_data[x].procs_id = atoi(line_vec[3].c_str());
+      this->edge_perf_data[x].out_procs_id = atoi(line_vec[4].c_str());
+      this->edge_perf_data[x].thread_id = atoi(line_vec[5].c_str());
+      this->edge_perf_data[x].out_thread_id = atoi(line_vec[6].c_str());
+
+      // Then parse call path
+      char delim_cp[] = " ";
+      // char addr_vec[MAX_CALL_PATH_DEPTH][13];
+      std::vector<std::string> addr_vec = split(line_vec[0], delim_cp);
+      // int cnt = split(line_vec[0], delim_cp, addr_vec);
+      int call_path_len = addr_vec.size();
+      this->edge_perf_data[x].call_path_len = call_path_len;
+      for (int i = 0; i < call_path_len; i++) {
+        this->edge_perf_data[x].call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
+        dbg(this->edge_perf_data[x].call_path[i]);
+      }
+      FREE_CONTAINER(addr_vec);
+
+      addr_vec = split(line_vec[1], delim_cp);
+      // int cnt = split(line_vec[0], delim_cp, addr_vec);
+      int out_call_path_len = addr_vec.size();
+      this->edge_perf_data[x].out_call_path_len = out_call_path_len;
+      for (int i = 0; i < out_call_path_len; i++) {
+        this->edge_perf_data[x].out_call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
+        dbg(this->edge_perf_data[x].out_call_path[i]);
+      }
+      FREE_CONTAINER(addr_vec);
+
+      // LOG_INFO("DATA[%lu]: %s | %lf | %d |%d\n", x, line_vec[0].c_str(),
+      //          this->edge_perf_data[x].value,
+      //          this->edge_perf_data[x].procs_id,
+      //          this->edge_perf_data[x].thread_id);
     }
   }
 
@@ -96,6 +158,7 @@ void PerfData::Dump(const char* output_file_name) {
   }
 
   // LOG_INFO("Rank %d : WRITE %d ADDR to %d TXT\n", mpiRank, call_path_addr_log_pointer[i], i);
+  fprintf(this->perf_data_fp, "%lu\n", this->vertex_perf_data_count);
   for (unsigned long int i = 0; i < this->vertex_perf_data_count; i++) {
     for (int j = 0; j < this->vertex_perf_data[i].call_path_len; j++) {
       fprintf(this->perf_data_fp, "%llx ", this->vertex_perf_data[i].call_path[j]);
@@ -105,6 +168,22 @@ void PerfData::Dump(const char* output_file_name) {
     fflush(this->perf_data_fp);
   }
   this->vertex_perf_data_count = __sync_and_and_fetch(&this->vertex_perf_data_count, 0);
+
+  fprintf(this->perf_data_fp, "%lu\n", this->edge_perf_data_count);
+  for (unsigned long int i = 0; i < this->edge_perf_data_count; i++) {
+    for (int j = 0; j < this->edge_perf_data[i].call_path_len; j++) {
+      fprintf(this->perf_data_fp, "%llx ", this->edge_perf_data[i].call_path[j]);
+    }
+    fprintf(this->perf_data_fp, "| ");
+    for (int j = 0; j < this->edge_perf_data[i].out_call_path_len; j++) {
+      fprintf(this->perf_data_fp, "%llx ", this->edge_perf_data[i].out_call_path[j]);
+    }
+    fprintf(this->perf_data_fp, " | %lf | %d | %d | %d | %d\n", this->edge_perf_data[i].value,
+            this->edge_perf_data[i].procs_id, this->edge_perf_data[i].out_procs_id, this->edge_perf_data[i].thread_id,
+            this->edge_perf_data[i].out_thread_id);
+    fflush(this->perf_data_fp);
+  }
+  this->edge_perf_data_count = __sync_and_and_fetch(&this->edge_perf_data_count, 0);
 }
 
 unsigned long int PerfData::GetVertexDataSize() { return this->vertex_perf_data_count; }
@@ -167,13 +246,13 @@ void PerfData::RecordVertexData(addr_t* call_path, int call_path_len, int procs_
     // Thread-safe, first fetch a index, then record data
     unsigned long long int x = __sync_fetch_and_add(&this->vertex_perf_data_count, 1);
 
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].call_path_len = call_path_len;
+    this->vertex_perf_data[x].call_path_len = call_path_len;
     for (int i = 0; i < call_path_len; i++) {
-      this->vertex_perf_data[this->vertex_perf_data_count - 1].call_path[i] = call_path[i];
+      this->vertex_perf_data[x].call_path[i] = call_path[i];
     }
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].value = value;
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].thread_id = thread_id;
-    this->vertex_perf_data[this->vertex_perf_data_count - 1].procs_id = procs_id;
+    this->vertex_perf_data[x].value = value;
+    this->vertex_perf_data[x].thread_id = thread_id;
+    this->vertex_perf_data[x].procs_id = procs_id;
   }
 
   if (this->vertex_perf_data_count >= this->vertex_perf_data_space_size - 5) {
@@ -187,20 +266,20 @@ void PerfData::RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_
   // Thread-safe, first fetch a index, then record data
   unsigned long long int x = __sync_fetch_and_add(&this->edge_perf_data_count, 1);
 
-  this->edge_perf_data[this->edge_perf_data_count - 1].call_path_len = call_path_len;
+  this->edge_perf_data[x].call_path_len = call_path_len;
   for (int i = 0; i < call_path_len; i++) {
-    this->edge_perf_data[this->edge_perf_data_count - 1].call_path[i] = call_path[i];
+    this->edge_perf_data[x].call_path[i] = call_path[i];
   }
-  this->edge_perf_data[this->edge_perf_data_count - 1].out_call_path_len = out_call_path_len;
+  this->edge_perf_data[x].out_call_path_len = out_call_path_len;
   for (int i = 0; i < out_call_path_len; i++) {
-    this->edge_perf_data[this->edge_perf_data_count - 1].out_call_path[i] = out_call_path[i];
+    this->edge_perf_data[x].out_call_path[i] = out_call_path[i];
   }
 
-  this->edge_perf_data[this->edge_perf_data_count - 1].value = value;
-  this->edge_perf_data[this->edge_perf_data_count - 1].thread_id = thread_id;
-  this->edge_perf_data[this->edge_perf_data_count - 1].procs_id = procs_id;
-  this->edge_perf_data[this->edge_perf_data_count - 1].out_thread_id = out_thread_id;
-  this->edge_perf_data[this->edge_perf_data_count - 1].out_procs_id = out_procs_id;
+  this->edge_perf_data[x].value = value;
+  this->edge_perf_data[x].thread_id = thread_id;
+  this->edge_perf_data[x].procs_id = procs_id;
+  this->edge_perf_data[x].out_thread_id = out_thread_id;
+  this->edge_perf_data[x].out_procs_id = out_procs_id;
 
   if (this->edge_perf_data_count >= this->edge_perf_data_space_size - 5) {
     // TODO: asynchronous dump

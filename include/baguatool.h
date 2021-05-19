@@ -277,14 +277,43 @@ class Graph {
   void Dfs();
 
   /** Read a graph from a GML format file.
-   * @param
+   * @param file_name - name of input file 
    */
   void ReadGraphGML(const char* file_name);
+
+  /** Dump the graph as a GML format file.
+   * @param file_name - name of output file 
+   */  
   void DumpGraphGML(const char* file_name);
+
+  /** Dump the graph as a dot format file.
+   * @param file_name - name of output file 
+   */
   void DumpGraphDot(const char* file_name);
+
+  /** Get the number of vertices.
+   * @return the number of vertices 
+   */
   int GetCurVertexNum();
+
+  /** Get a set of child vertices.
+   * @param vertex_id - id of a vertex
+   * @param child_vec - a vector that stores the id of child vertices
+   */
+  void GetChildVertexSet(vertex_t vertex_id, std::vector<vertex_t>& child_vec);
+
+
+
+  /** [Graph Algorithm] Traverse all vertices and execute CALL_BACK_FUNC when accessing each vertex.
+   * @param CALL_BACK_FUNC - callback function when a vertex is accessed. The input parameters of this function contain a pointer to the traversed graph, id of the accessed vertex, and extra pointer for developers to pass more parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
+   */
   void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, vertex_t, void*), void* extra);
-  void GetChildVertexSet(vertex_t, std::vector<vertex_t>&);
+    
+  /** [Graph Algorithm] Perform Pre-order traversal on the graph.
+   * @param root - id of the starting vertex 
+   * @param pre_order_vertex_vec - a vector that stores the accessing sequence (id) of vertex
+   */
   void PreOrderTraversal(vertex_t root, std::vector<vertex_t>& pre_order_vertex_vec);
 };
 

@@ -185,7 +185,7 @@ int Graph::GetEdgeSrc(edge_t edge_id) { return IGRAPH_FROM(&ipag_->graph, edge_i
 
 int Graph::GetEdgeDest(edge_t edge_id) { return IGRAPH_TO(&ipag_->graph, edge_id); }
 
-void Graph::QueryEdgeOtherSide() { UNIMPLEMENTED(); }
+void Graph::GetEdgeOtherSide() { UNIMPLEMENTED(); }
 
 void Graph::SetGraphAttributeString(const char *attr_name, const char *value) {
   SETGAS(&ipag_->graph, attr_name, value);
@@ -373,7 +373,7 @@ void Graph::ReadGraphGML(const char *file_name) {
   this->cur_vertex_num = igraph_vcount(&ipag_->graph);
 }
 
-void Graph::DumpGraph(const char *file_name) {
+void Graph::DumpGraphGML(const char *file_name) {
   this->DeleteExtraTailVertices();
 
   // Real dump

@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   hybrid_analysis->GenerateProgramAbstractionGraph();
 
   baguatool::core::ProgramAbstractionGraph* pag = hybrid_analysis->GetProgramAbstractionGraph();
-  pag->DumpGraph("root_1.gml");
+  pag->DumpGraphGML("root_1.gml");
 
   // pag->PreOrderTraversal(0);
 

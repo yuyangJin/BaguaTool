@@ -277,7 +277,7 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
 }
 
 void StaticAnalysisImpl::DumpFunctionGraph(core::ControlFlowGraph *func_cfg, const char *file_name) {
-  func_cfg->DumpGraph(file_name);
+  func_cfg->DumpGraphGML(file_name);
 }
 
 void StaticAnalysisImpl::DumpAllFunctionGraph() {
@@ -317,7 +317,7 @@ void StaticAnalysisImpl::DumpProgramCallGraph() {
   std::stringstream ss;
   ss << "./" << this->binary_name << ".pcg";
   auto file_name = ss.str();
-  this->pcg->DumpGraph(file_name.c_str());
+  this->pcg->DumpGraphGML(file_name.c_str());
 }
 
 void StaticAnalysisImpl::GetBinaryName() {

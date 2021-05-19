@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 
   auto root = prep->InterProceduralAnalysis(func_pag_vec);
 
-  root->DumpGraph("root.gml");
+  root->DumpGraphGML("root.gml");
 
   root->DumpGraphDot("root.dot");
 

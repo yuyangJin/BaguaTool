@@ -22,64 +22,265 @@ class vertex_set_t;
 typedef int vertex_t;
 typedef int edge_t;
 
+/** @brief Wrapper class of igraph. Provide basic graph operations.
+    @author Yuyang Jin, PACMAN, Tsinghua University
+    @date March 2021
+    */
 class Graph {
  protected:
-  std::unique_ptr<graph_t> ipag_;
-  int cur_vertex_num;
+  std::unique_ptr<graph_t> ipag_; /**<igraph_t wrapper struct */
+  int cur_vertex_num;             /**<initial the number of vertices in this graph */
 
  public:
+  /** Constructor. Create an graph and enable graph attributes.
+   */
   Graph();
+
+  /** Destructor. Destroy graph.
+   */
   ~Graph();
+
+  /** Initialize the graph. Build a directed graph with zero vertices and zero edges. Set name of the graph with the
+   * input parameter.
+   * @param graph_name - name of the graph
+   */
   void GraphInit(const char* graph_name);
+
+  /** Create a vertex in the graph.
+   * @return id of the new vertex
+   */
   vertex_t AddVertex();
-  void SwapVertex(vertex_t vertex_id_1, vertex_t vertex_id_2);
+
+  /** Create an edge in the graph.
+   * @param src_vertex_id - id of the source vertex of the edge
+   * @param dest_vertex_id - id of the destination vertex of the edge
+   * @return id of the new edge
+   */
   edge_t AddEdge(const vertex_t src_vertex_id, const vertex_t dest_vertex_id);
+
+  /** Append a graph to the graph. Copy all the vertices and edges (and all their attributes) of a graph to this graph.
+   * @param g - the graph to be appended
+   */
   void AddGraph(Graph* g);
 
+  /** Delete a vertex.
+   * @param vertex_id - id of vertex to be removed
+   */
   void DeleteVertex(vertex_t vertex_id);
-  void DeleteEdge(vertex_t src_id, vertex_t dest_id);
 
+  /** Delete a set of vertex.
+   * @param vs - set of vertices to be deleted
+   */
+  void DeleteVertices(vertex_set_t* vs);
+
+  /** Delete extra vertices at the end of vertices. (No need to expose to developers)
+   */
+  void DeleteExtraTailVertices();
+
+  /** Delete an edge.
+   * @param src_vertex_id - id of the source vertex of the edge to be removed
+   * @param dest_vertex_id - id of the destination vertex of the edge to be removed
+   */
+  void DeleteEdge(vertex_t src_vertex_id, vertex_t dest_vertex_id);
+
+  /** Swap two vertices. Swap all attributes except for "id"
+   * @param vertex_id_1 - id of the first vertex
+   * @param vertex_id_2 - id of the second vertex
+   */
+  void SwapVertex(vertex_t vertex_id_1, vertex_t vertex_id_2);
+
+  /** Query a vertex. (Not implement yet.)
+   */
   void QueryVertex();
-  int QueryEdge(vertex_t, vertex_t);
 
-  int GetEdgeSrc(edge_t edge_id);
-  int GetEdgeDest(edge_t edge_id);
-  void QueryEdgeOtherSide();
+  /** Query an edge with source and destination vertex ids.
+   * @param src_vertex_id - id of the source vertex of the edge
+   * @param dest_vertex_id - id of the destination vertex of the edge
+   * @return id of the queried edge
+   */
+  edge_t QueryEdge(vertex_t src_vertex_id, vertex_t dest_vertex_id);
 
+  /** Get the source vertex of the input edge.
+   * @param edge_id - input edge id
+   * @return id of the source vertex
+   */
+  vertex_t GetEdgeSrc(edge_t edge_id);
+
+  /** Get the destination vertex of the input edge.
+   * @param edge_id - input edge id
+   * @return id of the destination vertex
+   */
+  vertex_t GetEdgeDest(edge_t edge_id);
+
+  /** Get the other side vertex of the input edge. (Not implement yet.)
+   * @param edge_id - input edge id
+   * @param vertex_id - input vertex id
+   * @return id of the vertex in the other side of the input edge
+   */
+  void GetEdgeOtherSide();
+
+  /** Set a string graph attribute
+   * @param attr_name - name of the graph attribute
+   * @param value - the (new) value of the graph attribute
+   */
   void SetGraphAttributeString(const char* attr_name, const char* value);
+
+  /** Set a numeric graph attribute
+   * @param attr_name - name of the graph attribute
+   * @param value - the (new) value of the graph attribute
+   */
   void SetGraphAttributeNum(const char* attr_name, const int value);
+
+  /** Set a boolean graph attribute as flag
+   * @param attr_name - name of the graph attribute
+   * @param value - the (new) value of the graph attribute
+   */
   void SetGraphAttributeFlag(const char* attr_name, const bool value);
+
+  /** Set a string vertex attribute
+   * @param attr_name - name of the vertex attribute
+   * @param vertex_id - the vertex id
+   * @param value - the (new) value of the vertex attribute
+   */
   void SetVertexAttributeString(const char* attr_name, vertex_t vertex_id, const char* value);
+
+  /** Set a numeric vertex attribute
+   * @param attr_name - name of the vertex attribute
+   * @param vertex_id - the vertex id
+   * @param value - the (new) value of the vertex attribute
+   */
   void SetVertexAttributeNum(const char* attr_name, vertex_t vertex_id, const int value);
+
+  /** Set a boolean vertex attribute as flag
+   * @param attr_name - name of the vertex attribute
+   * @param vertex_id - the vertex id
+   * @param value - the (new) value of the vertex attribute
+   */
   void SetVertexAttributeFlag(const char* attr_name, vertex_t vertex_id, const bool value);
+
+  /** Set a string edge attribute
+   * @param attr_name - name of the edge attribute
+   * @param edge_t - the edge id
+   * @param value - the (new) value of the edge attribute
+   */
   void SetEdgeAttributeString(const char* attr_name, edge_t edge_id, const char* value);
+
+  /** Set a numeric edge attribute
+   * @param attr_name - name of the edge attribute
+   * @param edge_t - the edge id
+   * @param value - the (new) value of the edge attribute
+   */
   void SetEdgeAttributeNum(const char* attr_name, edge_t edge_id, const int value);
+
+  /** Set a boolean edge attribute as flag
+   * @param attr_name - name of the edge attribute
+   * @param edge_t - the edge id
+   * @param value - the (new) value of the edge attribute
+   */
   void SetEdgeAttributeFlag(const char* attr_name, edge_t edge_id, const bool value);
 
+  /** Get a string graph attribute
+   * @param attr_name - name of the graph attribute
+   * @return the (new) value of the graph attribute
+   */
   const char* GetGraphAttributeString(const char* attr_name);
+
+  /** Get a numeric graph attribute
+   * @param attr_name - name of the graph attribute
+   * @return the (new) value of the graph attribute
+   */
   const int GetGraphAttributeNum(const char* attr_name);
+
+  /** Get a flag graph attribute
+   * @param attr_name - name of the graph attribute
+   * @return the (new) value of the graph attribute
+   */
   const bool GetGraphAttributeFlag(const char* attr_name);
+
+  /** Get a string vertex attribute
+   * @param attr_name - name of the vertex attribute
+   * @param vertex_id - the vertex id
+   * @return value - the (new) value of the vertex attribute
+   */
   const char* GetVertexAttributeString(const char* attr_name, vertex_t vertex_id);
+
+  /** Get a numeric vertex attribute
+   * @param attr_name - name of the vertex attribute
+   * @param vertex_id - the vertex id
+   * @return value - the (new) value of the vertex attribute
+   */
   const int GetVertexAttributeNum(const char* attr_name, vertex_t vertex_id);
+
+  /** Get a flag vertex attribute
+   * @param attr_name - name of the vertex attribute
+   * @param vertex_id - the vertex id
+   * @return value - the (new) value of the vertex attribute
+   */
   const bool GetVertexAttributeFlag(const char* attr_name, vertex_t vertex_id);
+
+  /** Get a string edge attribute
+   * @param attr_name - name of the edge attribute
+   * @param edge_t - the edge id
+   * @return value - the (new) value of the edge attribute
+   */
   const char* GetEdgeAttributeString(const char* attr_name, edge_t edge_id);
+
+  /** Get a numeric edge attribute
+   * @param attr_name - name of the edge attribute
+   * @param edge_t - the edge id
+   * @return value - the (new) value of the edge attribute
+   */
   const int GetEdgeAttributeNum(const char* attr_name, edge_t edge_id);
+
+  /** Get a flag edge attribute
+   * @param attr_name - name of the edge attribute
+   * @param edge_t - the edge id
+   * @return value - the (new) value of the edge attribute
+   */
   const bool GetEdgeAttributeFlag(const char* attr_name, edge_t edge_id);
 
+  /** Remove a graph attribute
+   * @param attr_name - name of the graph attribute
+   */
   void RemoveGraphAttribute(const char* attr_name);
+
+  /** Remove a vertex attribute
+   * @param attr_name - name of the vertex attribute
+   */
   void RemoveVertexAttribute(const char* attr_name);
+
+  /** Remove an edge attribute
+   * @param attr_name - name of the edge attribute
+   */
   void RemoveEdgeAttribute(const char* attr_name);
 
   void MergeVertices();
   void SplitVertex();
+
+  /** Copy a vertex to the designated vertex. All attributes (include "id") are copied.
+   * @param new_vertex_id - id of the designated vertex
+   * @param g - graph that contains the vertex to be copied
+   * @param vertex_id - id of the vertex to be copied
+   */
   void DeepCopyVertex(vertex_t new_vertex_id, Graph* g, vertex_t vertex_id);
+
+  /** Copy a vertex to the designated vertex. All attributes, except "id", are copied.
+   * @param new_vertex_id - id of the designated vertex
+   * @param g - graph that contains the vertex to be copied
+   * @param vertex_id - id of the vertex to be copied
+   */
   void CopyVertex(vertex_t new_vertex_id, Graph* g, vertex_t vertex_id);
   // TODO: do not expose inner igraph
-  void DeleteVertices(vertex_set_t* vs);
-  void DeleteExtraTailVertices();
+
+  /** Depth-First Search, not implement yet.
+   */
   void Dfs();
+
+  /** Read a graph from a GML format file.
+   * @param
+   */
   void ReadGraphGML(const char* file_name);
-  void DumpGraph(const char* file_name);
+  void DumpGraphGML(const char* file_name);
   void DumpGraphDot(const char* file_name);
   int GetCurVertexNum();
   void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, vertex_t, void*), void* extra);

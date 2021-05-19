@@ -28,9 +28,9 @@ int main(int argc, char** argv) {
   std::string output_file_name_str("output.json");
   graph_perf_data->Dump(output_file_name_str);
 
-  hybrid_analysis->GetProgramAbstractionGraph()->DumpGraph("root_3.gml");
+  hybrid_analysis->GetProgramAbstractionGraph()->DumpGraphGML("root_3.gml");
   hybrid_analysis->GenerateMultiProgramAbstractionGraph();
 
   auto mpag = hybrid_analysis->GetMultiProgramAbstractionGraph();
-  mpag->DumpGraph("root_3.gml");
+  mpag->DumpGraphGML("root_3.gml");
 }

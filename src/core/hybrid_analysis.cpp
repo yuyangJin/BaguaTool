@@ -363,7 +363,7 @@ void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
     auto create_thread_id = pthread_data->GetVertexDataProcsId(i);
     auto thread_id = pthread_data->GetVertexDataThreadId(i);
 
-    // Need to judge if it is in current thread
+    // TODO: Need to judge if it is in current thread
     // if thread_id == cur_thread
 
     if (time == (baguatool::core::perf_data_t)(-1)) {

@@ -35,7 +35,7 @@ using namespace InstructionAPI;
 
 #define LOOP_GRANULARITY
 
-namespace baguatool::graph_sd {
+namespace baguatool::collector {
 
 StaticAnalysis::StaticAnalysis(char *binary_name) { this->sa = std::make_unique<StaticAnalysisImpl>(binary_name); }
 

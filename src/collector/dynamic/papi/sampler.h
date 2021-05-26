@@ -55,7 +55,7 @@
 
 // struct for pthread instrumrntation pthread_create
 
-namespace baguatool::graph_sd {
+namespace baguatool::collector {
 
 typedef unsigned long long int addr_t;
 

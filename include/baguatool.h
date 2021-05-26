@@ -277,22 +277,22 @@ class Graph {
   void Dfs();
 
   /** Read a graph from a GML format file.
-   * @param file_name - name of input file 
+   * @param file_name - name of input file
    */
   void ReadGraphGML(const char* file_name);
 
   /** Dump the graph as a GML format file.
-   * @param file_name - name of output file 
-   */  
+   * @param file_name - name of output file
+   */
   void DumpGraphGML(const char* file_name);
 
   /** Dump the graph as a dot format file.
-   * @param file_name - name of output file 
+   * @param file_name - name of output file
    */
   void DumpGraphDot(const char* file_name);
 
   /** Get the number of vertices.
-   * @return the number of vertices 
+   * @return the number of vertices
    */
   int GetCurVertexNum();
 
@@ -302,58 +302,143 @@ class Graph {
    */
   void GetChildVertexSet(vertex_t vertex_id, std::vector<vertex_t>& child_vec);
 
-
-
   /** [Graph Algorithm] Traverse all vertices and execute CALL_BACK_FUNC when accessing each vertex.
-   * @param CALL_BACK_FUNC - callback function when a vertex is accessed. The input parameters of this function contain a pointer to the traversed graph, id of the accessed vertex, and extra pointer for developers to pass more parameters.
+   * @param CALL_BACK_FUNC - callback function when a vertex is accessed. The input parameters of this function contain
+   * a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for developers to pass more
+   * parameters.
    * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
    */
   void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, vertex_t, void*), void* extra);
-    
+
   /** [Graph Algorithm] Perform Pre-order traversal on the graph.
-   * @param root - id of the starting vertex 
+   * @param root_vertex_id - id of the starting vertex
    * @param pre_order_vertex_vec - a vector that stores the accessing sequence (id) of vertex
    */
-  void PreOrderTraversal(vertex_t root, std::vector<vertex_t>& pre_order_vertex_vec);
+  void PreOrderTraversal(vertex_t root_vertex_id, std::vector<vertex_t>& pre_order_vertex_vec);
 };
 
 class ProgramGraph : public Graph {
  private:
  public:
+  /** Default Constructor
+   */
   ProgramGraph();
+
+  /** Default Destructor
+   */
   ~ProgramGraph();
+
+  /** Set basic information of a vertex, including type and name.
+   * @param vertex_id - id of the target vertex
+   * @param vertex_type - type of the target vertex
+   * @param vertex_name - name of the target vertex
+   * @return 0 is success
+   */
   int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
+
+  /** Set debug information of a vertex, including address or line number (need to extend).
+   * @param vertex_id - id of the target vertex
+   * @param entry_addr - entry address of the target vertex
+   * @param exit_addr - exit address of the target vertex
+   * @return 0 is success
+   */
   int SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr);
-  int GetVertexType(vertex_t);
-  vertex_t GetChildVertexWithAddr(vertex_t root_vertex, unsigned long long addr);
-  vertex_t GetVertexWithCallPath(vertex_t, std::stack<unsigned long long>&);
+
+  /** Get the type of a vertex.
+   * @param vertex_id - id of the target vertex
+   * @return type of the vertex
+   */
+  int GetVertexType(vertex_t vertex_id);
+
+  /** Identify the vertex corresponding to the address from a specific starting vertex.
+   * @param root_vertex_id - id of the starting vertex
+   * @param addr - address
+   * @return id of the identified vertex
+   */
+  vertex_t GetChildVertexWithAddr(vertex_t root_vertex_id, unsigned long long addr);
+
+  /** Identify the vertex corresponding to the call path from a specific starting vertex.
+   * @param root_vertex_id - id of the starting vertex
+   * @param call_path - call path
+   * @return id of the identified vertex
+   */
+  vertex_t GetVertexWithCallPath(vertex_t root_vertex_id, std::stack<unsigned long long>& call_path);
+
+  /** Identify the call vertex corresponding to the address from all vertices.
+   * @param addr - address
+   * @return id of the identified vertex
+   */
   vertex_t GetCallVertexWithAddr(unsigned long long addr);
+
+  /** Identify the function vertex corresponding to the address from all vertices.
+   * @param addr - address
+   * @return id of the identified vertex
+   */
   vertex_t GetFuncVertexWithAddr(unsigned long long addr);
+
+  /** Add a new edge between call vertex and callee function vertex through their addresses.
+   * @param call_addr - address of the call instruction
+   * @param callee_addr - address of the callee function
+   * @return
+   */
   int AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr);
-  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
-  const char* GetCalleeVertex(vertex_t);
+
+  /** Get name of a vertex's callee vertex
+   * @param vertex_id - id of vertex
+   * @return name of the callee vertex
+   */
+  const char* GetCallee(vertex_t vertex_id);
+
+  /** Sort vertices by entry addresses
+   */
   void VertexSortChild();
+
+  /** [Graph Algorithm] Traverse all vertices and execute CALL_BACK_FUNC when accessing each vertex.
+   * @param CALL_BACK_FUNC - callback function when a vertex is accessed. The input parameters of this function contain
+   * a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for developers to pass more
+   * parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
+   */
+  void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
 };
 
 class ProgramAbstractionGraph : public ProgramGraph {
  private:
  public:
+  /** Default Constructor
+   */
   ProgramAbstractionGraph();
+  /** Default Destructor
+   */
   ~ProgramAbstractionGraph();
+  /** [Graph Algorithm] Traverse all vertices and execute CALL_BACK_FUNC when accessing each vertex.
+   * @param CALL_BACK_FUNC - callback function when a vertex is accessed. The input parameters of this function contain
+   * a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for developers to pass more
+   * parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
+   */
   void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
 };
 
 class ControlFlowGraph : public ProgramGraph {
  private:
  public:
+  /** Default Constructor
+   */
   ControlFlowGraph();
+  /** Default Destructor
+   */
   ~ControlFlowGraph();
 };
 
 class ProgramCallGraph : public ProgramGraph {
  private:
  public:
+  /** Default Constructor
+   */
   ProgramCallGraph();
+  /** Default Destructor
+   */
   ~ProgramCallGraph();
 };
 
@@ -369,68 +454,220 @@ typedef double perf_data_t;
 
 class PerfData {
  private:
-  VDS* vertex_perf_data = nullptr;
-  unsigned long int vertex_perf_data_space_size = 0;
-  unsigned long int vertex_perf_data_count = 0;
-  EDS* edge_perf_data = nullptr;
-  unsigned long int edge_perf_data_space_size = 0;
-  unsigned long int edge_perf_data_count = 0;
-  FILE* perf_data_fp = nullptr;
-  std::ifstream perf_data_in_file;
-  bool has_open_output_file = false;
-  char file_name[MAX_LINE_LEN] = {0};
+  VDS* vertex_perf_data = nullptr;                   /**<pointer to vertex type performance data */
+  unsigned long int vertex_perf_data_space_size = 0; /**<pre-allocate space size of vertex type performance data*/
+  unsigned long int vertex_perf_data_count = 0;      /**<amount of recorded vertex type performance data*/
+  EDS* edge_perf_data = nullptr;                     /**<pointer to edge type performance data */
+  unsigned long int edge_perf_data_space_size = 0;   /**<pre-allocate space size of edge type performance data*/
+  unsigned long int edge_perf_data_count = 0;        /**<amount of recorded edge type performance data*/
+  FILE* perf_data_fp = nullptr;                      /**<file handler for output */
+  std::ifstream perf_data_in_file;                   /**<file handler for input */
+  bool has_open_output_file = false;                 /**<flag for record whether output file has open or not*/
+  char file_name[MAX_LINE_LEN] = {0};                /**<file name for output */
   // TODO: design a method to make metric_name portable
-  std::string metric_name = std::string("TOT_CYC");
+  std::string metric_name = std::string("TOT_CYC"); /**<metric name */
 
  public:
+  /** Default Constructor
+   */
   PerfData();
+  /** Default Destructor
+   */
   ~PerfData();
-  void Read(const char*);
-  void Dump(const char*);
+
+  /** Read vertex type and edge type performance data (Input)
+   * @param file_name - name of input file
+   */
+  void Read(const char* file_name);
+
+  /** Dump vertex type and edge type performance data (Output)
+   * @param file_name - name of output file
+   */
+  void Dump(const char* file_name);
+
+  /** Get size of recorded vertex type performance data
+   * @return size of recorded vertex type performance data
+   */
   unsigned long int GetVertexDataSize();
+
+  /** Get size of recorded edge type performance data
+   * @return size of recorded edge type performance data
+   */
+  unsigned long int GetEdgeDataSize();
+
+  /** Set metric name for the performance data
+   * @param metric_name - name of the metric
+   */
   void SetMetricName(std::string& metric_name);
+
+  /** Get metric name of the performance data
+   * @return name of the metric
+   */
   std::string& GetMetricName();
 
+  /** Query a piece of vertex type performance data by (call path, call path length, process id, thread id)
+   * @param call_path - call path
+   * @param call_path_len - depth of the call path
+   * @param procs_id - process id
+   * @param thread_id - thread id
+   * @return index of the queried piece of data
+   */
   int QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id);
+
+  /** Query a piece of edge type performance data by (call path, call path length, process id, thread id)
+   * @param call_path - call path of source
+   * @param call_path_len - depth of the call path of source
+   * @param out_call_path - call path of destination
+   * @param out_call_path_len - depth of the call path of destination
+   * @param procs_id - process id of source
+   * @param out_procs_id - process id of destination
+   * @param thread_id - thread id of source
+   * @param out_thread_id - thread id of destination
+   * @return index of the queried piece of data
+   */
   int QueryEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
                     int out_procs_id, int thread_id, int out_thread_id);
 
+  /** Record a piece of vertex type performance data
+   * @param call_path - call path
+   * @param call_path_len - depth of the call path
+   * @param procs_id - process id
+   * @param thread_id - thread id
+   * @param value of this piece of data
+   */
   void RecordVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t value);
+
+  /** Record a piece of edge type performance data
+   * @param call_path - call path of source
+   * @param call_path_len - depth of the call path of source
+   * @param out_call_path - call path of destination
+   * @param out_call_path_len - depth of the call path of destination
+   * @param procs_id - process id of source
+   * @param out_procs_id - process id of destination
+   * @param thread_id - thread id of source
+   * @param out_thread_id - thread id of destination
+   * @param value of this piece of data
+   */
   void RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
                       int out_procs_id, int thread_id, int out_thread_id, perf_data_t value);
 
-  void GetVertexDataCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
-  void GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
-  void GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<unsigned long long>&);
+  /** Query call path of a piece of vertex type performance data through index
+   * @param data_index - index of the piece of data
+   * @param call_path - call path of this piece of data
+   */
+  void GetVertexDataCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path);
 
+  /** Query source call path of a piece of edge type performance data through index
+   * @param data_index - index of the piece of data
+   * @param call_path - call path of the queried piece of data
+   */
+  void GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path);
+
+  /** Query destination call path of a piece of edge type performance data through index
+   * @param data_index - index of the piece of data
+   * @param call_path - call path of the queried piece of data
+   */
+  void GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<unsigned long long>& call_path);
+
+  /** Query value of a piece of vertex type performance data through index
+   * @param data_index - index of the piece of data
+   * @return value of the queried piece of data
+   */
   perf_data_t GetVertexDataValue(unsigned long int data_index);
+
+  /** Query value of a piece of edge type performance data through index
+   * @param data_index - index of the piece of data
+   * @return value of the queried piece of data
+   */
   perf_data_t GetEdgeDataValue(unsigned long int data_index);
 
+  /** Query process id of a piece of vertex type performance data through index
+   * @param data_index - index of the piece of data
+   * @return process id of the queried piece of data
+   */
   int GetVertexDataProcsId(unsigned long int data_index);
+
+  /** Query source process id of a piece of edge type performance data through index
+   * @param data_index - index of the piece of data
+   * @return process id of the queried piece of data
+   */
   int GetEdgeDataSrcProcsId(unsigned long int data_index);
+
+  /** Query destination process id of a piece of edge type performance data through index
+   * @param data_index - index of the piece of data
+   * @return process id of the queried piece of data
+   */
   int GetEdgeDataDestProcsId(unsigned long int data_index);
 
+  /** Query thread id of a piece of vertex type performance data through index
+   * @param data_index - index of the piece of data
+   * @return thread id of the queried piece of data
+   */
   int GetVertexDataThreadId(unsigned long int data_index);
+
+  /** Query source thread id of a piece of edge type performance data through index
+   * @param data_index - index of the piece of data
+   * @return thread id of the queried piece of data
+   */
   int GetEdgeDataSrcThreadId(unsigned long int data_index);
+
+  /** Query destination thread id of a piece of edge type performance data through index
+   * @param data_index - index of the piece of data
+   * @return thread id of the queried piece of data
+   */
   int GetEdgeDataDestThreadId(unsigned long int data_index);
 };
 
 class GraphPerfData {
  private:
-  json j_perf_data;
+  json j_perf_data; /**<[json format] Record performance data in a graph*/
 
  public:
+  /** Default Constructor
+   */
   GraphPerfData();
+  /** Default Destructor
+   */
   ~GraphPerfData();
 
-  void Read(std::string&);
-  void Dump(std::string&);
+  /** Read json file (Input)
+   * @param file_name - name of input file
+   */
+  void Read(std::string& file_name);
 
+  /** Dump as json file (Output)
+   * @param file_name - name of output file
+   */
+  void Dump(std::string& file_name);
+
+  /** Record a piece of data of a specific vertex, including metric, process id, thread id, and value.
+   * @param vertex_id - id of the specific vertex
+   * @param metric - metric name of this value
+   * @param procs_id - process id
+   * @param thread_id - thread id
+   * @param value - value
+   */
   void SetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id, perf_data_t value);
+
+  /** Query the value of a piece of data of a specific vertex through metric, process id, thread id.
+   * @param vertex_id - id of the specific vertex
+   * @param metric - metric name of this value
+   * @param procs_id - process id
+   * @param thread_id - thread id
+   * @return value
+   */
   perf_data_t GetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id);
 
+  /** Query if a specific vertex has the input metric
+   * @param vertex_id - id of the specific vertex
+   * @param metric - metric name
+   * @return true for existance, false for
+   */
   bool HasMetric(vertex_t vertex_id, std::string& metric);
-  void GetVertexPerfDataMetrics(vertex_t, std::vector<std::string>&);
+
+  /** Query metric list of
+   */
+  void GetVertexPerfDataMetrics(vertex_t vertex_id, std::vector<std::string>&);
   int GetMetricsPerfDataProcsNum(vertex_t vertex_id, std::string& metric);
   int GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& metric, int procs_id);
   void GetProcsPerfData(vertex_t vertex_id, std::string& metric, int procs_id,
@@ -440,12 +677,13 @@ class GraphPerfData {
 
 class HybridAnalysis {
  private:
-  std::map<std::string, ControlFlowGraph*> func_cfg_map;
-  ProgramCallGraph* pcg;
-  std::map<std::string, ProgramAbstractionGraph*> func_pag_map;
-  ProgramAbstractionGraph* root_pag;
-  ProgramAbstractionGraph* root_mpag;
-  GraphPerfData* graph_perf_data;
+  std::map<std::string, ControlFlowGraph*> func_cfg_map; /**<control-flow graphs for each function*/
+  ProgramCallGraph* pcg;                                 /**<program call graph*/
+  std::map<std::string, ProgramAbstractionGraph*>
+      func_pag_map; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
+  ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
+  ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
+  GraphPerfData* graph_perf_data;     /**<performance data in a graph*/
 
  public:
   HybridAnalysis();
@@ -496,21 +734,21 @@ class HybridAnalysis {
 
 namespace graph_perf {
 
-class Preprocess {
- private:
- public:
-  Preprocess() {}
-  ~Preprocess() {}
+// class Preprocess {
+//  private:
+//  public:
+//   Preprocess() {}
+//   ~Preprocess() {}
 
-  void ReadFunctionGraphs(const char* dir_name, std::vector<core::ProgramAbstractionGraph*>& func_pag_vec);
+//   void ReadFunctionGraphs(const char* dir_name, std::vector<core::ProgramAbstractionGraph*>& func_pag_vec);
 
-  core::ProgramAbstractionGraph* InterProceduralAnalysis(std::vector<core::ProgramAbstractionGraph*>& func_pag_vec);
+//   core::ProgramAbstractionGraph* InterProceduralAnalysis(std::vector<core::ProgramAbstractionGraph*>& func_pag_vec);
 
-  // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
-};
+//   // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
+// };
 }  // namespace graph_perf
 
-namespace graph_sd {
+namespace collector {
 
 class StaticAnalysisImpl;
 class StaticAnalysis {

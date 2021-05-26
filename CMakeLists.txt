@@ -41,8 +41,8 @@ add_library(
   src/core/hybrid_analysis.cpp
 
   #src/GraphPerf/preprocessing/preprocess.cpp
-  src/GraphSD/dyninst/static_analysis.cpp
-  src/GraphSD/papi/sampler.cpp
+  src/collector/static/dyninst/static_analysis.cpp
+  src/collector/dynamic/papi/sampler.cpp
 )
 
 set_property(TARGET baguatool PROPERTY CXX_STANDARD 17)
@@ -90,6 +90,7 @@ target_link_libraries(baguatool PRIVATE ${PAPI_LIBRARIES})
 
 if (ENABLE_EXAMPLE)
   add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/example/reproduction/GraphPerf)
 endif()
 
 if (ENABLE_TEST)

@@ -1,7 +1,7 @@
 #include "sampler.h"
 #include "baguatool.h"
 
-namespace baguatool::graph_sd {
+namespace baguatool::collector {
 
 Sampler::Sampler() { this->sa = std::make_unique<SamplerImpl>(); }
 

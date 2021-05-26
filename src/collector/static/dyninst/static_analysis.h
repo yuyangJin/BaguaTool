@@ -34,7 +34,7 @@ typedef long int VMASigned;  // useful for offsets
 #define PTR_TO_VMA(x) PTR_TO_BFDVMA(x)
 #define VMA_TO_PTR(x, totype) BFDVMA_TO_PTR(x, totype)
 
-namespace baguatool::graph_sd {
+namespace baguatool::collector {
 
 class StaticAnalysisImpl {
  private:

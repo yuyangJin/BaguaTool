@@ -125,7 +125,7 @@ void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extr
 
     // ProgramAbstractionGraph *callee_pag =
     //     (*func_name_2_pag)[std::string(pag->GetVertexAttributeString("name", vertex_id))];
-    auto callee_func_name = pcg->GetCalleeVertex(call_vertex_id);
+    auto callee_func_name = pcg->GetCallee(call_vertex_id);
     // free(callee_func_name);
 
     string callee_func_name_str = std::string(callee_func_name);

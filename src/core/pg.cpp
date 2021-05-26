@@ -214,7 +214,7 @@ int ProgramGraph::AddEdgeWithAddr(unsigned long long call_addr, unsigned long lo
   return -1;
 }
 
-const char *ProgramGraph::GetCalleeVertex(vertex_t vertex_id) {
+const char *ProgramGraph::GetCallee(vertex_t vertex_id) {
   // dbg(GetVertexAttributeString("name", vertex_id));
   std::vector<vertex_t> children;
   GetChildVertexSet(vertex_id, children);

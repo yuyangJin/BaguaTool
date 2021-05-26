@@ -10,7 +10,7 @@
 
 std::unique_ptr<baguatool::core::PerfData> perf_data = nullptr;
 
-std::unique_ptr<baguatool::graph_sd::Sampler> sampler = nullptr;
+std::unique_ptr<baguatool::collector::Sampler> sampler = nullptr;
 
 static int CYC_SAMPLE_COUNT = 0;
 static int module_init = 0;
@@ -18,7 +18,7 @@ static int module_init = 0;
 int mpiRank = 0;
 
 void RecordCallPath(int y) {
-  baguatool::graph_sd::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
+  baguatool::collector::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
   perf_data->RecordVertexData(call_path, call_path_len, 0 /* process_id */, 0 /* thread_id */, 1);
 }
@@ -31,7 +31,7 @@ static void init_mock() {
   if (module_init == MODULE_INITED) return;
   module_init = MODULE_INITED;
 
-  sampler = std::make_unique<baguatool::graph_sd::Sampler>();
+  sampler = std::make_unique<baguatool::collector::Sampler>();
   // TODO one perf_data corresponds to one metric, export it to an array
   perf_data = std::make_unique<baguatool::core::PerfData>();
 

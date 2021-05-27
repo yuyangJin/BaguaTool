@@ -53,7 +53,7 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
   // Get function list
   const CodeObject::funclist &func_list = this->co->funcs();
 
-  std::map<Address, core::vertex_t> addr_2_vertex_id;
+  std::map<Address, type::vertex_t> addr_2_vertex_id;
 
   // Create a graph for each function
   // this->pcg = new core::ProgramCallGraph();
@@ -67,8 +67,8 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
     Address exit_addr = blist.back()->last();
 
     // Add Function as a vertex
-    core::vertex_t func_vertex_id = this->pcg->AddVertex();
-    this->pcg->SetVertexBasicInfo(func_vertex_id, core::FUNC_NODE, func->name().c_str());
+    type::vertex_t func_vertex_id = this->pcg->AddVertex();
+    this->pcg->SetVertexBasicInfo(func_vertex_id, type::FUNC_NODE, func->name().c_str());
     this->pcg->SetVertexDebugInfo(func_vertex_id, func->addr(), exit_addr);
     addr_2_vertex_id[func->addr()] = func_vertex_id;
   }
@@ -76,7 +76,7 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
   // Traverse through all functions
   for (auto func : func_list) {
     const Function::edgelist &elist = func->callEdges();
-    core::vertex_t func_vertex_id = addr_2_vertex_id[func->addr()];
+    type::vertex_t func_vertex_id = addr_2_vertex_id[func->addr()];
 
     // Traverse through all fuunction calls in this function
     for (const auto &e : elist) {
@@ -85,8 +85,8 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
       this->call_graph_map[src_addr] = targ_addr;
 
       // Add CALL Vertex as child of function vertex
-      core::vertex_t call_vertex_id = this->pcg->AddVertex();
-      this->pcg->SetVertexBasicInfo(call_vertex_id, core::CALL_NODE, "CALL");
+      type::vertex_t call_vertex_id = this->pcg->AddVertex();
+      this->pcg->SetVertexBasicInfo(call_vertex_id, type::CALL_NODE, "CALL");
       this->pcg->SetVertexDebugInfo(call_vertex_id, src_addr, src_addr);
       this->pcg->AddEdge(func_vertex_id, call_vertex_id);
 
@@ -109,8 +109,8 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ControlFlowGraph *func_cfg, 
       /** Add BasciBlock Node **/
       Address bb_entry_addr = b->start();
       Address bb_exit_addr = b->end();
-      core::vertex_t bb_vertex_id = func_cfg->AddVertex();
-      func_cfg->SetVertexBasicInfo(bb_vertex_id, core::BB_NODE, "BB");
+      type::vertex_t bb_vertex_id = func_cfg->AddVertex();
+      func_cfg->SetVertexBasicInfo(bb_vertex_id, type::BB_NODE, "BB");
       func_cfg->SetVertexDebugInfo(bb_vertex_id, bb_entry_addr, bb_exit_addr);
       // Add an edge
       func_cfg->AddEdge(parent_id, bb_vertex_id);
@@ -128,21 +128,21 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ControlFlowGraph *func_cfg, 
           Address entry_addr = inst->src()->last();
           Address exit_addr = inst->src()->last();
           std::string call_name = this->addr_2_func_name[this->call_graph_map[entry_addr]];
-          core::vertex_t call_vertex_id = 0;
+          type::vertex_t call_vertex_id = 0;
 
           // Add a CALL vertex, including MPI_CALL, INDIRECT_CALL, and CALL
           auto startsWith = [](const std::string &s, const std::string &sub) -> bool { return s.find(sub) == 0; };
           if (startsWith(call_name, "MPI_") || startsWith(call_name, "_MPI_") || startsWith(call_name, "mpi_") ||
               startsWith(call_name, "_mpi_")) {  // MPI communication calls
             call_vertex_id = func_cfg->AddVertex();
-            func_cfg->SetVertexBasicInfo(call_vertex_id, core::MPI_NODE, call_name.c_str());
+            func_cfg->SetVertexBasicInfo(call_vertex_id, type::MPI_NODE, call_name.c_str());
           } else if (call_name.empty()) {  // Function calls that are not
                                            // analyzed at static analysis
             call_vertex_id = func_cfg->AddVertex();
-            func_cfg->SetVertexBasicInfo(call_vertex_id, core::CALL_IND_NODE, call_name.c_str());
+            func_cfg->SetVertexBasicInfo(call_vertex_id, type::CALL_IND_NODE, call_name.c_str());
           } else {  // Common function calls
             call_vertex_id = func_cfg->AddVertex();
-            func_cfg->SetVertexBasicInfo(call_vertex_id, core::CALL_NODE, call_name.c_str());
+            func_cfg->SetVertexBasicInfo(call_vertex_id, type::CALL_NODE, call_name.c_str());
           }
 
           func_cfg->SetVertexDebugInfo(call_vertex_id, entry_addr, exit_addr);
@@ -164,7 +164,7 @@ void StaticAnalysisImpl::ExtractCallStructure(core::ControlFlowGraph *func_cfg, 
           Address inst_entry_addr = inst->src()->last();
           Address inst_exit_addr = inst->src()->last();
           /** Add all non-call instructions as vertex **/
-          core::vertex_t inst_vertex_id = func_cfg->AddVertex();
+          type::vertex_t inst_vertex_id = func_cfg->AddVertex();
           func_cfg->SetVertexBasicInfo(inst_vertex_id, core::INST_NODE, "INS");
           func_cfg->SetVertexDebugInfo(inst_vertex_id, inst_entry_addr, inst_exit_addr);
           func_cfg->AddEdge(bb_vertex_id, inst_vertex_id);
@@ -218,7 +218,7 @@ void StaticAnalysisImpl::ExtractLoopStructure(core::ControlFlowGraph *func_cfg, 
     std::string loop_name = loop_tree_node->name();
 
     int loop_vertex_id = func_cfg->AddVertex();
-    func_cfg->SetVertexBasicInfo(loop_vertex_id, core::LOOP_NODE, loop_name.c_str());
+    func_cfg->SetVertexBasicInfo(loop_vertex_id, type::LOOP_NODE, loop_name.c_str());
     func_cfg->SetVertexDebugInfo(loop_vertex_id, entry_addr - 8, exit_addr - 8);
 
     func_cfg->AddEdge(parent_id, loop_vertex_id);
@@ -257,7 +257,7 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
 
     // Create root vertex in the graph
     int func_vertex_id = func_cfg->AddVertex();
-    func_cfg->SetVertexBasicInfo(func_vertex_id, core::FUNC_NODE, func_name.c_str());
+    func_cfg->SetVertexBasicInfo(func_vertex_id, type::FUNC_NODE, func_name.c_str());
     // Add DebugInfo attributes
     func_cfg->SetVertexDebugInfo(func_vertex_id, entry_addr, exit_addr);
 

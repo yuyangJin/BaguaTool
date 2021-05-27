@@ -15,12 +15,21 @@ using namespace nlohmann;
 
 namespace baguatool {
 
+namespace type {
+class graph_t;                         /**<igragh-graph wrapper */
+class vertex_set_t;                    /**<igraph_vs_t wrapper */
+typedef int vertex_t;                  /**<vertex id type (int)*/
+typedef int edge_t;                    /**<edge id type (int)*/
+typedef unsigned long long int addr_t; /**<address type (unsigned long long int)*/
+typedef double perf_data_t;            /**<performance data type (double) */
+}
+
 namespace core {
 
-class graph_t;
-class vertex_set_t;
-typedef int vertex_t;
-typedef int edge_t;
+// class type::graph_t;
+// class baguatool::type::vertex_set_t;
+// typedef int type::vertex_t;
+// typedef int type::edge_t;
 
 /** @brief Wrapper class of igraph. Provide basic graph operations.
     @author Yuyang Jin, PACMAN, Tsinghua University
@@ -28,8 +37,8 @@ typedef int edge_t;
     */
 class Graph {
  protected:
-  std::unique_ptr<graph_t> ipag_; /**<igraph_t wrapper struct */
-  int cur_vertex_num;             /**<initial the number of vertices in this graph */
+  std::unique_ptr<type::graph_t> ipag_; /**<igraph_t wrapper struct */
+  int cur_vertex_num;                   /**<initial the number of vertices in this graph */
 
  public:
   /** Constructor. Create an graph and enable graph attributes.
@@ -49,14 +58,14 @@ class Graph {
   /** Create a vertex in the graph.
    * @return id of the new vertex
    */
-  vertex_t AddVertex();
+  type::vertex_t AddVertex();
 
   /** Create an edge in the graph.
    * @param src_vertex_id - id of the source vertex of the edge
    * @param dest_vertex_id - id of the destination vertex of the edge
    * @return id of the new edge
    */
-  edge_t AddEdge(const vertex_t src_vertex_id, const vertex_t dest_vertex_id);
+  type::edge_t AddEdge(const type::vertex_t src_vertex_id, const type::vertex_t dest_vertex_id);
 
   /** Append a graph to the graph. Copy all the vertices and edges (and all their attributes) of a graph to this graph.
    * @param g - the graph to be appended
@@ -66,12 +75,12 @@ class Graph {
   /** Delete a vertex.
    * @param vertex_id - id of vertex to be removed
    */
-  void DeleteVertex(vertex_t vertex_id);
+  void DeleteVertex(type::vertex_t vertex_id);
 
   /** Delete a set of vertex.
    * @param vs - set of vertices to be deleted
    */
-  void DeleteVertices(vertex_set_t* vs);
+  void DeleteVertices(baguatool::type::vertex_set_t* vs);
 
   /** Delete extra vertices at the end of vertices. (No need to expose to developers)
    */
@@ -81,13 +90,13 @@ class Graph {
    * @param src_vertex_id - id of the source vertex of the edge to be removed
    * @param dest_vertex_id - id of the destination vertex of the edge to be removed
    */
-  void DeleteEdge(vertex_t src_vertex_id, vertex_t dest_vertex_id);
+  void DeleteEdge(type::vertex_t src_vertex_id, type::vertex_t dest_vertex_id);
 
   /** Swap two vertices. Swap all attributes except for "id"
    * @param vertex_id_1 - id of the first vertex
    * @param vertex_id_2 - id of the second vertex
    */
-  void SwapVertex(vertex_t vertex_id_1, vertex_t vertex_id_2);
+  void SwapVertex(type::vertex_t vertex_id_1, type::vertex_t vertex_id_2);
 
   /** Query a vertex. (Not implement yet.)
    */
@@ -98,19 +107,19 @@ class Graph {
    * @param dest_vertex_id - id of the destination vertex of the edge
    * @return id of the queried edge
    */
-  edge_t QueryEdge(vertex_t src_vertex_id, vertex_t dest_vertex_id);
+  type::edge_t QueryEdge(type::vertex_t src_vertex_id, type::vertex_t dest_vertex_id);
 
   /** Get the source vertex of the input edge.
    * @param edge_id - input edge id
    * @return id of the source vertex
    */
-  vertex_t GetEdgeSrc(edge_t edge_id);
+  type::vertex_t GetEdgeSrc(type::edge_t edge_id);
 
   /** Get the destination vertex of the input edge.
    * @param edge_id - input edge id
    * @return id of the destination vertex
    */
-  vertex_t GetEdgeDest(edge_t edge_id);
+  type::vertex_t GetEdgeDest(type::edge_t edge_id);
 
   /** Get the other side vertex of the input edge. (Not implement yet.)
    * @param edge_id - input edge id
@@ -142,42 +151,42 @@ class Graph {
    * @param vertex_id - the vertex id
    * @param value - the (new) value of the vertex attribute
    */
-  void SetVertexAttributeString(const char* attr_name, vertex_t vertex_id, const char* value);
+  void SetVertexAttributeString(const char* attr_name, type::vertex_t vertex_id, const char* value);
 
   /** Set a numeric vertex attribute
    * @param attr_name - name of the vertex attribute
    * @param vertex_id - the vertex id
    * @param value - the (new) value of the vertex attribute
    */
-  void SetVertexAttributeNum(const char* attr_name, vertex_t vertex_id, const int value);
+  void SetVertexAttributeNum(const char* attr_name, type::vertex_t vertex_id, const int value);
 
   /** Set a boolean vertex attribute as flag
    * @param attr_name - name of the vertex attribute
    * @param vertex_id - the vertex id
    * @param value - the (new) value of the vertex attribute
    */
-  void SetVertexAttributeFlag(const char* attr_name, vertex_t vertex_id, const bool value);
+  void SetVertexAttributeFlag(const char* attr_name, type::vertex_t vertex_id, const bool value);
 
   /** Set a string edge attribute
    * @param attr_name - name of the edge attribute
-   * @param edge_t - the edge id
+   * @param type::edge_t - the edge id
    * @param value - the (new) value of the edge attribute
    */
-  void SetEdgeAttributeString(const char* attr_name, edge_t edge_id, const char* value);
+  void SetEdgeAttributeString(const char* attr_name, type::edge_t edge_id, const char* value);
 
   /** Set a numeric edge attribute
    * @param attr_name - name of the edge attribute
-   * @param edge_t - the edge id
+   * @param type::edge_t - the edge id
    * @param value - the (new) value of the edge attribute
    */
-  void SetEdgeAttributeNum(const char* attr_name, edge_t edge_id, const int value);
+  void SetEdgeAttributeNum(const char* attr_name, type::edge_t edge_id, const int value);
 
   /** Set a boolean edge attribute as flag
    * @param attr_name - name of the edge attribute
-   * @param edge_t - the edge id
+   * @param type::edge_t - the edge id
    * @param value - the (new) value of the edge attribute
    */
-  void SetEdgeAttributeFlag(const char* attr_name, edge_t edge_id, const bool value);
+  void SetEdgeAttributeFlag(const char* attr_name, type::edge_t edge_id, const bool value);
 
   /** Get a string graph attribute
    * @param attr_name - name of the graph attribute
@@ -202,42 +211,42 @@ class Graph {
    * @param vertex_id - the vertex id
    * @return value - the (new) value of the vertex attribute
    */
-  const char* GetVertexAttributeString(const char* attr_name, vertex_t vertex_id);
+  const char* GetVertexAttributeString(const char* attr_name, type::vertex_t vertex_id);
 
   /** Get a numeric vertex attribute
    * @param attr_name - name of the vertex attribute
    * @param vertex_id - the vertex id
    * @return value - the (new) value of the vertex attribute
    */
-  const int GetVertexAttributeNum(const char* attr_name, vertex_t vertex_id);
+  const int GetVertexAttributeNum(const char* attr_name, type::vertex_t vertex_id);
 
   /** Get a flag vertex attribute
    * @param attr_name - name of the vertex attribute
    * @param vertex_id - the vertex id
    * @return value - the (new) value of the vertex attribute
    */
-  const bool GetVertexAttributeFlag(const char* attr_name, vertex_t vertex_id);
+  const bool GetVertexAttributeFlag(const char* attr_name, type::vertex_t vertex_id);
 
   /** Get a string edge attribute
    * @param attr_name - name of the edge attribute
-   * @param edge_t - the edge id
+   * @param type::edge_t - the edge id
    * @return value - the (new) value of the edge attribute
    */
-  const char* GetEdgeAttributeString(const char* attr_name, edge_t edge_id);
+  const char* GetEdgeAttributeString(const char* attr_name, type::edge_t edge_id);
 
   /** Get a numeric edge attribute
    * @param attr_name - name of the edge attribute
-   * @param edge_t - the edge id
+   * @param type::edge_t - the edge id
    * @return value - the (new) value of the edge attribute
    */
-  const int GetEdgeAttributeNum(const char* attr_name, edge_t edge_id);
+  const int GetEdgeAttributeNum(const char* attr_name, type::edge_t edge_id);
 
   /** Get a flag edge attribute
    * @param attr_name - name of the edge attribute
-   * @param edge_t - the edge id
+   * @param type::edge_t - the edge id
    * @return value - the (new) value of the edge attribute
    */
-  const bool GetEdgeAttributeFlag(const char* attr_name, edge_t edge_id);
+  const bool GetEdgeAttributeFlag(const char* attr_name, type::edge_t edge_id);
 
   /** Remove a graph attribute
    * @param attr_name - name of the graph attribute
@@ -262,14 +271,14 @@ class Graph {
    * @param g - graph that contains the vertex to be copied
    * @param vertex_id - id of the vertex to be copied
    */
-  void DeepCopyVertex(vertex_t new_vertex_id, Graph* g, vertex_t vertex_id);
+  void DeepCopyVertex(type::vertex_t new_vertex_id, Graph* g, type::vertex_t vertex_id);
 
   /** Copy a vertex to the designated vertex. All attributes, except "id", are copied.
    * @param new_vertex_id - id of the designated vertex
    * @param g - graph that contains the vertex to be copied
    * @param vertex_id - id of the vertex to be copied
    */
-  void CopyVertex(vertex_t new_vertex_id, Graph* g, vertex_t vertex_id);
+  void CopyVertex(type::vertex_t new_vertex_id, Graph* g, type::vertex_t vertex_id);
   // TODO: do not expose inner igraph
 
   /** Depth-First Search, not implement yet.
@@ -300,7 +309,7 @@ class Graph {
    * @param vertex_id - id of a vertex
    * @param child_vec - a vector that stores the id of child vertices
    */
-  void GetChildVertexSet(vertex_t vertex_id, std::vector<vertex_t>& child_vec);
+  void GetChildVertexSet(type::vertex_t vertex_id, std::vector<type::vertex_t>& child_vec);
 
   /** [Graph Algorithm] Traverse all vertices and execute CALL_BACK_FUNC when accessing each vertex.
    * @param CALL_BACK_FUNC - callback function when a vertex is accessed. The input parameters of this function contain
@@ -308,13 +317,13 @@ class Graph {
    * parameters.
    * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
    */
-  void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, vertex_t, void*), void* extra);
+  void VertexTraversal(void (*CALL_BACK_FUNC)(Graph*, type::vertex_t, void*), void* extra);
 
   /** [Graph Algorithm] Perform Pre-order traversal on the graph.
    * @param root_vertex_id - id of the starting vertex
    * @param pre_order_vertex_vec - a vector that stores the accessing sequence (id) of vertex
    */
-  void PreOrderTraversal(vertex_t root_vertex_id, std::vector<vertex_t>& pre_order_vertex_vec);
+  void PreOrderTraversal(type::vertex_t root_vertex_id, std::vector<type::vertex_t>& pre_order_vertex_vec);
 };
 
 class ProgramGraph : public Graph {
@@ -334,7 +343,7 @@ class ProgramGraph : public Graph {
    * @param vertex_name - name of the target vertex
    * @return 0 is success
    */
-  int SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char* vertex_name);
+  int SetVertexBasicInfo(const type::vertex_t vertex_id, const int vertex_type, const char* vertex_name);
 
   /** Set debug information of a vertex, including address or line number (need to extend).
    * @param vertex_id - id of the target vertex
@@ -342,39 +351,39 @@ class ProgramGraph : public Graph {
    * @param exit_addr - exit address of the target vertex
    * @return 0 is success
    */
-  int SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr);
+  int SetVertexDebugInfo(const type::vertex_t vertex_id, const int entry_addr, const int exit_addr);
 
   /** Get the type of a vertex.
    * @param vertex_id - id of the target vertex
    * @return type of the vertex
    */
-  int GetVertexType(vertex_t vertex_id);
+  int GetVertexType(type::vertex_t vertex_id);
 
   /** Identify the vertex corresponding to the address from a specific starting vertex.
    * @param root_vertex_id - id of the starting vertex
    * @param addr - address
    * @return id of the identified vertex
    */
-  vertex_t GetChildVertexWithAddr(vertex_t root_vertex_id, unsigned long long addr);
+  type::vertex_t GetChildVertexWithAddr(type::vertex_t root_vertex_id, unsigned long long addr);
 
   /** Identify the vertex corresponding to the call path from a specific starting vertex.
    * @param root_vertex_id - id of the starting vertex
    * @param call_path - call path
    * @return id of the identified vertex
    */
-  vertex_t GetVertexWithCallPath(vertex_t root_vertex_id, std::stack<unsigned long long>& call_path);
+  type::vertex_t GetVertexWithCallPath(type::vertex_t root_vertex_id, std::stack<unsigned long long>& call_path);
 
   /** Identify the call vertex corresponding to the address from all vertices.
    * @param addr - address
    * @return id of the identified vertex
    */
-  vertex_t GetCallVertexWithAddr(unsigned long long addr);
+  type::vertex_t GetCallVertexWithAddr(unsigned long long addr);
 
   /** Identify the function vertex corresponding to the address from all vertices.
    * @param addr - address
    * @return id of the identified vertex
    */
-  vertex_t GetFuncVertexWithAddr(unsigned long long addr);
+  type::vertex_t GetFuncVertexWithAddr(unsigned long long addr);
 
   /** Add a new edge between call vertex and callee function vertex through their addresses.
    * @param call_addr - address of the call instruction
@@ -387,7 +396,7 @@ class ProgramGraph : public Graph {
    * @param vertex_id - id of vertex
    * @return name of the callee vertex
    */
-  const char* GetCallee(vertex_t vertex_id);
+  const char* GetCallee(type::vertex_t vertex_id);
 
   /** Sort vertices by entry addresses
    */
@@ -449,9 +458,6 @@ typedef struct EDGE_DATA_STRUCT EDS;
 #define MAX_LINE_LEN 256
 #endif
 
-typedef unsigned long long int addr_t;
-typedef double perf_data_t;
-
 class PerfData {
  private:
   VDS* vertex_perf_data = nullptr;                   /**<pointer to vertex type performance data */
@@ -512,7 +518,7 @@ class PerfData {
    * @param thread_id - thread id
    * @return index of the queried piece of data
    */
-  int QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id);
+  int QueryVertexData(baguatool::type::addr_t* call_path, int call_path_len, int procs_id, int thread_id);
 
   /** Query a piece of edge type performance data by (call path, call path length, process id, thread id)
    * @param call_path - call path of source
@@ -525,8 +531,8 @@ class PerfData {
    * @param out_thread_id - thread id of destination
    * @return index of the queried piece of data
    */
-  int QueryEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
-                    int out_procs_id, int thread_id, int out_thread_id);
+  int QueryEdgeData(baguatool::type::addr_t* call_path, int call_path_len, baguatool::type::addr_t* out_call_path,
+                    int out_call_path_len, int procs_id, int out_procs_id, int thread_id, int out_thread_id);
 
   /** Record a piece of vertex type performance data
    * @param call_path - call path
@@ -535,7 +541,8 @@ class PerfData {
    * @param thread_id - thread id
    * @param value of this piece of data
    */
-  void RecordVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t value);
+  void RecordVertexData(baguatool::type::addr_t* call_path, int call_path_len, int procs_id, int thread_id,
+                        baguatool::type::perf_data_t value);
 
   /** Record a piece of edge type performance data
    * @param call_path - call path of source
@@ -548,8 +555,9 @@ class PerfData {
    * @param out_thread_id - thread id of destination
    * @param value of this piece of data
    */
-  void RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len, int procs_id,
-                      int out_procs_id, int thread_id, int out_thread_id, perf_data_t value);
+  void RecordEdgeData(baguatool::type::addr_t* call_path, int call_path_len, baguatool::type::addr_t* out_call_path,
+                      int out_call_path_len, int procs_id, int out_procs_id, int thread_id, int out_thread_id,
+                      baguatool::type::perf_data_t value);
 
   /** Query call path of a piece of vertex type performance data through index
    * @param data_index - index of the piece of data
@@ -573,13 +581,13 @@ class PerfData {
    * @param data_index - index of the piece of data
    * @return value of the queried piece of data
    */
-  perf_data_t GetVertexDataValue(unsigned long int data_index);
+  baguatool::type::perf_data_t GetVertexDataValue(unsigned long int data_index);
 
   /** Query value of a piece of edge type performance data through index
    * @param data_index - index of the piece of data
    * @return value of the queried piece of data
    */
-  perf_data_t GetEdgeDataValue(unsigned long int data_index);
+  baguatool::type::perf_data_t GetEdgeDataValue(unsigned long int data_index);
 
   /** Query process id of a piece of vertex type performance data through index
    * @param data_index - index of the piece of data
@@ -647,7 +655,8 @@ class GraphPerfData {
    * @param thread_id - thread id
    * @param value - value
    */
-  void SetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id, perf_data_t value);
+  void SetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id, int thread_id,
+                   baguatool::type::perf_data_t value);
 
   /** Query the value of a piece of data of a specific vertex through metric, process id, thread id.
    * @param vertex_id - id of the specific vertex
@@ -656,79 +665,80 @@ class GraphPerfData {
    * @param thread_id - thread id
    * @return value
    */
-  perf_data_t GetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id);
+  baguatool::type::perf_data_t GetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id, int thread_id);
 
   /** Query if a specific vertex has the input metric
    * @param vertex_id - id of the specific vertex
    * @param metric - metric name
    * @return true for existance, false for
    */
-  bool HasMetric(vertex_t vertex_id, std::string& metric);
+  bool HasMetric(type::vertex_t vertex_id, std::string& metric);
 
   /** Query metric list of
    */
-  void GetVertexPerfDataMetrics(vertex_t vertex_id, std::vector<std::string>&);
-  int GetMetricsPerfDataProcsNum(vertex_t vertex_id, std::string& metric);
-  int GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& metric, int procs_id);
-  void GetProcsPerfData(vertex_t vertex_id, std::string& metric, int procs_id,
-                        std::vector<perf_data_t>& proc_perf_data);
+  void GetVertexPerfDataMetrics(type::vertex_t vertex_id, std::vector<std::string>&);
+  int GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::string& metric);
+  int GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id);
+  void GetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                        std::vector<baguatool::type::perf_data_t>& proc_perf_data);
 
 };  // class GraphPerfData
 
-class HybridAnalysis {
- private:
-  std::map<std::string, ControlFlowGraph*> func_cfg_map; /**<control-flow graphs for each function*/
-  ProgramCallGraph* pcg;                                 /**<program call graph*/
-  std::map<std::string, ProgramAbstractionGraph*>
-      func_pag_map; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
-  ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
-  ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
-  GraphPerfData* graph_perf_data;     /**<performance data in a graph*/
+// class HybridAnalysis {
+//  private:
+//   std::map<std::string, ControlFlowGraph*> func_cfg_map; /**<control-flow graphs for each function*/
+//   ProgramCallGraph* pcg;                                 /**<program call graph*/
+//   std::map<std::string, ProgramAbstractionGraph*>
+//       func_pag_map; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
+//   ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
+//   ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
+//   GraphPerfData* graph_perf_data;     /**<performance data in a graph*/
 
- public:
-  HybridAnalysis();
-  ~HybridAnalysis();
+//  public:
+//   HybridAnalysis();
+//   ~HybridAnalysis();
 
-  /** Control Flow Graph of Each Function **/
+//   /** Control Flow Graph of Each Function **/
 
-  void ReadStaticControlFlowGraphs(const char* dir_name);
-  void GenerateControlFlowGraphs(const char* dir_name);
-  ControlFlowGraph* GetControlFlowGraph(std::string func_name);
-  std::map<std::string, ControlFlowGraph*>& GetControlFlowGraphs();
+//   void ReadStaticControlFlowGraphs(const char* dir_name);
+//   void GenerateControlFlowGraphs(const char* dir_name);
+//   ControlFlowGraph* GetControlFlowGraph(std::string func_name);
+//   std::map<std::string, ControlFlowGraph*>& GetControlFlowGraphs();
 
-  /** Program Call Graph **/
+//   /** Program Call Graph **/
 
-  void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
-  void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
-  void GenerateProgramCallGraph(const char*);
-  ProgramCallGraph* GetProgramCallGraph();
+//   void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
+//   void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
+//   void GenerateProgramCallGraph(const char*);
+//   ProgramCallGraph* GetProgramCallGraph();
 
-  /** Intra-procedural Analysis **/
+//   /** Intra-procedural Analysis **/
 
-  ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
-  std::map<std::string, ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
-  void IntraProceduralAnalysis();
-  void ReadFunctionAbstractionGraphs(const char* dir_name);
+//   ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
+//   std::map<std::string, ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
+//   void IntraProceduralAnalysis();
+//   void ReadFunctionAbstractionGraphs(const char* dir_name);
 
-  /** Inter-procedural Analysis **/
+//   /** Inter-procedural Analysis **/
 
-  void InterProceduralAnalysis();
-  void GenerateProgramAbstractionGraph();
-  void SetProgramAbstractionGraph(ProgramAbstractionGraph*);
-  ProgramAbstractionGraph* GetProgramAbstractionGraph();
+//   void InterProceduralAnalysis();
+//   void GenerateProgramAbstractionGraph();
+//   void SetProgramAbstractionGraph(ProgramAbstractionGraph*);
+//   ProgramAbstractionGraph* GetProgramAbstractionGraph();
 
-  /** DataEmbedding **/
-  void DataEmbedding(PerfData*);
-  GraphPerfData* GetGraphPerfData();
-  perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
-  void ConvertVertexReducedDataToPercent(std::string& metric, perf_data_t total, std::string& new_metric);
+//   /** DataEmbedding **/
+//   void DataEmbedding(PerfData*);
+//   GraphPerfData* GetGraphPerfData();
+//   baguatool::type::perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
+//   void ConvertVertexReducedDataToPercent(std::string& metric, baguatool::type::perf_data_t total, std::string&
+//   new_metric);
 
-  void GenerateMultiProgramAbstractionGraph();
-  ProgramAbstractionGraph* GetMultiProgramAbstractionGraph();
+//   void GenerateMultiProgramAbstractionGraph();
+//   ProgramAbstractionGraph* GetMultiProgramAbstractionGraph();
 
-  void PthreadAnalysis(PerfData* pthread_data);
+//   void PthreadAnalysis(PerfData* pthread_data);
 
-};  // class HybridAnalysis
+// };  // class HybridAnalysis
 
 }  // namespace core
 
@@ -746,6 +756,81 @@ namespace graph_perf {
 
 //   // void ConnectCallerCallee(ProgramAbstractionGraph* pag, int vertex_id, void* extra);
 // };
+
+class GPerf {
+ private:
+  std::map<std::string, core::ControlFlowGraph*> func_cfg_map; /**<control-flow graphs for each function*/
+  core::ProgramCallGraph* pcg;                                 /**<program call graph*/
+  std::map<std::string, core::ProgramAbstractionGraph*>
+      func_pag_map; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
+  core::ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
+  core::ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
+  core::GraphPerfData* graph_perf_data;     /**<performance data in a graph*/
+
+ public:
+  /** Constructor.
+   */
+  GPerf();
+  /** Destructor.
+   */
+  ~GPerf();
+
+  /** Control Flow Graph of Each Function **/
+
+  void ReadStaticControlFlowGraphs(const char* dir_name);
+  void GenerateControlFlowGraphs(const char* dir_name);
+  core::ControlFlowGraph* GetControlFlowGraph(std::string func_name);
+  std::map<std::string, core::ControlFlowGraph*>& GetControlFlowGraphs();
+
+  /** Program Call Graph **/
+
+  void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
+  void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
+  void GenerateProgramCallGraph(const char*);
+  core::ProgramCallGraph* GetProgramCallGraph();
+
+  /** Intra-procedural Analysis **/
+
+  core::ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
+  std::map<std::string, core::ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
+  void IntraProceduralAnalysis();
+  void ReadFunctionAbstractionGraphs(const char* dir_name);
+
+  /** Inter-procedural Analysis **/
+
+  void InterProceduralAnalysis();
+  void GenerateProgramAbstractionGraph();
+  void SetProgramAbstractionGraph(core::ProgramAbstractionGraph*);
+  core::ProgramAbstractionGraph* GetProgramAbstractionGraph();
+
+  /** DataEmbedding **/
+  void DataEmbedding(core::PerfData*);
+  /** Get performance data on the graph (GraphPerfData)
+   * @return GraphPerfData
+   */
+  core::GraphPerfData* GetGraphPerfData();
+
+  /** Reduce performance data of each process and thread of a speific metric for each vertex (GraphPerfData)
+   * @param metric - a specfic metric
+   * @param op - reduce operation
+   * @return what????
+   */
+  baguatool::type::perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
+
+  /** Reduce performance data of each process and thread of a speific metric for each vertex (GraphPerfData)
+   * @param metric - a specfic metric
+   * @param op - reduce operation
+   * @return what????
+   */
+  void ConvertVertexReducedDataToPercent(std::string& metric, baguatool::type::perf_data_t total,
+                                         std::string& new_metric);
+
+  void GenerateMultiProgramAbstractionGraph();
+  core::ProgramAbstractionGraph* GetMultiProgramAbstractionGraph();
+
+  void PthreadAnalysis(core::PerfData* pthread_data);
+};
+
 }  // namespace graph_perf
 
 namespace collector {
@@ -767,7 +852,7 @@ class StaticAnalysis {
   void GetBinaryName();
 };  // class StaticAnalysis
 
-typedef unsigned long long int addr_t;
+// typedef unsigned long long int baguatool::type::addr_t;
 
 class LongLongVec;
 class SamplerImpl;
@@ -788,7 +873,7 @@ class Sampler {
   void Start();
   void Stop();
   int GetOverflowEvent(LongLongVec* overflow_vector);
-  int GetBacktrace(addr_t* call_path, int max_call_path_depth);
+  int GetBacktrace(baguatool::type::addr_t* call_path, int max_call_path_depth);
 };  // class Sampler
 
 // static void* resolve_symbol(const char* symbol_name, int config);

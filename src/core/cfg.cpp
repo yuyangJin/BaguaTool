@@ -7,7 +7,8 @@ namespace baguatool::core {
 ControlFlowGraph::ControlFlowGraph() {}
 ControlFlowGraph::~ControlFlowGraph() {}
 
-// int ControlFlowGraph::SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char *vertex_name) {
+// int ControlFlowGraph::SetVertexBasicInfo(const type::vertex_t vertex_id, const int vertex_type, const char
+// *vertex_name) {
 //   //
 //   // SetVertexAttributeNum("type", vertex_id, (igraph_real_t)vertex_type);
 //   SETVAN(&ipag_->graph, "type", vertex_id, (igraph_real_t)vertex_type);
@@ -15,7 +16,7 @@ ControlFlowGraph::~ControlFlowGraph() {}
 //   return 0;
 // }
 
-// int ControlFlowGraph::SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr) {
+// int ControlFlowGraph::SetVertexDebugInfo(const type::vertex_t vertex_id, const int entry_addr, const int exit_addr) {
 //   //
 //   SETVAN(&ipag_->graph, "s_addr", vertex_id, (igraph_real_t)entry_addr);
 //   SETVAN(&ipag_->graph, "e_addr", vertex_id, (igraph_real_t)exit_addr);

@@ -1,9 +1,9 @@
 #ifndef VERTEX_TYPE_
 #define VERTEX_TYPE_
 
-namespace baguatool::core {
+namespace baguatool::type {
 
-enum VERTEX_TYPE {
+enum vertex_type_t {
   BB_NODE = -12,
   INST_NODE = -11,
   ADDR_NODE = -10,

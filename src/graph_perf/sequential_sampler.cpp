@@ -18,7 +18,7 @@ static int module_init = 0;
 int mpiRank = 0;
 
 void RecordCallPath(int y) {
-  baguatool::collector::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
+  baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
   perf_data->RecordVertexData(call_path, call_path_len, 0 /* process_id */, 0 /* thread_id */, 1);
 }

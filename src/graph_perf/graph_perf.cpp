@@ -1,16 +1,16 @@
-#include "core/hybrid_analysis.h"
+#include "graph_perf.h"
 #include <stdlib.h>
 #include "common/utils.h"
 #include "core/graph_perf_data.h"
 #include "core/vertex_type.h"
 
-namespace baguatool::core {
+namespace baguatool::graph_perf {
 
-HybridAnalysis::HybridAnalysis() { this->graph_perf_data = new GraphPerfData(); }
+GPerf::GPerf() { this->graph_perf_data = new core::GraphPerfData(); }
 
-HybridAnalysis::~HybridAnalysis() { delete this->graph_perf_data; }
+GPerf::~GPerf() { delete this->graph_perf_data; }
 
-void HybridAnalysis::ReadStaticControlFlowGraphs(const char *dir_name) {
+void GPerf::ReadStaticControlFlowGraphs(const char *dir_name) {
   // Get name of files in this directory
   std::vector<std::string> file_names;
   getFiles(std::string(dir_name), file_names);
@@ -20,30 +20,30 @@ void HybridAnalysis::ReadStaticControlFlowGraphs(const char *dir_name) {
     dbg(fn);
 
     // Read a ControlFlowGraph from each file
-    ControlFlowGraph *func_cfg = new ControlFlowGraph();
+    core::ControlFlowGraph *func_cfg = new core::ControlFlowGraph();
     func_cfg->ReadGraphGML(fn.c_str());
     // new_pag->DumpGraph((file_name + std::string(".bak")).c_str());
     this->func_cfg_map[std::string(func_cfg->GetGraphAttributeString("name"))] = func_cfg;
   }
 }
 
-void HybridAnalysis::GenerateControlFlowGraphs(const char *dir_name) { this->ReadStaticControlFlowGraphs(dir_name); }
+void GPerf::GenerateControlFlowGraphs(const char *dir_name) { this->ReadStaticControlFlowGraphs(dir_name); }
 
-ControlFlowGraph *HybridAnalysis::GetControlFlowGraph(std::string func_name) { return this->func_cfg_map[func_name]; }
+core::ControlFlowGraph *GPerf::GetControlFlowGraph(std::string func_name) { return this->func_cfg_map[func_name]; }
 
-std::map<std::string, ControlFlowGraph *> &HybridAnalysis::GetControlFlowGraphs() { return this->func_cfg_map; }
+std::map<std::string, core::ControlFlowGraph *> &GPerf::GetControlFlowGraphs() { return this->func_cfg_map; }
 
-void HybridAnalysis::ReadStaticProgramCallGraph(const char *binary_name) {
+void GPerf::ReadStaticProgramCallGraph(const char *binary_name) {
   // Get name of static program call graph's file
   std::string static_pcg_file_name = std::string(binary_name) + std::string(".pcg");
 
   // Read a ProgramCallGraph from each file
-  this->pcg = new ProgramCallGraph();
+  this->pcg = new core::ProgramCallGraph();
   this->pcg->ReadGraphGML(static_pcg_file_name.c_str());
 }
 
-void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
-  PerfData *perf_data = new PerfData();
+void GPerf::ReadDynamicProgramCallGraph(std::string perf_data_file) {
+  core::PerfData *perf_data = new core::PerfData();
   perf_data->Read(perf_data_file.c_str());
   auto data_size = perf_data->GetVertexDataSize();
 
@@ -67,13 +67,11 @@ void HybridAnalysis::ReadDynamicProgramCallGraph(std::string perf_data_file) {
   }
 }
 
-void HybridAnalysis::GenerateProgramCallGraph(const char *binary_name) {
-  this->ReadStaticProgramCallGraph(binary_name);
-}
+void GPerf::GenerateProgramCallGraph(const char *binary_name) { this->ReadStaticProgramCallGraph(binary_name); }
 
-ProgramCallGraph *HybridAnalysis::GetProgramCallGraph() { return this->pcg; }
+core::ProgramCallGraph *GPerf::GetProgramCallGraph() { return this->pcg; }
 
-void HybridAnalysis::ReadFunctionAbstractionGraphs(const char *dir_name) {
+void GPerf::ReadFunctionAbstractionGraphs(const char *dir_name) {
   // Get name of files in this directory
   std::vector<std::string> file_names;
   getFiles(std::string(dir_name), file_names);
@@ -83,7 +81,7 @@ void HybridAnalysis::ReadFunctionAbstractionGraphs(const char *dir_name) {
     dbg(fn);
 
     // Read a ProgramAbstractionGraph from each file
-    ProgramAbstractionGraph *new_pag = new ProgramAbstractionGraph();
+    core::ProgramAbstractionGraph *new_pag = new core::ProgramAbstractionGraph();
     new_pag->ReadGraphGML(fn.c_str());
     // new_pag->DumpGraph((file_name + std::string(".bak")).c_str());
     func_pag_map[std::string(new_pag->GetGraphAttributeString("name"))] = new_pag;
@@ -92,32 +90,32 @@ void HybridAnalysis::ReadFunctionAbstractionGraphs(const char *dir_name) {
 
 /** Intra-procedural Analysis **/
 
-ProgramAbstractionGraph *HybridAnalysis::GetFunctionAbstractionGraph(std::string func_name) {
+core::ProgramAbstractionGraph *GPerf::GetFunctionAbstractionGraph(std::string func_name) {
   return this->func_pag_map[func_name];
 }
 
-std::map<std::string, ProgramAbstractionGraph *> &HybridAnalysis::GetFunctionAbstractionGraphs() {
+std::map<std::string, core::ProgramAbstractionGraph *> &GPerf::GetFunctionAbstractionGraphs() {
   return this->func_pag_map;
 }
 
-void HybridAnalysis::IntraProceduralAnalysis() {}
+void GPerf::IntraProceduralAnalysis() {}
 
 /** Inter-procedural Analysis **/
 
 typedef struct InterProceduralAnalysisArg {
-  std::map<std::string, ProgramAbstractionGraph *> *func_pag_map;
-  ProgramCallGraph *pcg;
+  std::map<std::string, core::ProgramAbstractionGraph *> *func_pag_map;
+  core::ProgramCallGraph *pcg;
 } InterPAArg;
 
 // FIXME: `void *` should not appear in cpp
-void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   InterPAArg *arg = (InterPAArg *)extra;
-  std::map<std::string, ProgramAbstractionGraph *> *func_name_2_pag = arg->func_pag_map;
-  ProgramCallGraph *pcg = arg->pcg;
+  std::map<std::string, core::ProgramAbstractionGraph *> *func_name_2_pag = arg->func_pag_map;
+  core::ProgramCallGraph *pcg = arg->pcg;
 
   // dbg(pag->GetGraphAttributeString("name"));
   int type = pag->GetVertexType(vertex_id);
-  if (type == CALL_NODE || type == CALL_IND_NODE || type == CALL_REC_NODE) {
+  if (type == type::CALL_NODE || type == type::CALL_IND_NODE || type == type::CALL_REC_NODE) {
     int addr = pag->GetVertexAttributeNum("saddr", vertex_id);
     // dbg(vertex_id, addr);
     type::vertex_t call_vertex_id = pcg->GetCallVertexWithAddr(addr);
@@ -133,10 +131,10 @@ void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extr
     // dbg(callee_func_name_str);
 
     if (callee_func_name) {
-      ProgramAbstractionGraph *callee_pag = (*func_name_2_pag)[callee_func_name_str];
+      core::ProgramAbstractionGraph *callee_pag = (*func_name_2_pag)[callee_func_name_str];
 
       if (!callee_pag->GetGraphAttributeFlag("scanned")) {
-        void (*ConnectCallerCalleePointer)(ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
+        void (*ConnectCallerCalleePointer)(core::ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
         // dbg(callee_pag->GetGraphAttributeString("name"));
         callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
         callee_pag->SetGraphAttributeFlag("scanned", true);
@@ -152,7 +150,7 @@ void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extr
   }
 }
 
-void HybridAnalysis::InterProceduralAnalysis() {
+void GPerf::InterProceduralAnalysis() {
   // Search root node , "name" is "main"
   // std::map<std::string, ProgramAbstractionGraph *> func_name_2_pag;
 
@@ -188,13 +186,13 @@ void HybridAnalysis::InterProceduralAnalysis() {
   return;
 }  // function InterProceduralAnalysis
 
-void HybridAnalysis::GenerateProgramAbstractionGraph() { this->InterProceduralAnalysis(); }
+void GPerf::GenerateProgramAbstractionGraph() { this->InterProceduralAnalysis(); }
 
-void HybridAnalysis::SetProgramAbstractionGraph(ProgramAbstractionGraph *pag) { this->root_pag = pag; }
+void GPerf::SetProgramAbstractionGraph(core::ProgramAbstractionGraph *pag) { this->root_pag = pag; }
 
-ProgramAbstractionGraph *HybridAnalysis::GetProgramAbstractionGraph() { return this->root_pag; }
+core::ProgramAbstractionGraph *GPerf::GetProgramAbstractionGraph() { return this->root_pag; }
 
-void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
+void GPerf::DataEmbedding(core::PerfData *perf_data) {
   // Query for each call path
   auto data_size = perf_data->GetVertexDataSize();
   for (unsigned long int i = 0; i < data_size; i++) {
@@ -209,7 +207,7 @@ void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
 
     type::vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
     // dbg(queried_vertex_id);
-    perf_data_t data =
+    type::perf_data_t data =
         this->graph_perf_data->GetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id);
     data += value;
     this->graph_perf_data->SetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id, data);
@@ -217,18 +215,18 @@ void HybridAnalysis::DataEmbedding(PerfData *perf_data) {
 
 }  // function Dataembedding
 
-GraphPerfData *HybridAnalysis::GetGraphPerfData() { return this->graph_perf_data; }
+core::GraphPerfData *GPerf::GetGraphPerfData() { return this->graph_perf_data; }
 
-perf_data_t ReduceOperation(std::vector<perf_data_t> &perf_data, int num, string &op) {
+type::perf_data_t ReduceOperation(std::vector<type::perf_data_t> &perf_data, int num, string &op) {
   if (num == 0) {
     return 0.0;
   }
   if (!strcmp(op.c_str(), "AVG")) {
-    perf_data_t avg = 0.0;
+    type::perf_data_t avg = 0.0;
     for (int i = 0; i < num; i++) {
       avg += perf_data[i];
     }
-    avg /= (perf_data_t)num;
+    avg /= (type::perf_data_t)num;
     return avg;
   } else {
     return perf_data[0];
@@ -237,26 +235,26 @@ perf_data_t ReduceOperation(std::vector<perf_data_t> &perf_data, int num, string
 
 typedef struct ReducePerfDataArg {
   // input
-  GraphPerfData *graph_perf_data = nullptr;
+  core::GraphPerfData *graph_perf_data = nullptr;
   std::string metric;
   std::string op;
   // output
-  perf_data_t total_reduced_data = 0.0;
+  type::perf_data_t total_reduced_data = 0.0;
 } RPDArg;
 
-void ReducePerfData(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   RPDArg *arg = (RPDArg *)extra;
-  GraphPerfData *graph_perf_data = arg->graph_perf_data;
+  core::GraphPerfData *graph_perf_data = arg->graph_perf_data;
   std::string metric(arg->metric);
   std::string op(arg->op);
 
   int num_procs = graph_perf_data->GetMetricsPerfDataProcsNum(vertex_id, metric);
 
-  std::vector<perf_data_t> im_reduced_data;
+  std::vector<type::perf_data_t> im_reduced_data;
 
   for (int i = 0; i < num_procs; i++) {
-    // perf_data_t* procs_perf_data = nullptr;
-    std::vector<perf_data_t> procs_perf_data;
+    // type::perf_data_t* procs_perf_data = nullptr;
+    std::vector<type::perf_data_t> procs_perf_data;
     graph_perf_data->GetProcsPerfData(vertex_id, metric, i, procs_perf_data);
     // int num_thread = graph_perf_data->GetProcsPerfDataThreadNum(vertex_id, metric, i);
     int num_thread = procs_perf_data.size();
@@ -271,7 +269,7 @@ void ReducePerfData(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
     FREE_CONTAINER(procs_perf_data);
   }
 
-  perf_data_t reduced_data = ReduceOperation(im_reduced_data, num_procs, op);
+  type::perf_data_t reduced_data = ReduceOperation(im_reduced_data, num_procs, op);
   // dbg(reduced_data);
 
   FREE_CONTAINER(im_reduced_data);
@@ -283,7 +281,7 @@ void ReducePerfData(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
 }
 
 // Reduce each vertex's perf data
-perf_data_t HybridAnalysis::ReduceVertexPerfData(std::string &metric, std::string &op) {
+type::perf_data_t GPerf::ReduceVertexPerfData(std::string &metric, std::string &op) {
   RPDArg *arg = new RPDArg();
   arg->graph_perf_data = this->graph_perf_data;
   arg->metric = std::string(metric);
@@ -292,7 +290,7 @@ perf_data_t HybridAnalysis::ReduceVertexPerfData(std::string &metric, std::strin
 
   this->root_pag->VertexTraversal(&ReducePerfData, arg);
 
-  perf_data_t total = arg->total_reduced_data;
+  type::perf_data_t total = arg->total_reduced_data;
   delete arg;
   return total;
 }
@@ -301,25 +299,24 @@ typedef struct PerfDataToPercentArg {
   // input
   std::string new_metric;
   std::string metric;
-  perf_data_t total;
+  type::perf_data_t total;
   // output
   //...
 } PDTPArg;
 
-void PerfDataToPercent(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+void PerfDataToPercent(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   PDTPArg *arg = (PDTPArg *)extra;
   std::string new_metric(arg->new_metric);
   std::string metric(arg->metric);
-  perf_data_t total = arg->total;
+  type::perf_data_t total = arg->total;
 
-  perf_data_t data = strtod(pag->GetVertexAttributeString(metric.c_str(), (type::vertex_t)vertex_id), NULL);
-  perf_data_t percent = data / total;
+  type::perf_data_t data = strtod(pag->GetVertexAttributeString(metric.c_str(), (type::vertex_t)vertex_id), NULL);
+  type::perf_data_t percent = data / total;
   pag->SetVertexAttributeString(new_metric.c_str(), (type::vertex_t)vertex_id, std::to_string(percent).c_str());
 }
 
 // convert vertex's reduced data to percent
-void HybridAnalysis::ConvertVertexReducedDataToPercent(std::string &metric, perf_data_t total,
-                                                       std::string &new_metric) {
+void GPerf::ConvertVertexReducedDataToPercent(std::string &metric, type::perf_data_t total, std::string &new_metric) {
   PDTPArg *arg = new PDTPArg();
   arg->new_metric = std::string(new_metric);
   arg->metric = std::string(metric);
@@ -330,8 +327,8 @@ void HybridAnalysis::ConvertVertexReducedDataToPercent(std::string &metric, perf
   delete arg;
 }
 
-void HybridAnalysis::GenerateMultiProgramAbstractionGraph() {
-  root_mpag = new ProgramAbstractionGraph();
+void GPerf::GenerateMultiProgramAbstractionGraph() {
+  root_mpag = new core::ProgramAbstractionGraph();
   root_mpag->GraphInit("Multi-process Program Abstraction Graph");
 
   std::vector<type::vertex_t> pre_order_vertex_seq;
@@ -348,9 +345,9 @@ void HybridAnalysis::GenerateMultiProgramAbstractionGraph() {
   }
 }
 
-ProgramAbstractionGraph *HybridAnalysis::GetMultiProgramAbstractionGraph() { return root_mpag; }
+core::ProgramAbstractionGraph *GPerf::GetMultiProgramAbstractionGraph() { return root_mpag; }
 
-void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
+void GPerf::PthreadAnalysis(core::PerfData *pthread_data) {
   // Query for each call path
   auto data_size = pthread_data->GetVertexDataSize();
   for (unsigned long int i = 0; i < data_size; i++) {
@@ -366,12 +363,12 @@ void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
     // TODO: Need to judge if it is in current thread
     // if thread_id == cur_thread
 
-    if (time == (baguatool::core::perf_data_t)(-1)) {
+    if (time == (type::perf_data_t)(-1)) {
       type::vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
       type::addr_t addr = call_path.top();
       dbg(addr);
       type::vertex_t pthread_vertex_id = root_pag->AddVertex();
-      root_pag->SetVertexBasicInfo(pthread_vertex_id, core::CALL_NODE, "pthread_create");
+      root_pag->SetVertexBasicInfo(pthread_vertex_id, type::CALL_NODE, "pthread_create");
       root_pag->SetVertexDebugInfo(pthread_vertex_id, addr, addr);
       root_pag->SetVertexAttributeNum("id", pthread_vertex_id, pthread_vertex_id);
       root_pag->AddEdge(queried_vertex_id, pthread_vertex_id);
@@ -393,7 +390,7 @@ void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
             dbg(addr_j);
             type::vertex_t pthread_join_vertex_id = root_pag->AddVertex();
             dbg(pthread_join_vertex_id);
-            root_pag->SetVertexBasicInfo(pthread_join_vertex_id, core::CALL_NODE, "pthread_join");
+            root_pag->SetVertexBasicInfo(pthread_join_vertex_id, type::CALL_NODE, "pthread_join");
             root_pag->SetVertexDebugInfo(pthread_join_vertex_id, addr_j, addr_j);
             root_pag->SetVertexAttributeNum("id", pthread_join_vertex_id, pthread_join_vertex_id);
             root_pag->AddEdge(queried_vertex_id_j, pthread_join_vertex_id);
@@ -409,4 +406,4 @@ void HybridAnalysis::PthreadAnalysis(PerfData *pthread_data) {
   root_pag->VertexSortChild();
 }
 
-}  // namespace baguatool::core
+}  // graph_perf

@@ -21,6 +21,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "baguatool.h"
 #include "common/tprintf.h"
 
 #define TRY(func, flag)                                                               \
@@ -57,7 +58,7 @@
 
 namespace baguatool::collector {
 
-typedef unsigned long long int addr_t;
+// typedef unsigned long long int addr_t;
 
 struct LongLongVec {
   long_long overflow_vector;
@@ -88,7 +89,7 @@ class SamplerImpl {
   void Start();
   void Stop();
   int GetOverflowEvent(LongLongVec* overflow_vector);
-  int GetBacktrace(addr_t* call_path, int max_call_path_depth);
+  int GetBacktrace(type::addr_t* call_path, int max_call_path_depth);
 };
 
 int my_backtrace(unw_word_t* buffer, int max_depth);

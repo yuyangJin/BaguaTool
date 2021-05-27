@@ -16,7 +16,7 @@ void Sampler::SetOverflow(void (*FUNC_AT_OVERFLOW)(int)) { sa->SetOverflow(FUNC_
 void Sampler::Start() { sa->Start(); }
 void Sampler::Stop() { sa->Stop(); }
 int Sampler::GetOverflowEvent(LongLongVec* overflow_vector) { return sa->GetOverflowEvent(overflow_vector); }
-int Sampler::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
+int Sampler::GetBacktrace(type::addr_t* call_path, int max_call_path_depth) {
   return sa->GetBacktrace(call_path, max_call_path_depth);
 }
 // int Sampler::my_backtrace(unw_word_t *buffer, int max_depth) {my_backtrace(buffer, max_depth); }
@@ -111,7 +111,7 @@ int SamplerImpl::GetOverflowEvent(LongLongVec* overflow_vector) {
   return y;
 }
 
-int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
+int SamplerImpl::GetBacktrace(type::addr_t* call_path, int max_call_path_depth) {
 #ifdef MY_BT
   unw_word_t buffer[MAX_STACK_DEPTH] = {0};
 #else
@@ -138,7 +138,7 @@ int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
   for (i = 1; i < depth; ++i) {
     // if( (void*)buffer[i] != NULL && (char*)buffer[i] < addr_threshold ){
     if (buffer[i] != 0) {
-      call_path[addr_log_pointer] = (addr_t)(buffer[i]) - 2;
+      call_path[addr_log_pointer] = (type::addr_t)(buffer[i]) - 2;
       addr_log_pointer++;
     }
   }
@@ -154,7 +154,7 @@ int SamplerImpl::GetBacktrace(addr_t* call_path, int max_call_path_depth) {
   for (i = 1; i < depth; ++i) {
     // if( (void*)buffer[i] != NULL && (char*)buffer[i] < addr_threshold ){
     if ((void*)buffer[i] != NULL) {
-      call_path[addr_log_pointer] = (addr_t)(buffer[i]) - 2;
+      call_path[addr_log_pointer] = (type::addr_t)(buffer[i]) - 2;
       addr_log_pointer++;
       // LOG_INFO("%08x\n",buffer[i]);
     }

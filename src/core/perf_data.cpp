@@ -192,7 +192,7 @@ std::string& PerfData::GetMetricName() { return this->metric_name; }
 
 void PerfData::SetMetricName(std::string& metric_name) { this->metric_name = std::string(metric_name); }
 
-bool CallPathCmp(addr_t* cp_1, int cp_1_len, addr_t* cp_2, int cp_2_len) {
+bool CallPathCmp(type::addr_t* cp_1, int cp_1_len, type::addr_t* cp_2, int cp_2_len) {
   if (cp_1_len != cp_2_len) {
     return false;
   } else {
@@ -205,7 +205,7 @@ bool CallPathCmp(addr_t* cp_1, int cp_1_len, addr_t* cp_2, int cp_2_len) {
   return true;
 }
 
-int PerfData::QueryVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
+int PerfData::QueryVertexData(type::addr_t* call_path, int call_path_len, int procs_id, int thread_id) {
   for (unsigned long int i = 0; i < this->vertex_perf_data_count; i++) {
     // call_path
     if (CallPathCmp(call_path, call_path_len, this->vertex_perf_data[i].call_path,
@@ -218,8 +218,8 @@ int PerfData::QueryVertexData(addr_t* call_path, int call_path_len, int procs_id
   return -1;
 }
 
-int PerfData::QueryEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len,
-                            int procs_id, int out_procs_id, int thread_id, int out_thread_id) {
+int PerfData::QueryEdgeData(type::addr_t* call_path, int call_path_len, type::addr_t* out_call_path,
+                            int out_call_path_len, int procs_id, int out_procs_id, int thread_id, int out_thread_id) {
   for (unsigned long int i = 0; i < this->edge_perf_data_count; i++) {
     // call_path
     if (CallPathCmp(call_path, call_path_len, this->edge_perf_data[i].call_path,
@@ -237,7 +237,8 @@ int PerfData::QueryEdgeData(addr_t* call_path, int call_path_len, addr_t* out_ca
 }
 
 // TODO: Modify current aggregation mode to non-aggregation mode, users can do aggregation with our APIs
-void PerfData::RecordVertexData(addr_t* call_path, int call_path_len, int procs_id, int thread_id, perf_data_t value) {
+void PerfData::RecordVertexData(type::addr_t* call_path, int call_path_len, int procs_id, int thread_id,
+                                perf_data_t value) {
   int index = this->QueryVertexData(call_path, call_path_len, procs_id, thread_id);
 
   if (index >= 0) {
@@ -261,8 +262,9 @@ void PerfData::RecordVertexData(addr_t* call_path, int call_path_len, int procs_
   }
 }
 
-void PerfData::RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_call_path, int out_call_path_len,
-                              int procs_id, int out_procs_id, int thread_id, int out_thread_id, perf_data_t value) {
+void PerfData::RecordEdgeData(type::addr_t* call_path, int call_path_len, type::addr_t* out_call_path,
+                              int out_call_path_len, int procs_id, int out_procs_id, int thread_id, int out_thread_id,
+                              perf_data_t value) {
   // Thread-safe, first fetch a index, then record data
   unsigned long long int x = __sync_fetch_and_add(&this->edge_perf_data_count, 1);
 
@@ -287,7 +289,7 @@ void PerfData::RecordEdgeData(addr_t* call_path, int call_path_len, addr_t* out_
   }
 }
 
-void PerfData::GetVertexDataCallPath(unsigned long int data_index, std::stack<addr_t>& call_path_stack) {
+void PerfData::GetVertexDataCallPath(unsigned long int data_index, std::stack<type::addr_t>& call_path_stack) {
   VDS* data = &(this->vertex_perf_data[data_index]);
   for (int i = 0; i < data->call_path_len; i++) {
     call_path_stack.push(data->call_path[i]);
@@ -296,7 +298,7 @@ void PerfData::GetVertexDataCallPath(unsigned long int data_index, std::stack<ad
   return;
 }
 
-void PerfData::GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<addr_t>& call_path_stack) {
+void PerfData::GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<type::addr_t>& call_path_stack) {
   EDS* data = &(this->edge_perf_data[data_index]);
   for (int i = 0; i < data->call_path_len; i++) {
     call_path_stack.push(data->call_path[i]);
@@ -305,7 +307,7 @@ void PerfData::GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<a
   return;
 }
 
-void PerfData::GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<addr_t>& call_path_stack) {
+void PerfData::GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<type::addr_t>& call_path_stack) {
   EDS* data = &(this->edge_perf_data[data_index]);
   for (int i = 0; i < data->out_call_path_len; i++) {
     call_path_stack.push(data->out_call_path[i]);

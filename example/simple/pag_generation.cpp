@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
   strcpy(pcg_name, bin_name);
   strcat(pcg_name, ".pcg");
 
-  auto hybrid_analysis = std::make_unique<baguatool::core::HybridAnalysis>();
+  auto hybrid_analysis = std::make_unique<baguatool::graph_perf::GPerf>();
 
   hybrid_analysis->ReadFunctionAbstractionGraphs(pag_dir_name);
   hybrid_analysis->ReadStaticProgramCallGraph(bin_name);

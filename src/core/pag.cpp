@@ -21,7 +21,7 @@ ProgramAbstractionGraph::~ProgramAbstractionGraph() {
   // // delete ipag_;
 }
 
-// int ProgramAbstractionGraph::SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type,
+// int ProgramAbstractionGraph::SetVertexBasicInfo(const type::vertex_t vertex_id, const int vertex_type,
 //                                                 const char *vertex_name) {
 //   //
 //   // SetVertexAttributeNum("type", vertex_id, (igraph_real_t)vertex_type);
@@ -30,7 +30,8 @@ ProgramAbstractionGraph::~ProgramAbstractionGraph() {
 //   return 0;
 // }
 
-// int ProgramAbstractionGraph::SetVertexDebugInfo(const vertex_t vertex_id, const int entry_addr, const int exit_addr)
+// int ProgramAbstractionGraph::SetVertexDebugInfo(const type::vertex_t vertex_id, const int entry_addr, const int
+// exit_addr)
 // {
 //   //
 //   SETVAN(&ipag_->graph, "s_addr", vertex_id, (igraph_real_t)entry_addr);
@@ -38,12 +39,13 @@ ProgramAbstractionGraph::~ProgramAbstractionGraph() {
 //   return 0;
 // }
 
-// int ProgramAbstractionGraph::GetVertexType(vertex_t vertex) {
+// int ProgramAbstractionGraph::GetVertexType(type::vertex_t vertex) {
 //   return this->GetVertexAttributeNum("type", vertex);
 // } // function GetVertexType
 
-// vertex_t ProgramAbstractionGraph::GetChildVertexWithAddress(vertex_t root_vertex, unsigned long long addr) {
-//   std::vector<vertex_t> children = GetChildVertexSet(root_vertex);
+// type::vertex_t ProgramAbstractionGraph::GetChildVertexWithAddress(type::vertex_t root_vertex, unsigned long long
+// addr) {
+//   std::vector<type::vertex_t> children = GetChildVertexSet(root_vertex);
 //   if (0 == children.size()) {
 //     return -1;
 //   }
@@ -56,13 +58,14 @@ ProgramAbstractionGraph::~ProgramAbstractionGraph() {
 //     }
 //   }
 
-//   std::vector<vertex_t>().swap(children);
+//   std::vector<type::vertex_t>().swap(children);
 
 //   // Not found
 //   return -1;
 // }  // function GetChildVertexWithAddress
 
-// vertex_t ProgramAbstractionGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<unsigned long long>&
+// type::vertex_t ProgramAbstractionGraph::GetVertexWithCallPath(type::vertex_t root_vertex, std::stack<unsigned long
+// long>&
 // call_path_stack ) {
 //   // if call path stack is empty, it means the call path points to current vertex, so return it.
 //   if (call_path_stack.empty()) {
@@ -78,14 +81,14 @@ ProgramAbstractionGraph::~ProgramAbstractionGraph() {
 //   // }
 
 //   // Find the CALL vertex of current addr, addr is from calling context
-//   vertex_t found_vertex = root_vertex;
+//   type::vertex_t found_vertex = root_vertex;
 //   while (1) {
-//     vertex_t child_vertex = GetChildVertexWithAddress(found_vertex, addr);
+//     type::vertex_t child_vertex = GetChildVertexWithAddress(found_vertex, addr);
 
 //     found_vertex = child_vertex;
 //     // if child_vertex is not found
 //     if (-1 == child_vertex) {
-//       //vertex_t new_vertex = this->AddVertex();
+//       //type::vertex_t new_vertex = this->AddVertex();
 //       //this->AddEdge(root_vertex, new_vertex);
 //       //this->SetVertexBasicInfo();
 //       //found_vertex = new_vertex;
@@ -120,7 +123,7 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
-    vertex_t vertex_id = (vertex_t)IGRAPH_VIT_GET(vit);
+    type::vertex_t vertex_id = (type::vertex_t)IGRAPH_VIT_GET(vit);
     printf("Traverse %d\n", vertex_id);
 
     // Call user-defined function

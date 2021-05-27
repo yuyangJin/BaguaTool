@@ -5,8 +5,7 @@
 
 #define TRUNK_SIZE 1000
 
-namespace baguatool::core {
-
+namespace baguatool::type {
 struct graph_t {
   igraph_t graph;
 };
@@ -14,6 +13,9 @@ struct graph_t {
 struct vertex_set_t {
   igraph_vs_t vertices;
 };
+}
+
+namespace baguatool::core {
 
 // struct PAG_vertex_t {
 //   igraph_integer_t vertex_id;
@@ -25,7 +27,7 @@ struct vertex_set_t {
 
 // class Graph {
 //  protected:
-//   std::unique_ptr<graph_t> ipag_;
+//   std::unique_ptr<type::graph_t> ipag_;
 //   int cur_vertex_num;
 
 //  public:

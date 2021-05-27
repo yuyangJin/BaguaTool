@@ -38,12 +38,21 @@ add_library(
   src/core/cfg.cpp
   src/core/perf_data.cpp
   src/core/graph_perf_data.cpp
-  src/core/hybrid_analysis.cpp
+  # src/core/hybrid_analysis.cpp
 
-  #src/GraphPerf/preprocessing/preprocess.cpp
+  #src/graph_perf/preprocessing/preprocess.cpp
   src/collector/static/dyninst/static_analysis.cpp
   src/collector/dynamic/papi/sampler.cpp
+
+  src/graph_perf/graph_perf.cpp
 )
+
+add_executable(binary_analyzer src/graph_perf/binary_analyzer.cpp)
+add_library(sequential_sampler SHARED src/graph_perf/sequential_sampler.cpp)
+add_library(pthread_sampler SHARED src/graph_perf/pthread_sampler.cpp)
+
+
+
 
 set_property(TARGET baguatool PROPERTY CXX_STANDARD 17)
 set_property(TARGET baguatool PROPERTY CXX_STANDARD_REQUIRED ON)
@@ -86,11 +95,13 @@ target_link_libraries(
   # TODO: we do not need all these
   dyninstAPI parseAPI instructionAPI symtabAPI symLite dynDwarf dynElf boost_system common elf unwind papi)
 target_link_libraries(baguatool PRIVATE ${PAPI_LIBRARIES})
-
+target_link_libraries(binary_analyzer PRIVATE baguatool)
+target_link_libraries(sequential_sampler PRIVATE baguatool)
+target_link_libraries(pthread_sampler PRIVATE baguatool)
 
 if (ENABLE_EXAMPLE)
   add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/example/reproduction/GraphPerf)
+  # add_subdirectory(${PROJECT_SOURCE_DIR}/example/reproduction/GraphPerf)
 endif()
 
 if (ENABLE_TEST)

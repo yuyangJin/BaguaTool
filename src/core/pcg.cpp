@@ -7,7 +7,8 @@ namespace baguatool::core {
 ProgramCallGraph::ProgramCallGraph() {}
 ProgramCallGraph::~ProgramCallGraph() {}
 
-// int ProgramCallGraph::SetVertexBasicInfo(const vertex_t vertex_id, const int vertex_type, const char *vertex_name) {
+// int ProgramCallGraph::SetVertexBasicInfo(const type::vertex_t vertex_id, const int vertex_type, const char
+// *vertex_name) {
 //   //
 //   // SetVertexAttributeNum("type", vertex_id, (igraph_real_t)vertex_type);
 //   SETVAN(&ipag_->graph, "type", vertex_id, (igraph_real_t)vertex_type);
@@ -15,18 +16,18 @@ ProgramCallGraph::~ProgramCallGraph() {}
 //   return 0;
 // }
 
-// int ProgramCallGraph::SetVertexDebugInfo(const vertex_t vertex_id, const int addr) {
+// int ProgramCallGraph::SetVertexDebugInfo(const type::vertex_t vertex_id, const int addr) {
 //   //
 //   SETVAN(&ipag_->graph, "addr", vertex_id, (igraph_real_t)addr);
 //   return 0;
 // }
 
-// int ProgramCallGraph::GetVertexType(vertex_t vertex) {
+// int ProgramCallGraph::GetVertexType(type::vertex_t vertex) {
 //   return this->GetVertexAttributeNum("type", vertex);
 // } // function GetVertexType
 
-// vertex_t ProgramCallGraph::GetChildVertexWithAddress(vertex_t root_vertex, unsigned long long addr) {
-//   std::vector<vertex_t> children = GetChildVertexSet(root_vertex);
+// type::vertex_t ProgramCallGraph::GetChildVertexWithAddress(type::vertex_t root_vertex, unsigned long long addr) {
+//   std::vector<type::vertex_t> children = GetChildVertexSet(root_vertex);
 //   if (0 == children.size()) {
 //     return -1;
 //   }
@@ -39,13 +40,13 @@ ProgramCallGraph::~ProgramCallGraph() {}
 //     }
 //   }
 
-//   std::vector<vertex_t>().swap(children);
+//   std::vector<type::vertex_t>().swap(children);
 
 //   // Not found
 //   return -1;
 // }  // function GetChildVertexWithAddress
 
-// vertex_t ProgramCallGraph::GetVertexWithCallPath(vertex_t root_vertex, std::stack<unsigned long long>&
+// type::vertex_t ProgramCallGraph::GetVertexWithCallPath(type::vertex_t root_vertex, std::stack<unsigned long long>&
 // call_path_stack ) {
 //   // if call path stack is empty, it means the call path points to current vertex, so return it.
 //   if (call_path_stack.empty()) {
@@ -61,14 +62,14 @@ ProgramCallGraph::~ProgramCallGraph() {}
 //   // }
 
 //   // Find the CALL vertex of current addr, addr is from calling context
-//   vertex_t found_vertex = root_vertex;
+//   type::vertex_t found_vertex = root_vertex;
 //   while (1) {
-//     vertex_t child_vertex = GetChildVertexWithAddress(found_vertex, addr);
+//     type::vertex_t child_vertex = GetChildVertexWithAddress(found_vertex, addr);
 
 //     found_vertex = child_vertex;
 //     // if child_vertex is not found
 //     if (-1 == child_vertex) {
-//       //vertex_t new_vertex = this->AddVertex();
+//       //type::vertex_t new_vertex = this->AddVertex();
 //       //this->AddEdge(root_vertex, new_vertex);
 //       //this->SetVertexBasicInfo();
 //       //found_vertex = new_vertex;
@@ -96,13 +97,13 @@ ProgramCallGraph::~ProgramCallGraph() {}
 
 // // void
 
-// vertex_t ProgramCallGraph::GetVertexWithAddr(unsigned long long addr) {
+// type::vertex_t ProgramCallGraph::GetVertexWithAddr(unsigned long long addr) {
 //   VertexTraversal();
 // }
 
 // int ProgramCallGraph::AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr) {
-//   vertex_t call_vertex = GetVertexWithAddress(call_addr);
-//   vertex_t callee_vertex = GetVertexWithAddress(callee_addr);
+//   type::vertex_t call_vertex = GetVertexWithAddress(call_addr);
+//   type::vertex_t callee_vertex = GetVertexWithAddress(callee_addr);
 //   if (!this->QueryEdgeWithSrcDest(call_vertex, callee_vertex)) {
 //     this->AddEdge(call_vertex, callee_vertex);
 //   }

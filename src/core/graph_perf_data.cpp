@@ -24,8 +24,8 @@ void GraphPerfData::Dump(std::string& output_file) {
   output.close();
 }
 
-void GraphPerfData::SetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id,
-                                perf_data_t data) {
+void GraphPerfData::SetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id, int thread_id,
+                                type::perf_data_t data) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
   std::string process_id_str = std::to_string(procs_id);
@@ -38,8 +38,9 @@ void GraphPerfData::SetPerfData(vertex_t vertex_id, std::string& metric, int pro
   this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str] = data;
 }
 
-perf_data_t GraphPerfData::GetPerfData(vertex_t vertex_id, std::string& metric, int procs_id, int thread_id) {
-  perf_data_t data = 0;
+type::perf_data_t GraphPerfData::GetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                                             int thread_id) {
+  type::perf_data_t data = 0;
 
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
@@ -52,7 +53,8 @@ perf_data_t GraphPerfData::GetPerfData(vertex_t vertex_id, std::string& metric, 
         if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].size() > (unsigned int)thread_id) {
           auto ret = this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str];
           if (ret != nullptr) {
-            data += this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<perf_data_t>();
+            data +=
+                this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>();
           }
         }
       }
@@ -62,7 +64,7 @@ perf_data_t GraphPerfData::GetPerfData(vertex_t vertex_id, std::string& metric, 
   return data;
 }
 
-bool GraphPerfData::HasMetric(vertex_t vertex_id, std::string& metric) {
+bool GraphPerfData::HasMetric(type::vertex_t vertex_id, std::string& metric) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
 
@@ -72,7 +74,7 @@ bool GraphPerfData::HasMetric(vertex_t vertex_id, std::string& metric) {
     return false;
   }
 }
-void GraphPerfData::GetVertexPerfDataMetrics(vertex_t vertex_id, std::vector<std::string>& metrics) {
+void GraphPerfData::GetVertexPerfDataMetrics(type::vertex_t vertex_id, std::vector<std::string>& metrics) {
   std::string vertex_id_str = std::to_string(vertex_id);
 
   for (auto& el : this->j_perf_data[vertex_id_str].items()) {
@@ -81,7 +83,7 @@ void GraphPerfData::GetVertexPerfDataMetrics(vertex_t vertex_id, std::vector<std
   return;
 }
 
-int GraphPerfData::GetMetricsPerfDataProcsNum(vertex_t vertex_id, std::string& metric) {
+int GraphPerfData::GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::string& metric) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
 
@@ -90,7 +92,7 @@ int GraphPerfData::GetMetricsPerfDataProcsNum(vertex_t vertex_id, std::string& m
   return size;
 }
 
-int GraphPerfData::GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& metric, int procs_id) {
+int GraphPerfData::GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
   std::string process_id_str = std::to_string(procs_id);
@@ -100,9 +102,9 @@ int GraphPerfData::GetProcsPerfDataThreadNum(vertex_t vertex_id, std::string& me
   return size;
 }
 
-// perf_data_t** GraphPerfData::GetMetricPerfData(vertex_t vertex_id, std::string& metric) {}
-void GraphPerfData::GetProcsPerfData(vertex_t vertex_id, std::string& metric, int procs_id,
-                                     std::vector<perf_data_t>& proc_perf_data) {
+// type::perf_data_t** GraphPerfData::GetMetricPerfData(type::vertex_t vertex_id, std::string& metric) {}
+void GraphPerfData::GetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                                     std::vector<type::perf_data_t>& proc_perf_data) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
   std::string process_id_str = std::to_string(procs_id);
@@ -110,13 +112,13 @@ void GraphPerfData::GetProcsPerfData(vertex_t vertex_id, std::string& metric, in
 
   int size = this->j_perf_data[vertex_id_str][metric_str][process_id_str].size();
   if (size > 0) {
-    // proc_perf_data = new perf_data_t[size]();
+    // proc_perf_data = new type::perf_data_t[size]();
     for (int i = 0; i < size; i++) {
       // memset();
       thread_id_str = std::to_string(i);
       if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
         proc_perf_data.push_back(
-            this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<perf_data_t>());
+            this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>());
         dbg(proc_perf_data[i]);
       } else {
         proc_perf_data.push_back(0.0);

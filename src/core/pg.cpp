@@ -55,6 +55,14 @@ int ProgramGraph::GetVertexType(type::vertex_t vertex) {
   return this->GetVertexAttributeNum("type", vertex);
 }  // function GetVertexType
 
+type::addr_t ProgramGraph::GetVertexEntryAddr(type::vertex_t vertex_id) {
+  return this->GetVertexAttributeNum("saddr", vertex_id);
+}
+
+type::addr_t ProgramGraph::GetVertexExitAddr(type::vertex_t vertex_id) {
+  return this->GetVertexAttributeNum("eaddr", vertex_id);
+}
+
 type::vertex_t ProgramGraph::GetChildVertexWithAddr(type::vertex_t root_vertex, unsigned long long addr) {
   // std::vector<type::vertex_t> children = GetChildVertexSet(root_vertex);
   std::vector<type::vertex_t> children;
@@ -97,7 +105,7 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
   // Get the top addr of the stack
   unsigned long long addr = call_path_stack.top();
 
-  // dbg(addr);
+  dbg(addr);
 
   if (addr > 0x40000000) {
     call_path_stack.pop();
@@ -109,7 +117,7 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
   type::vertex_t child_vertex = -1;
   while (1) {
     child_vertex = GetChildVertexWithAddr(found_vertex, addr);
-    // dbg(child_vertex);
+    dbg(child_vertex);
 
     // if child_vertex is not found
     if (-1 == child_vertex) {

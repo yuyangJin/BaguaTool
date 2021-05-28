@@ -23,7 +23,7 @@ static int (*original_pthread_join)(pthread_t thread, void **value_ptr) = NULL;
 
 std::unique_ptr<baguatool::collector::Sampler> sampler = nullptr;
 std::unique_ptr<baguatool::core::PerfData> perf_data = nullptr;
-std::unique_ptr<baguatool::core::PerfData> perf_data_pthread = nullptr;
+// std::unique_ptr<baguatool::core::PerfData> perf_data_pthread = nullptr;
 std::map<pthread_mutex_t *, std::string> mutex_to_lock_callsite;
 
 std::map<int, int> pthread_t_to_create_thread_id;
@@ -88,7 +88,7 @@ static void init_mock() {
   // sampler = new Sampler();
   sampler = std::make_unique<baguatool::collector::Sampler>();
   perf_data = std::make_unique<baguatool::core::PerfData>();
-  perf_data_pthread = std::make_unique<baguatool::core::PerfData>();
+  // perf_data_pthread = std::make_unique<baguatool::core::PerfData>();
 
   // original_GOMP_parallel = resolve_symbol("GOMP_parallel", RESOLVE_SYMBOL_UNVERSIONED);
   original_pthread_create =
@@ -119,7 +119,7 @@ static void fini_mock() {
   // sampler->RecordLdLib();
 
   perf_data->Dump("SAMPLE.TXT");
-  perf_data_pthread->Dump("PTHREAD.TXT");
+  // perf_data_pthread->Dump("PTHREAD.TXT");
 }
 
 // struct for pthread instrumentation start_routine
@@ -175,9 +175,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   dbg("create", *thread);
 
   baguatool::type::addr_t *out_call_path = nullptr;
-  // perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)*thread, thread_gid, -1);
-  perf_data_pthread->RecordEdgeData(call_path, call_path_len, out_call_path, 0, 0, 0, thread_gid, arg->create_thread_id,
-                                    -1);
+  // perf_data->RecordVertexData(call_path, call_path_len, (int)*thread, thread_gid, -1);
+  perf_data->RecordEdgeData(call_path, call_path_len, out_call_path, 0, 0, 0, thread_gid, arg->create_thread_id, -1);
 
   pthread_t_to_create_thread_id[(int)*thread] = arg->create_thread_id;
 
@@ -210,8 +209,7 @@ int pthread_join(pthread_t thread, void **value_ptr) {
   baguatool::type::addr_t *call_path = nullptr;
   int create_thread_id = pthread_t_to_create_thread_id[(int)thread];
   // perf_data_pthread->RecordVertexData(call_path, call_path_len, (int)thread, thread_gid, time);
-  perf_data_pthread->RecordEdgeData(call_path, 0, out_call_path, out_call_path_len, 0, 0, create_thread_id, thread_gid,
-                                    -1);
+  perf_data->RecordEdgeData(call_path, 0, out_call_path, out_call_path_len, 0, 0, create_thread_id, thread_gid, 0);
 
   return ret;
 }

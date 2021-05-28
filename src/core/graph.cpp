@@ -92,7 +92,7 @@ type::edge_t Graph::AddEdge(const type::vertex_t src_vertex_id, const type::vert
   return (type::edge_t)(new_edge_id - 1);
 }
 
-void Graph::AddGraph(Graph *g) {
+type::vertex_t Graph::AddGraph(Graph *g) {
   // dbg(g->GetCurVertexNum());
   g->DeleteExtraTailVertices();
   // dbg(g->GetCurVertexNum());
@@ -151,7 +151,10 @@ void Graph::AddGraph(Graph *g) {
 
   igraph_eit_destroy(&eit);
   igraph_es_destroy(&es);
+
+  type::vertex_t ret_vertex_id = old_vertex_id_2_new_vertex_id[0];
   FREE_CONTAINER(old_vertex_id_2_new_vertex_id);
+  return ret_vertex_id;
 }
 
 void Graph::DeleteVertex(type::vertex_t vertex_id) {

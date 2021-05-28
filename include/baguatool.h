@@ -22,6 +22,7 @@ typedef int vertex_t;                  /**<vertex id type (int)*/
 typedef int edge_t;                    /**<edge id type (int)*/
 typedef unsigned long long int addr_t; /**<address type (unsigned long long int)*/
 typedef double perf_data_t;            /**<performance data type (double) */
+typedef std::stack<type::addr_t> call_path_t;
 }
 
 namespace core {
@@ -69,8 +70,9 @@ class Graph {
 
   /** Append a graph to the graph. Copy all the vertices and edges (and all their attributes) of a graph to this graph.
    * @param g - the graph to be appended
+   * @return id of entry vertex of the appended new graph (not id in old graph)
    */
-  void AddGraph(Graph* g);
+  type::vertex_t AddGraph(Graph* g);
 
   /** Delete a vertex.
    * @param vertex_id - id of vertex to be removed
@@ -359,12 +361,24 @@ class ProgramGraph : public Graph {
    */
   int GetVertexType(type::vertex_t vertex_id);
 
+  /** Get the entry address of a specific vertex
+   * @param vertex_id - id of the specific vertex
+   * @return entry address of the specific vertex
+   */
+  type::addr_t GetVertexEntryAddr(type::vertex_t vertex_id);
+
+  /** Get the exit address of a specific vertex
+   * @param vertex_id - id of the specific vertex
+   * @return exit address of the specific vertex
+   */
+  type::addr_t GetVertexExitAddr(type::vertex_t vertex_id);
+
   /** Identify the vertex corresponding to the address from a specific starting vertex.
    * @param root_vertex_id - id of the starting vertex
    * @param addr - address
    * @return id of the identified vertex
    */
-  type::vertex_t GetChildVertexWithAddr(type::vertex_t root_vertex_id, unsigned long long addr);
+  type::vertex_t GetChildVertexWithAddr(type::vertex_t root_vertex_id, type::addr_t addr);
 
   /** Identify the vertex corresponding to the call path from a specific starting vertex.
    * @param root_vertex_id - id of the starting vertex
@@ -775,15 +789,28 @@ class GPerf {
    */
   ~GPerf();
 
-  /** Control Flow Graph of Each Function **/
-
+  /** Read static control-flow graph of each function (Input)
+   * @param dir_name - dictory name of all functions' CFG
+   */
   void ReadStaticControlFlowGraphs(const char* dir_name);
+
+  /** Geneate control-flow graph of each function through hybrid static-dynamic analysis. Dynamic module is disable.
+   * @param dir_name - dictory name of all functions' CFG
+   */
   void GenerateControlFlowGraphs(const char* dir_name);
+
+  /** Get control-flow graph of a specific function.
+   * @param func_name - function name
+   * @return CFG of a specific function
+   */
   core::ControlFlowGraph* GetControlFlowGraph(std::string func_name);
+
+  /** Get control-flow graphs of all functions.
+   * @return CFGs of all functions
+   */
   std::map<std::string, core::ControlFlowGraph*>& GetControlFlowGraphs();
 
   /** Program Call Graph **/
-
   void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
   void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
   void GenerateProgramCallGraph(const char*);
@@ -793,17 +820,30 @@ class GPerf {
 
   core::ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
   std::map<std::string, core::ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
+
+  /** Get function abstraction graph by address. (entry address of this function <= input address <= exit address of
+   * this function)
+   * @param addr - input address for identification
+   * @return program abstraction graph pointer of the identified function
+   *
+  */
+  core::ProgramAbstractionGraph* GetFunctionAbstractionGraphByAddr(type::addr_t addr);
   void IntraProceduralAnalysis();
   void ReadFunctionAbstractionGraphs(const char* dir_name);
 
   /** Inter-procedural Analysis **/
 
-  void InterProceduralAnalysis();
-  void GenerateProgramAbstractionGraph();
+  void DynamicInterProceduralAnalysis(core::PerfData* pthread_data);
+
+  void InterProceduralAnalysis(core::PerfData* pthread_data);
+  void GenerateProgramAbstractionGraph(core::PerfData* perf_data);
   void SetProgramAbstractionGraph(core::ProgramAbstractionGraph*);
   core::ProgramAbstractionGraph* GetProgramAbstractionGraph();
 
   /** DataEmbedding **/
+
+  type::vertex_t GetVertexWithInterThreadAnalysis(int thread_id, type::call_path_t& call_path);
+
   void DataEmbedding(core::PerfData*);
   /** Get performance data on the graph (GraphPerfData)
    * @return GraphPerfData
@@ -827,8 +867,6 @@ class GPerf {
 
   void GenerateMultiProgramAbstractionGraph();
   core::ProgramAbstractionGraph* GetMultiProgramAbstractionGraph();
-
-  void PthreadAnalysis(core::PerfData* pthread_data);
 };
 
 }  // namespace graph_perf

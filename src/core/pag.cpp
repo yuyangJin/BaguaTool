@@ -124,7 +124,7 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
     type::vertex_t vertex_id = (type::vertex_t)IGRAPH_VIT_GET(vit);
-    printf("Traverse %d\n", vertex_id);
+    // printf("Traverse %d\n", vertex_id);
 
     // Call user-defined function
     (*CALL_BACK_FUNC)(this, vertex_id, extra);

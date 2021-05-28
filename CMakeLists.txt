@@ -10,6 +10,11 @@ endif()
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Set build type to DEBUG" FORCE)
 message(AUTHOR_WARNING "Overwrite build type to DEBUG for development")
 
+# # output path
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 # third party
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/igraph)
@@ -51,6 +56,17 @@ add_executable(binary_analyzer src/graph_perf/binary_analyzer.cpp)
 add_library(sequential_sampler SHARED src/graph_perf/sequential_sampler.cpp)
 add_library(pthread_sampler SHARED src/graph_perf/pthread_sampler.cpp)
 
+set_target_properties(
+  baguatool
+  binary_analyzer
+  sequential_sampler
+  pthread_sampler
+
+  PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
 
 
 
@@ -98,6 +114,8 @@ target_link_libraries(baguatool PRIVATE ${PAPI_LIBRARIES})
 target_link_libraries(binary_analyzer PRIVATE baguatool)
 target_link_libraries(sequential_sampler PRIVATE baguatool)
 target_link_libraries(pthread_sampler PRIVATE baguatool)
+
+
 
 if (ENABLE_EXAMPLE)
   add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)

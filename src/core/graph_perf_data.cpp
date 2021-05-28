@@ -49,8 +49,8 @@ type::perf_data_t GraphPerfData::GetPerfData(type::vertex_t vertex_id, std::stri
 
   if (this->j_perf_data.contains(vertex_id_str)) {
     if (this->j_perf_data[vertex_id_str].contains(metric_str)) {
-      if (this->j_perf_data[vertex_id_str][metric_str].size() > (unsigned int)procs_id) {
-        if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].size() > (unsigned int)thread_id) {
+      if (this->j_perf_data[vertex_id_str][metric_str].contains(process_id_str)) {
+        if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
           auto ret = this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str];
           if (ret != nullptr) {
             data +=

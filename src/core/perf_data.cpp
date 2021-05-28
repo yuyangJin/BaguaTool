@@ -174,7 +174,7 @@ void PerfData::Dump(const char* output_file_name) {
     for (int j = 0; j < this->edge_perf_data[i].call_path_len; j++) {
       fprintf(this->perf_data_fp, "%llx ", this->edge_perf_data[i].call_path[j]);
     }
-    fprintf(this->perf_data_fp, "| ");
+    fprintf(this->perf_data_fp, " | ");
     for (int j = 0; j < this->edge_perf_data[i].out_call_path_len; j++) {
       fprintf(this->perf_data_fp, "%llx ", this->edge_perf_data[i].out_call_path[j]);
     }
@@ -187,6 +187,8 @@ void PerfData::Dump(const char* output_file_name) {
 }
 
 unsigned long int PerfData::GetVertexDataSize() { return this->vertex_perf_data_count; }
+
+unsigned long int PerfData::GetEdgeDataSize() { return this->edge_perf_data_count; }
 
 std::string& PerfData::GetMetricName() { return this->metric_name; }
 

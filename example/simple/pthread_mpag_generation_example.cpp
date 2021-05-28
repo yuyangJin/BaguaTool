@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
   baguatool::core::PerfData* perf_data = new baguatool::core::PerfData();
   perf_data->Read(perf_data_file_name);
 
-  auto hybrid_analysis = std::make_unique<baguatool::core::HybridAnalysis>();
+  auto hybrid_analysis = std::make_unique<baguatool::graph_perf::GPerf>();
 
   hybrid_analysis->SetProgramAbstractionGraph(pag);
 

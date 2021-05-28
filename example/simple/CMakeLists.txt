@@ -1,4 +1,4 @@
-#add_executable(pag_generation pag_generation.cpp)
+add_executable(pag_generation pag_generation.cpp)
 # add_executable(static_analysis_example static_analysis_example.cpp)
 add_executable(read_perf_data read_perf_data.cpp)
 add_executable(json_test json_test.cpp)
@@ -9,7 +9,7 @@ add_executable(toml_test toml_test.cpp)
 #add_library(pthread_sampler SHARED pthread_sampler.cpp)
 
 
-#target_link_libraries(pag_generation PRIVATE baguatool)
+target_link_libraries(pag_generation PRIVATE baguatool)
 #target_link_libraries(static_analysis_example PRIVATE baguatool)
 #target_link_libraries(single_process_sampler PRIVATE baguatool)
 #target_link_libraries(pthread_sampler PRIVATE baguatool)

@@ -464,6 +464,11 @@ void GPerf::DataEmbedding(core::PerfData *perf_data) {
     FREE_CONTAINER(call_path);
   }
 
+  for (auto &kv : created_tid_2_callpath_and_tid) {
+    FREE_CONTAINER(kv.second.first);
+  }
+  FREE_CONTAINER(created_tid_2_callpath_and_tid);
+
 }  // function Dataembedding
 
 core::GraphPerfData *GPerf::GetGraphPerfData() { return this->graph_perf_data; }
@@ -478,6 +483,7 @@ type::perf_data_t ReduceOperation(std::vector<type::perf_data_t> &perf_data, int
       avg += perf_data[i];
     }
     avg /= (type::perf_data_t)num;
+    dbg(avg);
     return avg;
   } else {
     return perf_data[0];
@@ -499,6 +505,7 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
   std::string metric(arg->metric);
   std::string op(arg->op);
 
+  // TODO: (FIX) need to return list of procs
   int num_procs = graph_perf_data->GetMetricsPerfDataProcsNum(vertex_id, metric);
 
   std::vector<type::perf_data_t> im_reduced_data;
@@ -509,12 +516,13 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
     graph_perf_data->GetProcsPerfData(vertex_id, metric, i, procs_perf_data);
     // int num_thread = graph_perf_data->GetProcsPerfDataThreadNum(vertex_id, metric, i);
     int num_thread = procs_perf_data.size();
+    dbg(num_thread);
 
     if (num_thread > 0) {
       im_reduced_data.push_back(ReduceOperation(procs_perf_data, num_thread, op));
       // dbg(im_reduced_data[i]);
     } else {
-      im_reduced_data[i] = 0.0;
+      im_reduced_data.push_back(0.0);
     }
 
     FREE_CONTAINER(procs_perf_data);

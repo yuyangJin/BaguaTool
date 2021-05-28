@@ -110,21 +110,36 @@ void GraphPerfData::GetProcsPerfData(type::vertex_t vertex_id, std::string& metr
   std::string process_id_str = std::to_string(procs_id);
   std::string thread_id_str;
 
-  int size = this->j_perf_data[vertex_id_str][metric_str][process_id_str].size();
-  if (size > 0) {
-    // proc_perf_data = new type::perf_data_t[size]();
-    for (int i = 0; i < size; i++) {
-      // memset();
-      thread_id_str = std::to_string(i);
-      if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
-        proc_perf_data.push_back(
-            this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>());
-        dbg(proc_perf_data[i]);
-      } else {
-        proc_perf_data.push_back(0.0);
-      }
+  for (auto& thread_perf_data : j_perf_data[vertex_id_str][metric_str][process_id_str].items()) {
+    thread_id_str = std::string(thread_perf_data.key());
+
+    if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
+      proc_perf_data.push_back(
+          this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>());
+      // dbg(proc_perf_data[i]);
+    } else {
+      proc_perf_data.push_back(0.0);
     }
+    std::string(thread_perf_data.key());
   }
+
+  // int size = this->j_perf_data[vertex_id_str][metric_str][process_id_str].size();
+  // auto this->j_perf_data[vertex_id_str][metric_str][process_id_str].keys()
+
+  // if (size > 0) {
+  //   // proc_perf_data = new type::perf_data_t[size]();
+  //   for (int i = 0; i < size; i++) {
+  //     // memset();
+  //     thread_id_str = std::to_string(i);
+  //     if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
+  //       proc_perf_data.push_back(
+  //           this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>());
+  //       dbg(proc_perf_data[i]);
+  //     } else {
+  //       proc_perf_data.push_back(0.0);
+  //     }
+  //   }
+  // }
   return;
 }
 

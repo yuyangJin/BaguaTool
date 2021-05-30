@@ -29,7 +29,7 @@ void ProgramGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph *, int, v
 
     IGRAPH_VIT_NEXT(vit);
   }
-  printf("\n");
+  // printf("\n");
 
   igraph_vit_destroy(&vit);
   igraph_vs_destroy(&vs);

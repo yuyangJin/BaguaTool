@@ -813,7 +813,7 @@ class GPerf {
   /** Program Call Graph **/
   void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
   void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
-  void GenerateProgramCallGraph(const char*);
+  void GenerateProgramCallGraph(const char* binary_name, const char* perf_data_file);
   core::ProgramCallGraph* GetProgramCallGraph();
 
   /** Intra-procedural Analysis **/

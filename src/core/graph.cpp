@@ -65,7 +65,7 @@ void Graph::SwapVertex(type::vertex_t vertex_id_1, type::vertex_t vertex_id_2) {
   /* Graph attributes */
   for (i = 0; i < igraph_strvector_size(&vnames); i++) {
     const char *vname = STR(vnames, i);
-    printf("%s=", vname);
+    // printf("%s=", vname);
     if (VECTOR(vtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
       igraph_integer_t swap_num = VAN(&this->ipag_->graph, STR(vnames, i), vertex_id_1);
       SETVAN(&this->ipag_->graph, vname, vertex_id_1, VAN(&this->ipag_->graph, STR(vnames, i), vertex_id_2));
@@ -108,7 +108,7 @@ type::vertex_t Graph::AddGraph(Graph *g) {
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
     type::vertex_t vertex_id = (type::vertex_t)IGRAPH_VIT_GET(vit);
-    printf("vertex %d", vertex_id);
+    // printf("vertex %d", vertex_id);
 
     // Add new vertex (the copy of that in the input g) into this pag
     type::vertex_t new_vertex_id = this->AddVertex();
@@ -120,7 +120,7 @@ type::vertex_t Graph::AddGraph(Graph *g) {
 
     IGRAPH_VIT_NEXT(vit);
   }
-  printf("\n");
+  // printf("\n");
 
   igraph_vit_destroy(&vit);
   igraph_vs_destroy(&vs);
@@ -135,7 +135,7 @@ type::vertex_t Graph::AddGraph(Graph *g) {
   while (!IGRAPH_EIT_END(eit)) {
     // Get edge id
     type::edge_t edge_id = (type::edge_t)IGRAPH_EIT_GET(eit);
-    printf("edge %d", edge_id);
+    // printf("edge %d", edge_id);
 
     // Add new edge (the copy of that in the input g) into this pag
     // type::edge_t new_edge_id =
@@ -147,7 +147,7 @@ type::vertex_t Graph::AddGraph(Graph *g) {
 
     IGRAPH_EIT_NEXT(eit);
   }
-  printf("\n");
+  // printf("\n");
 
   igraph_eit_destroy(&eit);
   igraph_es_destroy(&es);
@@ -286,23 +286,23 @@ void Graph::DeepCopyVertex(type::vertex_t new_vertex_id, Graph *g, type::vertex_
   /* Graph attributes */
   for (i = 0; i < igraph_strvector_size(&vnames); i++) {
     const char *vname = STR(vnames, i);
-    printf("%s=", vname);
+    // printf("%s=", vname);
     if (VECTOR(vtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
       // if (strcmp(vname, "id") == 0) {
       //   SETVAN(&ipag_->graph, vname, new_vertex_id, new_vertex_id);
       //   printf("%d", new_vertex_id);
       // } else {
       SETVAN(&ipag_->graph, vname, new_vertex_id, VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
-      igraph_real_printf(VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
+      // igraph_real_printf(VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
       // }
 
       // putchar(' ');
     } else {
       SETVAS(&ipag_->graph, vname, new_vertex_id, VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
-      printf("\"%s\" ", VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
+      // printf("\"%s\" ", VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
     }
   }
-  printf("\n");
+  // printf("\n");
 }
 
 void Graph::CopyVertex(type::vertex_t new_vertex_id, Graph *g, type::vertex_t vertex_id) {
@@ -321,23 +321,23 @@ void Graph::CopyVertex(type::vertex_t new_vertex_id, Graph *g, type::vertex_t ve
   /* Graph attributes */
   for (i = 0; i < igraph_strvector_size(&vnames); i++) {
     const char *vname = STR(vnames, i);
-    printf("%s=", vname);
+    // printf("%s=", vname);
     if (VECTOR(vtypes)[i] == IGRAPH_ATTRIBUTE_NUMERIC) {
       if (strcmp(vname, "id") == 0) {
         SETVAN(&ipag_->graph, vname, new_vertex_id, new_vertex_id);
-        printf("%d", new_vertex_id);
+        // printf("%d", new_vertex_id);
       } else {
         SETVAN(&ipag_->graph, vname, new_vertex_id, VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
-        igraph_real_printf(VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
+        // igraph_real_printf(VAN(&g->ipag_->graph, STR(vnames, i), vertex_id));
       }
 
-      printf(" ");
+      // printf(" ");
     } else {
       SETVAS(&ipag_->graph, vname, new_vertex_id, VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
-      printf("\"%s\" ", VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
+      // printf("\"%s\" ", VAS(&g->ipag_->graph, STR(vnames, i), vertex_id));
     }
   }
-  printf("\n");
+  // printf("\n");
 }
 
 void Graph::DeleteVertices(type::vertex_set_t *vs) { igraph_delete_vertices(&ipag_->graph, vs->vertices); }
@@ -417,7 +417,7 @@ void Graph::VertexTraversal(void (*CALL_BACK_FUNC)(Graph *, int, void *), void *
 
     IGRAPH_VIT_NEXT(vit);
   }
-  printf("\n");
+  // printf("\n");
 
   igraph_vit_destroy(&vit);
   igraph_vs_destroy(&vs);

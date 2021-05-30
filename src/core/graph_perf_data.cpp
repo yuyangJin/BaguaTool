@@ -30,7 +30,7 @@ void GraphPerfData::SetPerfData(type::vertex_t vertex_id, std::string& metric, i
   std::string metric_str = std::string(metric);
   std::string process_id_str = std::to_string(procs_id);
   std::string thread_id_str = std::to_string(thread_id);
-  dbg(vertex_id_str, metric_str, process_id_str, thread_id_str);
+  // dbg(vertex_id_str, metric_str, process_id_str, thread_id_str);
 
   std::cout << this->j_perf_data.size() << std::endl;
   std::cout << this->j_perf_data.dump() << std::endl;

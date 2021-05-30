@@ -28,7 +28,7 @@ void PerfData::Read(const char* infile_name) {
   // Open a file
   // this->perf_data_in_file.open(this->file_name, std::ios::in);
   // dbg(infile_name);
-  char infile_name_str[MAX_STR_LEN];
+  char infile_name_str[MAX_CALL_PATH_LEN];
   strcpy(infile_name_str, std::string(infile_name).c_str());
   this->perf_data_in_file.open(infile_name_str, std::ios::in);
   if (!(this->perf_data_in_file.is_open())) {
@@ -40,19 +40,20 @@ void PerfData::Read(const char* infile_name) {
 
   char line[MAX_LINE_LEN];
   // Read a line for VDS counts
-  this->perf_data_in_file.getline(line, MAX_STR_LEN);
+  this->perf_data_in_file.getline(line, MAX_CALL_PATH_LEN);
   unsigned long int count = strtoul(line, nullptr, 10);
+  dbg(count);
 
   // Read lines, each line is a VDS
 
   while (count-- && !(this->perf_data_in_file.eof())) {
     // Read a line
-    this->perf_data_in_file.getline(line, MAX_STR_LEN);
+    this->perf_data_in_file.getline(line, MAX_CALL_PATH_LEN);
 
     // Parse the line
     // First '|'
     char delim[] = "|";
-    // line_vec[4][MAX_STR_LEN];
+    // line_vec[4][MAX_CALL_PATH_LEN];
     std::vector<std::string> line_vec = split(line, delim);
     int cnt = line_vec.size();
 
@@ -74,28 +75,31 @@ void PerfData::Read(const char* infile_name) {
       this->vertex_perf_data[x].call_path_len = call_path_len;
       for (int i = 0; i < call_path_len; i++) {
         this->vertex_perf_data[x].call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
-        dbg(this->vertex_perf_data[x].call_path[i]);
+        // dbg(this->vertex_perf_data[x].call_path[i]);
       }
 
-      LOG_INFO("DATA[%lu]: %s | %lf | %d |%d\n", x, line_vec[0].c_str(), this->vertex_perf_data[x].value,
-               this->vertex_perf_data[x].procs_id, this->vertex_perf_data[x].thread_id);
+      // LOG_INFO("DATA[%lu]: %s | %lf | %d |%d\n", x, line_vec[0].c_str(), this->vertex_perf_data[x].value,
+      //         this->vertex_perf_data[x].procs_id, this->vertex_perf_data[x].thread_id);
 
       // size ++
+    } else {
+      dbg(cnt, line);
     }
   }
 
   // Read a line for EDS counts
-  this->perf_data_in_file.getline(line, MAX_STR_LEN);
+  this->perf_data_in_file.getline(line, MAX_CALL_PATH_LEN);
   count = strtoul(line, nullptr, 10);
+  dbg(count);
 
   while (count-- && !(this->perf_data_in_file.eof())) {
     // Read a line
-    this->perf_data_in_file.getline(line, MAX_STR_LEN);
+    this->perf_data_in_file.getline(line, MAX_CALL_PATH_LEN);
 
     // Parse the line
     // First '|'
     char delim[] = "|";
-    // line_vec[4][MAX_STR_LEN];
+    // line_vec[4][MAX_CALL_PATH_LEN];
     std::vector<std::string> line_vec = split(line, delim);
     int cnt = line_vec.size();
 
@@ -120,7 +124,7 @@ void PerfData::Read(const char* infile_name) {
       this->edge_perf_data[x].call_path_len = call_path_len;
       for (int i = 0; i < call_path_len; i++) {
         this->edge_perf_data[x].call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
-        dbg(this->edge_perf_data[x].call_path[i]);
+        // dbg(this->edge_perf_data[x].call_path[i]);
       }
       FREE_CONTAINER(addr_vec);
 
@@ -130,7 +134,7 @@ void PerfData::Read(const char* infile_name) {
       this->edge_perf_data[x].out_call_path_len = out_call_path_len;
       for (int i = 0; i < out_call_path_len; i++) {
         this->edge_perf_data[x].out_call_path[i] = strtoul(addr_vec[i].c_str(), NULL, 16);
-        dbg(this->edge_perf_data[x].out_call_path[i]);
+        // dbg(this->edge_perf_data[x].out_call_path[i]);
       }
       FREE_CONTAINER(addr_vec);
 
@@ -138,6 +142,8 @@ void PerfData::Read(const char* infile_name) {
       //          this->edge_perf_data[x].value,
       //          this->edge_perf_data[x].procs_id,
       //          this->edge_perf_data[x].thread_id);
+    } else {
+      dbg(cnt, line);
     }
   }
 

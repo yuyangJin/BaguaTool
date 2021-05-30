@@ -131,7 +131,7 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
 
     IGRAPH_VIT_NEXT(vit);
   }
-  printf("\n");
+  // printf("\n");
 
   igraph_vit_destroy(&vit);
   igraph_vs_destroy(&vs);

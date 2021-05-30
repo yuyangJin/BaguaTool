@@ -25,9 +25,9 @@
 #include <vector>
 
 #include "baguatool.h"
+#include "common/utils.h"
 #include "core/pag.h"
 #include "static_analysis.h"
-#include "common/utils.h"
 
 using namespace Dyninst;
 using namespace ParseAPI;
@@ -49,31 +49,30 @@ void StaticAnalysis::DumpAllControlFlowGraph() { sa->DumpAllFunctionGraph(); }
 void StaticAnalysis::DumpProgramCallGraph() { sa->DumpProgramCallGraph(); }
 void StaticAnalysis::GetBinaryName() { sa->GetBinaryName(); }
 
-  StaticAnalysisImpl::StaticAnalysisImpl(char *binary_name) {
-    // Create a new binary code object from the filename argument
-    this->sts = new SymtabCodeSource(binary_name);
-    this->co = new CodeObject(this->sts);
+StaticAnalysisImpl::StaticAnalysisImpl(char *binary_name) {
+  // Create a new binary code object from the filename argument
+  this->sts = new SymtabCodeSource(binary_name);
+  this->co = new CodeObject(this->sts);
 
-    // Parse the binary
-    this->co->parse();
+  // Parse the binary
+  this->co->parse();
 
-    auto binary_name_vec = split(binary_name, std::string("/"));
+  auto binary_name_vec = split(binary_name, std::string("/"));
 
-    strcpy(this->binary_name, binary_name_vec[binary_name_vec.size() - 1].c_str());
-  }
+  strcpy(this->binary_name, binary_name_vec[binary_name_vec.size() - 1].c_str());
+}
 
-  StaticAnalysisImpl::~StaticAnalysisImpl() {
-    delete this->co;
-    delete this->sts;
+StaticAnalysisImpl::~StaticAnalysisImpl() {
+  delete this->co;
+  delete this->sts;
 
-    FREE_CONTAINER(visited_block_map);
-    FREE_CONTAINER(addr_2_func_name);
-    FREE_CONTAINER(call_graph_map);
+  FREE_CONTAINER(visited_block_map);
+  FREE_CONTAINER(addr_2_func_name);
+  FREE_CONTAINER(call_graph_map);
 
-    // TODO: it is better to use unique_ptr instead of raw pointer?
-    for (auto &it : func_2_graph) delete it.second;
-  }
-
+  // TODO: it is better to use unique_ptr instead of raw pointer?
+  for (auto &it : func_2_graph) delete it.second;
+}
 
 // Capture a Program Call Graph (PCG)
 void StaticAnalysisImpl::CaptureProgramCallGraph() {
@@ -325,13 +324,14 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
     }
   }
 
-  std::map<std::string, int> func_2_hash;
+  std::map<int, std::string> hash_2_func;
 
   int i = 0;
   // Traverse through all functions
   for (auto func : this->co->funcs()) {
     std::string func_name = func->name();
-    func_2_hash[std::string(func_name)] = i;
+    hash_2_func[i] = std::string(func_name);
+
     core::ControlFlowGraph *func_cfg = this->func_2_graph[func_name];
     std::stringstream ss;
 #ifdef LOOP_GRANULARITY
@@ -341,18 +341,17 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
 #endif
     auto file_name = ss.str();
     this->DumpFunctionGraph(func_cfg, file_name.c_str());
-    i ++;
+    i++;
   }
 
   std::stringstream ss;
 #ifdef LOOP_GRANULARITY
-    ss << "./" << this->binary_name << ".pag/map";
+  ss << "./" << this->binary_name << ".pag.map";
 #else
-    ss << "./" << this->binary_name << ".cfg/map";
+  ss << "./" << this->binary_name << ".cfg.map";
 #endif
   auto file_name = ss.str();
-  DumpMap<std::string, int>(func_2_hash, file_name);
-
+  DumpMap<int, std::string>(hash_2_func, file_name);
 }
 
 void StaticAnalysisImpl::DumpProgramCallGraph() {

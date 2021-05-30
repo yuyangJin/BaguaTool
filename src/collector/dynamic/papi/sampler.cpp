@@ -214,7 +214,7 @@ void papi_handler(int EventSet, void* address, long_long overflow_vector, void* 
   }
   // return y;
 
-  printf("interrupt\n");
+  // printf("interrupt\n");
   (*(func_at_overflow_1))(y);
 
   TRY(PAPI_start(EventSet), PAPI_OK);

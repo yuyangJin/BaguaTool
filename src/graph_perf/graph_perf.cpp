@@ -303,8 +303,19 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
             dbg("func_pag is not found!");
           } else {
             dbg(func_pag->GetGraphAttributeString("name"));
+
+            /** Expand the graph, connect call&callee, inter-procedural analysis */
+            // DFS From root node of function created by pthread_create
+            InterPAArg *arg = new InterPAArg();
+            arg->pcg = this->pcg;
+            arg->func_pag_map = &(this->func_pag_map);
+            func_pag->VertexTraversal(&ConnectCallerCallee, arg);
+            delete arg;
+
+            // Add the graph after call&callee connection
             func_vertex_id = this->root_pag->AddGraph(func_pag);
           }
+
           break;
         }
       }
@@ -321,7 +332,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
 
     // Sort the graph
     // TODO: support sorting from a specific vertex
-    this->root_pag->VertexSortChild();
+    // this->root_pag->VertexSortChild();
   }
 
   //   std::stack<unsigned long long> src_call_path;
@@ -401,16 +412,17 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
   // dbg(this->root_pag->GetGraphAttributeString("name"));
   this->root_pag->VertexTraversal(&ConnectCallerCallee, arg);
 
+  delete arg;
+
+  this->DynamicInterProceduralAnalysis(pthread_data);
+
+  this->root_pag->VertexSortChild();
+
   for (auto &kv : this->func_pag_map) {
     // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     auto pag = kv.second;
     pag->RemoveGraphAttribute("scanned");
   }
-  delete arg;
-
-  this->root_pag->VertexSortChild();
-
-  this->DynamicInterProceduralAnalysis(pthread_data);
 
   return;
 }  // function InterProceduralAnalysis

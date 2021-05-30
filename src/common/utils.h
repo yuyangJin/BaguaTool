@@ -23,4 +23,19 @@ using namespace std;
 void getFiles(std::string path, std::vector<std::string> &files);
 vector<string> split(const string &str, const string &delim);
 int split(char *str, const char *delim, char dst[][MAX_STR_LEN]);
+
+template <class keyType, class valueType>
+void DumpMap(std::map<keyType, valueType>& m, std::string& file_name){
+  char file_name_str[MAX_STR_LEN];
+  strcpy(file_name_str, file_name.c_str());
+  std::ofstream fout;
+  fout.open(file_name_str);
+
+  for (auto &kv: m) {
+    fout << kv.first << " " << kv.second << std::endl;
+  }
+
+  fout.close();
+}
+
 #endif

@@ -27,6 +27,8 @@ typedef long int VMASigned;  // useful for offsets
 #define MAX_LOOP_DEPTH 2
 #endif
 
+#define MAX_STR_LEN 256
+
 #define VMA_MAX (~((unsigned long int)(0)))
 #define PTR_TO_BFDVMA(x) ((unsigned long int)(uintptr_t)(x))
 #define BFDVMA_TO_PTR(x, totype) ((totype)(uintptr_t)(x))
@@ -47,31 +49,12 @@ class StaticAnalysisImpl {
   std::unique_ptr<core::ProgramCallGraph> pcg;
 
   std::unordered_map<std::string, core::ControlFlowGraph *> func_2_graph;
-  char *binary_name;
+  char binary_name[MAX_STR_LEN];
 
  public:
-  StaticAnalysisImpl(char *binary_name) {
-    // Create a new binary code object from the filename argument
-    this->sts = new SymtabCodeSource(binary_name);
-    this->co = new CodeObject(this->sts);
+  StaticAnalysisImpl(char *binary_name);
 
-    // Parse the binary
-    this->co->parse();
-
-    this->binary_name = binary_name;
-  }
-
-  ~StaticAnalysisImpl() {
-    delete this->co;
-    delete this->sts;
-
-    FREE_CONTAINER(visited_block_map);
-    FREE_CONTAINER(addr_2_func_name);
-    FREE_CONTAINER(call_graph_map);
-
-    // TODO: it is better to use unique_ptr instead of raw pointer?
-    for (auto &it : func_2_graph) delete it.second;
-  }
+  ~StaticAnalysisImpl();
 
   void IntraProceduralAnalysis();
   void ExtractLoopStructure(core::ControlFlowGraph *func_struct_graph, LoopTreeNode *loop_tree, int depth,

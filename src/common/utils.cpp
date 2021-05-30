@@ -1,3 +1,5 @@
+#include <map>
+#include <fstream>
 #include "utils.h"
 
 void getFiles(std::string path, std::vector<std::string> &files) {
@@ -59,3 +61,4 @@ std::vector<std::string> split(char *str, const char *delim) {
   }
   return res;
 }
+

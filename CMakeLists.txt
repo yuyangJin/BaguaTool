@@ -116,7 +116,6 @@ target_link_libraries(sequential_sampler PRIVATE baguatool)
 target_link_libraries(pthread_sampler PRIVATE baguatool)
 
 
-
 if (ENABLE_EXAMPLE)
   add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
   # add_subdirectory(${PROJECT_SOURCE_DIR}/example/reproduction/GraphPerf)
@@ -126,3 +125,8 @@ if (ENABLE_TEST)
   # List what we want to test
   add_subdirectory(${PROJECT_SOURCE_DIR}/test/igraph_test)
 endif()
+
+install(TARGETS baguatool DESTINATION lib)
+install(TARGETS binary_analyzer DESTINATION bin)
+install(TARGETS sequential_sampler DESTINATION lib)
+install(TARGETS pthread_sampler DESTINATION lib)

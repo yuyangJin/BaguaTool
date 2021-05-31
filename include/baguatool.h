@@ -811,40 +811,102 @@ class GPerf {
   std::map<std::string, core::ControlFlowGraph*>& GetControlFlowGraphs();
 
   /** Program Call Graph **/
-  void ReadStaticProgramCallGraph(const char* static_pcg_file_name);
-  void ReadDynamicProgramCallGraph(std::string perf_data_file_name);
-  void GenerateProgramCallGraph(const char* binary_name, const char* perf_data_file);
+
+  /** Read static program call graph from an input file.
+   * @param file_name - file name of static program call graph
+   */
+  void ReadStaticProgramCallGraph(const char* file_name);
+
+  /** Read dynamic program call graph. This function includes two phases: indirect call relationship analysis, as well
+   * as pthread_create and its created function.
+   * @param file_name - file name of performance data
+  */
+  void ReadDynamicProgramCallGraph(std::string file_name);
+
+  /** Generate complete program call graph through hybrid static-dynamic analysis.
+   * @param binary_name - binary name
+   * @param perf_data_file_name - input file name of performance data
+   */
+  void GenerateProgramCallGraph(const char* binary_name, const char* perf_data_file_name);
+
+  /** Get complete program call graph.
+   * @return complete program call graph
+   */
   core::ProgramCallGraph* GetProgramCallGraph();
 
   /** Intra-procedural Analysis **/
 
+  /** Perform intra-procedural analysis to abstract program structure from control-flow graph.
+   * Not be implemented yet.
+  */
+  void IntraProceduralAnalysis();
+
+  /** Read function abstraction graphs of all functions in a program from a directory.
+   * @param dir_name - name of directory
+  */
+  void ReadFunctionAbstractionGraphs(const char* dir_name);
+
+  /** Get function abstraction graph of a specific function.
+   * @param func_name - name of a specific function
+   * @return fucntion abstraction graph of the specific function
+  */
   core::ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
-  std::map<std::string, core::ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
 
   /** Get function abstraction graph by address. (entry address of this function <= input address <= exit address of
    * this function)
    * @param addr - input address for identification
-   * @return program abstraction graph pointer of the identified function
-   *
+   * @return program abstraction graph of the identified function
   */
   core::ProgramAbstractionGraph* GetFunctionAbstractionGraphByAddr(type::addr_t addr);
-  void IntraProceduralAnalysis();
-  void ReadFunctionAbstractionGraphs(const char* dir_name);
+
+  /** Get function abstraction graphs of all functions.
+   * @return a map of function names and corresponding fucntion abstraction graphs
+  */
+  std::map<std::string, core::ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
 
   /** Inter-procedural Analysis **/
 
+  /** Perform dynamic inter-procedural analysis. Add pag of created function to pthread_create vertex.
+   * @param pthread_data - data that contains pthread-related information
+  */
   void DynamicInterProceduralAnalysis(core::PerfData* pthread_data);
 
-  void InterProceduralAnalysis(core::PerfData* pthread_data);
+  /** Perform inter-procedural analysis. Add pag of callee function to call vertex.
+   * @param perf_data - performance data that contains runtime call relationship
+  */
+  void InterProceduralAnalysis(core::PerfData* perf_data);
+
+  /** Generate an overall program abstraction graph through intra-procedural analysis and inter-procedural analysis.
+   * param binary_name - name of binary for static analysis
+   * @param perf_data - file name of performance data for dynamic analysis
+  */
   void GenerateProgramAbstractionGraph(core::PerfData* perf_data);
-  void SetProgramAbstractionGraph(core::ProgramAbstractionGraph*);
+
+  /** Set a input pag as program abstraction graph. This function is for reusing pag after intra-procedural and
+   * inter-procedural analysis.
+   * @param pag - input program abstraction graph
+  */
+  void SetProgramAbstractionGraph(core::ProgramAbstractionGraph* pag);
+
+  /** Get program abstraction graph.
+   * @return program abstraction graph
+  */
   core::ProgramAbstractionGraph* GetProgramAbstractionGraph();
 
   /** DataEmbedding **/
 
+  /** Get corresponding vertex through inter-thread analysis.
+   * @param thread_id - thread id of a input call path
+   * @param call_path - call path
+   * @return id of the corresponding vertex of the input call path
+  */
   type::vertex_t GetVertexWithInterThreadAnalysis(int thread_id, type::call_path_t& call_path);
 
-  void DataEmbedding(core::PerfData*);
+  /** Embed data to graph.
+   * @param perf_data - performance data
+  */
+  void DataEmbedding(core::PerfData* perf_data);
+
   /** Get performance data on the graph (GraphPerfData)
    * @return GraphPerfData
    */
@@ -857,15 +919,22 @@ class GPerf {
    */
   baguatool::type::perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
 
-  /** Reduce performance data of each process and thread of a speific metric for each vertex (GraphPerfData)
+  /** Convert performance data to percentage format for each vertex (total value as 100 percent).
    * @param metric - a specfic metric
-   * @param op - reduce operation
-   * @return what????
+   * @param total - total value
+   * @param new_metric - new metric for record percentage format data
    */
   void ConvertVertexReducedDataToPercent(std::string& metric, baguatool::type::perf_data_t total,
                                          std::string& new_metric);
 
+  /** Generate multi-thread or multi-process program abstraction graph.
+   *
+  */
   void GenerateMultiProgramAbstractionGraph();
+
+  /** Get multi-thread or multi-process program abstraction graph.
+   * @return multi-thread or multi-process program abstraction graph
+  */
   core::ProgramAbstractionGraph* GetMultiProgramAbstractionGraph();
 };
 

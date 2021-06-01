@@ -943,19 +943,53 @@ class GPerf {
 namespace collector {
 
 class StaticAnalysisImpl;
+
+/** Static analysis based on binary. Extract structure and function call relationship and ...
+ *
+*/
 class StaticAnalysis {
  private:
-  std::unique_ptr<StaticAnalysisImpl> sa;
+  std::unique_ptr<StaticAnalysisImpl> sa; /**< wrapper for dyninst */
 
  public:
+  /** Constructor. Initialize the class with input binary name.
+   *
+  */
   StaticAnalysis(char* binary_name);
 
+  /** Destructor.
+   *
+  */
   ~StaticAnalysis();
+
+  /** Extract control-flow graphs of all functions.
+   *
+  */
   void IntraProceduralAnalysis();
+
+  /** Capture static program call graph.
+   *
+  */
   void InterProceduralAnalysis();
+
+  /** Capture static program call graph.
+   *
+  */
   void CaptureProgramCallGraph();
+
+  /** Dump control-flow graphs of all functions.
+   *
+  */
   void DumpAllControlFlowGraph();
+
+  /** Dump static program call graph.
+   *
+  */
   void DumpProgramCallGraph();
+
+  /** Get name of input binary.
+   *
+  */
   void GetBinaryName();
 };  // class StaticAnalysis
 
@@ -963,23 +997,76 @@ class StaticAnalysis {
 
 class LongLongVec;
 class SamplerImpl;
+
+/** Runtime sampler.
+ *
+*/
 class Sampler {
  private:
-  std::unique_ptr<SamplerImpl> sa;
+  std::unique_ptr<SamplerImpl> sa; /**< wrapper of sampler based on papi tool*/
 
  public:
+  /** Constructor.
+   *
+  */
   Sampler();
+
+  /** Destructor.
+   *
+  */
   ~Sampler();
 
+  /** Set sampling frequence to input value.
+   * @param freq - frequence
+  */
   void SetSamplingFreq(int freq);
+
+  /** Setup (Initialize).
+   *
+  */
   void Setup();
+
+  /** Add a thread at runtime. Sampler could handle new thread.
+   *
+  */
   void AddThread();
+
+  /** Remove a thread at runtime. Sampler stop sampling this thread.
+   *
+  */
   void RemoveThread();
-  void UnsetOverflow();
+
+  /** Set overflow function. Sampler executes an input function every time the program is interrupted.
+   * @param FUNC_AT_OVERFLOW - overflow fucntion.
+  */
   void SetOverflow(void (*FUNC_AT_OVERFLOW)(int));
+
+  /** Unset overflow fucntion.
+   *
+   */
+  void UnsetOverflow();
+
+  /** Start counting performance metric events.
+   *
+  */
   void Start();
+
+  /** Stop counting performance metric events.
+   *
+  */
   void Stop();
+
+  /** Get overflow event.
+   * @param overflow_vector - papi overflow vector to detect which event counter is overflow
+   * @return id of overflowed event
+  */
   int GetOverflowEvent(LongLongVec* overflow_vector);
+
+  /** backtrace.
+   * @param call_path - call path (output)
+   * @param max_call_path_depth - max depth of call path
+   * @return depth of call path
+  */
   int GetBacktrace(baguatool::type::addr_t* call_path, int max_call_path_depth);
 };  // class Sampler
 

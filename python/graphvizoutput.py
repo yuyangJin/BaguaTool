@@ -27,6 +27,7 @@ class GraphvizOutput(Output):
         self.group_border_color = Color(0, 0, 0, 0.8)
         self.edges = []
         self.vertices = []
+        self.preserve_vertices = []
         self.groups = []
 
         Output.__init__(self, **kwargs)
@@ -126,13 +127,13 @@ class GraphvizOutput(Output):
         #    self.output_file, len(self.processor.func_count),
         #))
     
-    def draw(self, graph, vertex_attrs = [], edge_attrs = [], vertex_color_depth_attr = ""):
+    def draw(self, graph, vertex_attrs = [], edge_attrs = [], vertex_color_depth_attr = "", preserve_attrs = ""):
         ''' Add vertices and edges into self.vertices and self.edges
         '''
 
-        self.vertices = self.generate_vertices(graph.vs, vertex_attrs, vertex_color_depth_attr)
+        self.vertices = self.generate_vertices(graph.vs, vertex_attrs, vertex_color_depth_attr, preserve_attrs)
 
-        self.edges = self.generate_edges(graph.es, edge_attrs)
+        self.edges = self.generate_edges(graph.es, edge_attrs, preserve_attrs)
 
 
     def generate(self):
@@ -206,33 +207,36 @@ class GraphvizOutput(Output):
     #             'color="{group_color}"; }}'.format(**locals()))
     #     return output
 
-    def generate_vertices(self, vertices, vertex_attrs, vertex_color_depth_attr):
+    def generate_vertices(self, vertices, vertex_attrs, vertex_color_depth_attr, preserve_attrs):
         output = []
         for i in range(len(vertices)):
             vertex = vertices[i]
-            if vertex_color_depth_attr != "" and vertex.attributes().__contains__(vertex_color_depth_attr):
-                attr = {
-                    'color': self.node_color_func(vertex, float(vertex[vertex_color_depth_attr])).rgba_web(),
-                    'label': self.node_label_func(vertex, vertex_attrs),
-                }
-            else:
-                attr = {
-                    'color': self.node_color_func(vertex, 0.1).rgba_web(),
-                    'label': self.node_label_func(vertex, vertex_attrs),
-                }
-            output.append(self.vertex(i, attr))
+            if preserve_attrs != "" and vertex.attributes().__contains__(preserve_attrs) and vertex[preserve_attrs]:
+                if vertex_color_depth_attr != "" and vertex.attributes().__contains__(vertex_color_depth_attr):
+                    attr = {
+                        'color': self.node_color_func(vertex, float(vertex[vertex_color_depth_attr])).rgba_web(),
+                        'label': self.node_label_func(vertex, vertex_attrs),
+                    }
+                else:
+                    attr = {
+                        'color': self.node_color_func(vertex, 0.1).rgba_web(),
+                        'label': self.node_label_func(vertex, vertex_attrs),
+                    }
+                self.preserve_vertices.append(vertex["id"])
+                output.append(self.vertex(i, attr))
 
         return output
 
-    def generate_edges(self, edges, edge_attrs):
+    def generate_edges(self, edges, edge_attrs, preserve_attrs):
         output = []
 
         for edge in edges:
-            attr = {
-                'color': self.edge_color_func(edge).rgba_web(),
-                'label': self.edge_label_func(edge, edge_attrs),
-            }
-            output.append(self.edge(int(edge.source), int(edge.target), attr))
+            if edge.source in self.preserve_vertices and edge.target in self.preserve_vertices:
+                attr = {
+                    'color': self.edge_color_func(edge).rgba_web(),
+                    'label': self.edge_label_func(edge, edge_attrs),
+                }
+                output.append(self.edge(int(edge.source), int(edge.target), attr))
 
         return output 
 

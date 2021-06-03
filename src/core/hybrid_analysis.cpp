@@ -119,6 +119,7 @@ void ConnectCallerCallee(ProgramAbstractionGraph *pag, int vertex_id, void *extr
   int type = pag->GetVertexType(vertex_id);
   if (type == CALL_NODE || type == CALL_IND_NODE || type == CALL_REC_NODE) {
     int addr = pag->GetVertexAttributeNum("saddr", vertex_id);
+
     // dbg(vertex_id, addr);
     type::vertex_t call_vertex_id = pcg->GetCallVertexWithAddr(addr);
     // dbg(call_vertex_id);

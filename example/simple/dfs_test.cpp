@@ -1,6 +1,15 @@
 #include <cstring>
 #include "baguatool.h"
 
+void in_func(baguatool::core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  printf(" %d- ", vertex_id);
+}
+
+void out_func(baguatool::core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  printf(" %d* ", vertex_id);
+}
+
+
 int main(int argc, char** argv) {
   const char* bin_name = argv[1];
   char pag_dir_name[20] = {0};
@@ -31,20 +40,21 @@ int main(int argc, char** argv) {
 
   // pag->PreOrderTraversal(0);
 
-  pag->DumpGraphDot("root_1.dot");
+  pag->DFS(0, &in_func, &out_func, nullptr);
 
-  hybrid_analysis->DataEmbedding(perf_data);
-  std::string metric("TOT_CYC");
-  std::string op("SUM");
-  baguatool::type::perf_data_t total = hybrid_analysis->ReduceVertexPerfData(metric, op);
-  std::string avg_metric("TOT_CYC_SUM");
-  std::string new_metric("CYCAVGPERCENT");
-  hybrid_analysis->ConvertVertexReducedDataToPercent(avg_metric, total, new_metric);
+  // pag->DumpGraphDot("root_1.dot");
 
-  auto graph_perf_data = hybrid_analysis->GetGraphPerfData();
-  std::string output_file_name_str("output.json");
-  graph_perf_data->Dump(output_file_name_str);
+  // hybrid_analysis->DataEmbedding(perf_data);
+  // std::string metric("TOT_CYC");
+  // std::string op("SUM");
+  // baguatool::type::perf_data_t total = hybrid_analysis->ReduceVertexPerfData(metric, op);
+  // std::string avg_metric("TOT_CYC_SUM");
+  // std::string new_metric("CYC_AVG_PERCENT");
+  // hybrid_analysis->ConvertVertexReducedDataToPercent(avg_metric, total, new_metric);
 
-  hybrid_analysis->GetProgramAbstractionGraph()->PreserveHotVertices("CYCAVGPERCENT");
-  hybrid_analysis->GetProgramAbstractionGraph()->DumpGraphGML("root_3.gml");
+  // auto graph_perf_data = hybrid_analysis->GetGraphPerfData();
+  // std::string output_file_name_str("output.json");
+  // graph_perf_data->Dump(output_file_name_str);
+
+  // hybrid_analysis->GetProgramAbstractionGraph()->DumpGraphGML("root_3.gml");
 }

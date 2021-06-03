@@ -7,9 +7,14 @@ from pag import *
 from graphvizoutput import *                                                                                                                                           
 #import ProgramAbstractionGraph as paag  
 
-g = ProgramAbstractionGraph.Read_GML("root_3.gml")                                                                                                         
-graphviz_output = GraphvizOutput(output_file = "root_single_process")
-graphviz_output.draw(g, vertex_attrs = ["id", "name", "type", "saddr", "eaddr" , "TOTCYCAVG", "CYCAVGPERCENT"], edge_attrs = ["id"], vertex_color_depth_attr = "CYCAVGPERCENT", preserve_attrs = "preserve")
+
+file_name = sys.argv[1]
+output_file_name = sys.argv[2]
+if output_file_name == None:
+    output_file_name = "output"
+g = ProgramAbstractionGraph.Read_GML(file_name)                                                                                                         
+graphviz_output = GraphvizOutput(output_file = output_file_name)
+graphviz_output.draw(g, vertex_attrs = ["id", "name", "type", "saddr", "eaddr"], edge_attrs = ["id"]) #, vertex_color_depth_attr = "CYCAVGPERCENT")
 graphviz_output.show()
 
 #g.write_dot("test.dot")

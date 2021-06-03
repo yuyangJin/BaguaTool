@@ -104,7 +104,7 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
     const Function::edgelist &elist = func->callEdges();
     type::vertex_t func_vertex_id = addr_2_vertex_id[func->addr()];
 
-    // Traverse through all fuunction calls in this function
+    // Traverse through all function calls in this function
     for (const auto &e : elist) {
       VMA src_addr = e->src()->last();
       VMA targ_addr = e->trg()->start();
@@ -117,7 +117,10 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
       this->pcg->AddEdge(func_vertex_id, call_vertex_id);
 
       // Add Callee Function Vertex as child of CALL Vertex
-      this->pcg->AddEdge(call_vertex_id, addr_2_vertex_id[targ_addr]);
+      // TODO: Indirect call, this condition should be modified. 
+      if (addr_2_vertex_id[targ_addr] != 0) {
+        this->pcg->AddEdge(call_vertex_id, addr_2_vertex_id[targ_addr]);
+      }
     }
   }
 }

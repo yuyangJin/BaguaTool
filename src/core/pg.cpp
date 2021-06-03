@@ -153,7 +153,7 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
 // void
 typedef struct CallVertexWithAddrArg {
   unsigned long long addr;   // input
-  type::vertex_t vertex_id;  // output
+  type::vertex_t vertex_id = -1;  // output
   bool find_flag = false;    // find flag
 } CVWAArg;
 
@@ -196,7 +196,13 @@ void FuncVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {
   if (pg->GetVertexAttributeNum("type", vertex_id) == type::FUNC_NODE) {
     unsigned long long s_addr = pg->GetVertexAttributeNum("saddr", vertex_id);
     unsigned long long e_addr = pg->GetVertexAttributeNum("eaddr", vertex_id);
+    // if (addr == 0x40f058) {
+    //   dbg(addr, s_addr, e_addr, pg->GetVertexAttributeString("name",vertex_id));
+    // }
     if (addr >= s_addr - 4 && addr <= e_addr + 4) {
+      // if (addr == 0x408b59) {
+      //   dbg(addr, s_addr, e_addr, pg->GetVertexAttributeString("name",vertex_id));
+      // }
       arg->vertex_id = vertex_id;
       arg->find_flag = true;
       return;
@@ -217,8 +223,17 @@ type::vertex_t ProgramGraph::GetFuncVertexWithAddr(unsigned long long addr) {
 int ProgramGraph::AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr) {
   type::vertex_t call_vertex = GetCallVertexWithAddr(call_addr);
   type::vertex_t callee_vertex = GetFuncVertexWithAddr(callee_addr);
-  if (!this->QueryEdge(call_vertex, callee_vertex)) {
+  if (callee_vertex == -1) {
+    return -1;
+  }
+  // if (callee_addr == 4229977) {
+  //   dbg(call_vertex, callee_vertex);
+  // }
+  if (-1 == this->QueryEdge(call_vertex, callee_vertex)) {
     type::edge_t edge_id = this->AddEdge(call_vertex, callee_vertex);
+    // if (callee_addr == 4229977) {
+    //   dbg(edge_id);
+    // }
     return edge_id;
   }
   return -1;

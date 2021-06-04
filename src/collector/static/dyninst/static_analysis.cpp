@@ -117,7 +117,7 @@ void StaticAnalysisImpl::CaptureProgramCallGraph() {
       this->pcg->AddEdge(func_vertex_id, call_vertex_id);
 
       // Add Callee Function Vertex as child of CALL Vertex
-      // TODO: Indirect call, this condition should be modified. 
+      // TODO: Indirect call, this condition should be modified.
       if (addr_2_vertex_id[targ_addr] != 0) {
         this->pcg->AddEdge(call_vertex_id, addr_2_vertex_id[targ_addr]);
       }

@@ -1,14 +1,9 @@
 #include <cstring>
 #include "baguatool.h"
 
-void in_func(baguatool::core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
-  printf(" %d- ", vertex_id);
-}
+void in_func(baguatool::core::ProgramAbstractionGraph* pag, int vertex_id, void* extra) { printf(" %d- ", vertex_id); }
 
-void out_func(baguatool::core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
-  printf(" %d* ", vertex_id);
-}
-
+void out_func(baguatool::core::ProgramAbstractionGraph* pag, int vertex_id, void* extra) { printf(" %d* ", vertex_id); }
 
 int main(int argc, char** argv) {
   const char* bin_name = argv[1];
@@ -27,13 +22,11 @@ int main(int argc, char** argv) {
   auto hybrid_analysis = std::make_unique<baguatool::graph_perf::GPerf>();
 
   hybrid_analysis->ReadFunctionAbstractionGraphs(pag_dir_name);
-  //hybrid_analysis->ReadStaticProgramCallGraph(bin_name);
+  // hybrid_analysis->ReadStaticProgramCallGraph(bin_name);
   hybrid_analysis->GenerateProgramCallGraph(bin_name, perf_data_file_name);
   hybrid_analysis->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 
   hybrid_analysis->GenerateProgramAbstractionGraph(perf_data);
-
-
 
   baguatool::core::ProgramAbstractionGraph* pag = hybrid_analysis->GetProgramAbstractionGraph();
   pag->DumpGraphGML("root_1.gml");

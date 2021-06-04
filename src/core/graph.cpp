@@ -460,27 +460,27 @@ void Graph::PreOrderTraversal(type::vertex_t root, std::vector<type::vertex_t> &
 struct dfs_call_back_t {
   void (*IN_CALL_BACK_FUNC)(Graph *, int, void *);
   void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *);
-  Graph* g;
-  void* extra;
+  Graph *g;
+  void *extra;
 };
 
 igraph_bool_t g_in_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
-  struct dfs_call_back_t* extra_wrapper = (struct dfs_call_back_t*) extra;
+  struct dfs_call_back_t *extra_wrapper = (struct dfs_call_back_t *)extra;
   (*(extra_wrapper->IN_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
   return 0;
 }
 
 igraph_bool_t g_out_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
-  struct dfs_call_back_t* extra_wrapper = (struct dfs_call_back_t*) extra;
+  struct dfs_call_back_t *extra_wrapper = (struct dfs_call_back_t *)extra;
   (*(extra_wrapper->OUT_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
   return 0;
 }
 
-void Graph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, void *), void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *),
-                                              void *extra) {
+void Graph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, void *),
+                void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *), void *extra) {
   // Graph* new_graph = new Graph();
   // new_graph->GraphInit();
-  struct dfs_call_back_t* extra_wrapper = new (struct dfs_call_back_t)();
+  struct dfs_call_back_t *extra_wrapper = new (struct dfs_call_back_t)();
   extra_wrapper->IN_CALL_BACK_FUNC = IN_CALL_BACK_FUNC;
   extra_wrapper->OUT_CALL_BACK_FUNC = OUT_CALL_BACK_FUNC;
   extra_wrapper->g = this;
@@ -490,7 +490,7 @@ void Graph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, voi
              /*unreachable=*/1, /*order=*/0, /*order_out=*/0,
              /*father=*/0, /*dist=*/0,
              /*in_callback=*/g_in_callback, /*out_callback=*/g_out_callback, /*extra=*/extra_wrapper);
-             ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
+  ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
 }
 
 }  // namespace baguatool::core

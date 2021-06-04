@@ -152,9 +152,9 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
 
 // void
 typedef struct CallVertexWithAddrArg {
-  unsigned long long addr;   // input
+  unsigned long long addr;        // input
   type::vertex_t vertex_id = -1;  // output
-  bool find_flag = false;    // find flag
+  bool find_flag = false;         // find flag
 } CVWAArg;
 
 void CallVertexWithAddr(ProgramGraph *pg, int vertex_id, void *extra) {

@@ -326,12 +326,12 @@ class Graph {
    * @param pre_order_vertex_vec - a vector that stores the accessing sequence (id) of vertex
    */
   void PreOrderTraversal(type::vertex_t root_vertex_id, std::vector<type::vertex_t>& pre_order_vertex_vec);
-  
+
   /** DFS
-   * 
+   *
   */
-  void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, void *), void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *),
-                                              void *extra);
+  void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph*, int, void*),
+           void (*OUT_CALL_BACK_FUNC)(Graph*, int, void*), void* extra);
 };
 
 class ProgramGraph : public Graph {
@@ -448,12 +448,12 @@ class ProgramAbstractionGraph : public ProgramGraph {
    */
   void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
   /** DFS
-   * 
+   *
   */
-  void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *), void (*OUT_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *),
-                                              void *extra);
+  void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*),
+           void (*OUT_CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
   /** PreserveHotVertices
-   * 
+   *
   */
   void PreserveHotVertices(char* metric_name);
 };

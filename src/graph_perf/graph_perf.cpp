@@ -71,9 +71,9 @@ void GPerf::ReadDynamicProgramCallGraph(std::string perf_data_file) {
     if (!call_path.empty()) {
       call_path.pop();
     }
-    
+
     while (!call_path.empty()) {
-      //dbg(i, call_path.top());
+      // dbg(i, call_path.top());
       type::addr_t call_addr, callee_addr;
       // Get call fucntion address
       while (!call_path.empty()) {
@@ -179,12 +179,11 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
     // free(callee_func_name);
     if (!callee_func_name) {
       dbg(addr, call_vertex_id);
-      return ;
+      return;
     }
 
     string callee_func_name_str = std::string(callee_func_name);
     if (addr == 4227127) {
-
       dbg(addr, callee_func_name_str);
     }
     // dbg(callee_func_name_str);
@@ -215,7 +214,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
   // Query for each call path
   auto vertex_data_size = pthread_data->GetVertexDataSize();
   auto edge_data_size = pthread_data->GetEdgeDataSize();
-  //dbg(vertex_data_size, edge_data_size);
+  // dbg(vertex_data_size, edge_data_size);
   for (unsigned long int i = 0; i < edge_data_size; i++) {
     // Value of pthread_create is recorded as (-1)
     auto value = pthread_data->GetEdgeDataValue(i);
@@ -237,7 +236,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
         type::addr_t addr = src_call_path.top();
 
         pthread_create_vertex_id = root_pag->AddVertex();
-        //dbg(pthread_create_vertex_id);
+        // dbg(pthread_create_vertex_id);
         root_pag->SetVertexBasicInfo(pthread_create_vertex_id, type::CALL_NODE, "pthread_create");
         root_pag->SetVertexDebugInfo(pthread_create_vertex_id, addr, addr);
         root_pag->SetVertexAttributeNum("id", pthread_create_vertex_id, pthread_create_vertex_id);
@@ -245,7 +244,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
         root_pag->AddEdge(queried_vertex_id, pthread_create_vertex_id);
       } else {
         pthread_create_vertex_id = queried_vertex_id;
-        //dbg(pthread_create_vertex_id);
+        // dbg(pthread_create_vertex_id);
       }
       FREE_CONTAINER(src_call_path);
 
@@ -253,7 +252,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
       auto dest_thread_id = pthread_data->GetEdgeDataDestThreadId(i);
       type::vertex_t pthread_join_vertex_id = -1;
       for (unsigned long int j = i + 1; j < edge_data_size; j++) {
-        //dbg(j, edge_data_size, dest_thread_id, pthread_data->GetEdgeDataSrcThreadId(j));
+        // dbg(j, edge_data_size, dest_thread_id, pthread_data->GetEdgeDataSrcThreadId(j));
         if (dest_thread_id == pthread_data->GetEdgeDataSrcThreadId(j)) {
           // dbg(dest_thread_id, pthread_data->GetEdgeDataSrcThreadId(j));
           std::stack<unsigned long long> dest_call_path_join;
@@ -272,7 +271,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
 
             // dbg(addr_join);
             pthread_join_vertex_id = root_pag->AddVertex();
-            //dbg(pthread_join_vertex_id);
+            // dbg(pthread_join_vertex_id);
             root_pag->SetVertexBasicInfo(pthread_join_vertex_id, type::CALL_NODE, "pthread_join");
             root_pag->SetVertexDebugInfo(pthread_join_vertex_id, addr_join, addr_join);
             // dbg(root_pag->GetCurVertexNum());
@@ -281,7 +280,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
             root_pag->AddEdge(queried_vertex_id_join, pthread_join_vertex_id);
           } else {
             pthread_join_vertex_id = queried_vertex_id_join;
-            //dbg(pthread_join_vertex_id);
+            // dbg(pthread_join_vertex_id);
           }
           FREE_CONTAINER(dest_call_path_join);
 
@@ -295,7 +294,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
         // find the samples with same thread id as created thread id of this pthread_create
         auto func_thread_id = pthread_data->GetVertexDataThreadId(j);
         if (func_thread_id == dest_thread_id) {
-          //dbg(func_thread_id, dest_thread_id);
+          // dbg(func_thread_id, dest_thread_id);
           // Get the first addr of call path
           std::stack<type::addr_t> call_path;
           pthread_data->GetVertexDataCallPath(j, call_path);
@@ -336,7 +335,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
       if (func_vertex_id == -1) {
         // dbg(func_vertex_id);
       } else {
-        //dbg(pthread_create_vertex_id, func_vertex_id);
+        // dbg(pthread_create_vertex_id, func_vertex_id);
         this->root_pag->AddEdge(pthread_create_vertex_id, func_vertex_id);
         // dbg(func_vertex_id, pthread_join_vertex_id);
         // this->root_pag->AddEdge(func_vertex_id, pthread_join_vertex_id);
@@ -429,7 +428,7 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
 
   this->DynamicInterProceduralAnalysis(pthread_data);
 
-  //this->root_pag->VertexSortChild();
+  // this->root_pag->VertexSortChild();
 
   for (auto &kv : this->func_pag_map) {
     // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
@@ -499,7 +498,7 @@ void GPerf::DataEmbedding(core::PerfData *perf_data) {
       auto thread_id = perf_data->GetEdgeDataSrcThreadId(i);
       std::pair<type::call_path_t, int> tmp(src_call_path, thread_id);
       created_tid_2_callpath_and_tid[create_thread_id] = tmp;
-      //printf("map[%d] = < %llx , %d > \n", create_thread_id, src_call_path.top(), thread_id);
+      // printf("map[%d] = < %llx , %d > \n", create_thread_id, src_call_path.top(), thread_id);
     }
   }
 

@@ -141,31 +141,32 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
 struct pag_dfs_call_back_t {
   void (*IN_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *);
   void (*OUT_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *);
-  ProgramAbstractionGraph* g;
-  void* extra;
+  ProgramAbstractionGraph *g;
+  void *extra;
 };
 
 igraph_bool_t pag_in_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
-  struct pag_dfs_call_back_t* extra_wrapper = (struct pag_dfs_call_back_t*) extra;
-  if (extra_wrapper->IN_CALL_BACK_FUNC != nullptr){ 
+  struct pag_dfs_call_back_t *extra_wrapper = (struct pag_dfs_call_back_t *)extra;
+  if (extra_wrapper->IN_CALL_BACK_FUNC != nullptr) {
     (*(extra_wrapper->IN_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
   }
   return 0;
 }
 
 igraph_bool_t pag_out_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
-  struct pag_dfs_call_back_t* extra_wrapper = (struct pag_dfs_call_back_t*) extra;
-  if (extra_wrapper->OUT_CALL_BACK_FUNC != nullptr){ 
+  struct pag_dfs_call_back_t *extra_wrapper = (struct pag_dfs_call_back_t *)extra;
+  if (extra_wrapper->OUT_CALL_BACK_FUNC != nullptr) {
     (*(extra_wrapper->OUT_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
   }
   return 0;
 }
 
-void ProgramAbstractionGraph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *), void (*OUT_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *),
-                                              void *extra) {
+void ProgramAbstractionGraph::DFS(type::vertex_t root,
+                                  void (*IN_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *),
+                                  void (*OUT_CALL_BACK_FUNC)(ProgramAbstractionGraph *, int, void *), void *extra) {
   // ProgramAbstractionGraph* new_graph = new ProgramAbstractionGraph();
   // new_graph->GraphInit();
-  struct pag_dfs_call_back_t* extra_wrapper = new (struct pag_dfs_call_back_t)();
+  struct pag_dfs_call_back_t *extra_wrapper = new (struct pag_dfs_call_back_t)();
   extra_wrapper->IN_CALL_BACK_FUNC = IN_CALL_BACK_FUNC;
   extra_wrapper->OUT_CALL_BACK_FUNC = OUT_CALL_BACK_FUNC;
   extra_wrapper->g = this;
@@ -175,51 +176,53 @@ void ProgramAbstractionGraph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)
              /*unreachable=*/1, /*order=*/0, /*order_out=*/0,
              /*father=*/0, /*dist=*/0,
              /*in_callback=*/pag_in_callback, /*out_callback=*/pag_out_callback, /*extra=*/extra_wrapper);
-             ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
+  ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
 }
 
 struct hot_spot_t {
-  char* metric_name;
-  //bool preserve;
+  char *metric_name;
+  // bool preserve;
 };
 
 void in_func(baguatool::core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
-  //struct hot_spot_t* extra_ = (struct hot_spot_t*)extra;
-  //extra_->preserve = false;
+  // struct hot_spot_t* extra_ = (struct hot_spot_t*)extra;
+  // extra_->preserve = false;
 
   pag->SetVertexAttributeFlag("preserve", vertex_id, false);
 }
 
 void out_func(baguatool::core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
-  struct hot_spot_t* extra_ = (struct hot_spot_t*)extra;
-  const char* metric_name = extra_->metric_name;
+  struct hot_spot_t *extra_ = (struct hot_spot_t *)extra;
+  const char *metric_name = extra_->metric_name;
 
   bool preserve_flag = false;
-  type::perf_data_t data = strtod(pag->GetVertexAttributeString(std::string(metric_name).c_str(), (type::vertex_t)vertex_id), NULL);
+  type::perf_data_t data =
+      strtod(pag->GetVertexAttributeString(std::string(metric_name).c_str(), (type::vertex_t)vertex_id), NULL);
   if (data > 0.0) {
     preserve_flag = true;
   } else {
     std::vector<type::vertex_t> children;
     pag->GetChildVertexSet(vertex_id, children);
 
-    for (auto &child: children) {
+    for (auto &child : children) {
       bool child_preserve_flag = pag->GetVertexAttributeFlag("preserve", child);
       preserve_flag |= child_preserve_flag;
     }
   }
 
-  dbg(vertex_id, metric_name, strtod(pag->GetVertexAttributeString(std::string(metric_name).c_str(), (type::vertex_t)vertex_id), NULL), preserve_flag); //, extra_->preserve);
+  dbg(vertex_id, metric_name,
+      strtod(pag->GetVertexAttributeString(std::string(metric_name).c_str(), (type::vertex_t)vertex_id), NULL),
+      preserve_flag);  //, extra_->preserve);
 
   pag->SetVertexAttributeFlag("preserve", vertex_id, preserve_flag);
 }
 
-void ProgramAbstractionGraph::PreserveHotVertices(char* metric_name) {
-  struct hot_spot_t* arg = new (struct hot_spot_t)();
+void ProgramAbstractionGraph::PreserveHotVertices(char *metric_name) {
+  struct hot_spot_t *arg = new (struct hot_spot_t)();
   arg->metric_name = metric_name;
-  //arg->preserve = false;
+  // arg->preserve = false;
 
   this->DFS(0, in_func, out_func, arg);
 }
-
 
 }  // namespace baguatool::core

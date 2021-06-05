@@ -22,6 +22,8 @@ target_compile_options(igraph PRIVATE -fPIC)
 
 find_package(PAPI REQUIRED)
 find_package(Dyninst REQUIRED)
+find_package(MPI REQUIRED)
+
 if (Dyninst_FOUND) 
   message(STATUS "Found Dyninst: " ${DYNINST_INCLUDE_DIR})
 endif()
@@ -54,7 +56,9 @@ add_library(
 
 add_executable(binary_analyzer src/graph_perf/binary_analyzer.cpp)
 add_library(sequential_sampler SHARED src/graph_perf/sequential_sampler.cpp)
+add_library(mpi_sampler SHARED src/graph_perf/mpi_sampler.cpp src/graph_perf/mpi_init.cpp)
 add_library(pthread_sampler SHARED src/graph_perf/pthread_sampler.cpp)
+
 
 set_target_properties(
   baguatool
@@ -87,6 +91,13 @@ target_compile_options(
   -fno-omit-frame-pointer -fstack-protector-all
 )
 
+# target_compile_options(
+#   mpi_sampler PRIVATE
+#   -Wall -Wno-missing-braces
+#   #-fno-rtti # We cannot open it because dyninst use `typeid` in header
+#   -fno-omit-frame-pointer -fstack-protector-all -lmpi
+# )
+
 # FIXME: how to use sanitize for subproject?
 if (ENABLE_SANITIZE) 
   target_compile_options(
@@ -100,6 +111,7 @@ target_include_directories(baguatool PRIVATE src)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/dbg)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/json)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/toml)
+target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/pmpi_wrapper)
 target_include_directories(baguatool PRIVATE igraph)
 target_include_directories(baguatool PRIVATE ${DYNINST_INCLUDE_DIR})
 target_include_directories(baguatool PRIVATE ${PAPI_INCLUDE_DIRS})
@@ -113,6 +125,8 @@ target_link_libraries(
 target_link_libraries(baguatool PRIVATE ${PAPI_LIBRARIES})
 target_link_libraries(binary_analyzer PRIVATE baguatool)
 target_link_libraries(sequential_sampler PRIVATE baguatool)
+#target_link_libraries(parallel_task PUBLIC MPI::MPI_CXX)
+target_link_libraries(mpi_sampler PUBLIC baguatool MPI::MPI_CXX)
 target_link_libraries(pthread_sampler PRIVATE baguatool)
 
 
@@ -130,3 +144,4 @@ install(TARGETS baguatool DESTINATION lib)
 install(TARGETS binary_analyzer DESTINATION bin)
 install(TARGETS sequential_sampler DESTINATION lib)
 install(TARGETS pthread_sampler DESTINATION lib)
+install(TARGETS mpi_sampler DESTINATION lib)

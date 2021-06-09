@@ -23,6 +23,10 @@ target_compile_options(igraph PRIVATE -fPIC)
 find_package(PAPI REQUIRED)
 find_package(Dyninst REQUIRED)
 find_package(MPI REQUIRED)
+find_package(OpenMP REQUIRED)
+# if(OpenMP_CXX_FOUND)
+#     target_link_libraries(parallel_task PUBLIC OpenMP::OpenMP_CXX)
+# endif()
 
 if (Dyninst_FOUND) 
   message(STATUS "Found Dyninst: " ${DYNINST_INCLUDE_DIR})
@@ -57,6 +61,7 @@ add_library(
 add_executable(binary_analyzer src/graph_perf/binary_analyzer.cpp)
 add_library(sequential_sampler SHARED src/graph_perf/sequential_sampler.cpp)
 add_library(mpi_sampler SHARED src/graph_perf/mpi_sampler.cpp src/graph_perf/mpi_init.cpp)
+add_library(omp_sampler SHARED src/graph_perf/omp_sampler.cpp)
 add_library(pthread_sampler SHARED src/graph_perf/pthread_sampler.cpp)
 
 
@@ -98,6 +103,8 @@ target_compile_options(
 #   -fno-omit-frame-pointer -fstack-protector-all -lmpi
 # )
 
+
+
 # FIXME: how to use sanitize for subproject?
 if (ENABLE_SANITIZE) 
   target_compile_options(
@@ -130,6 +137,15 @@ target_link_libraries(mpi_sampler PUBLIC baguatool MPI::MPI_CXX)
 target_link_libraries(pthread_sampler PRIVATE baguatool)
 
 
+# -fopenmp flag (enables OpenMP)
+# set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -pedantic -lm -O3 -funroll-loops -fopenmp")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(omp_sampler PUBLIC baguatool OpenMP::OpenMP_CXX)
+endif()
+#target_link_libraries(omp_sampler PUBLIC baguatool)
+
+
 if (ENABLE_EXAMPLE)
   add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
   # add_subdirectory(${PROJECT_SOURCE_DIR}/example/reproduction/GraphPerf)
@@ -145,3 +161,4 @@ install(TARGETS binary_analyzer DESTINATION bin)
 install(TARGETS sequential_sampler DESTINATION lib)
 install(TARGETS pthread_sampler DESTINATION lib)
 install(TARGETS mpi_sampler DESTINATION lib)
+install(TARGETS omp_sampler DESTINATION lib)

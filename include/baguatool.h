@@ -313,6 +313,13 @@ class Graph {
    */
   void GetChildVertexSet(type::vertex_t vertex_id, std::vector<type::vertex_t>& child_vec);
 
+  /** Get parent vertex.
+   * @param vertex_id - id of a vertex
+   * @return parent vertex of input vertex
+   *
+  */
+  type::vertex_t GetParentVertex(type::vertex_t vertex_id);
+
   /** [Graph Algorithm] Traverse all vertices and execute CALL_BACK_FUNC when accessing each vertex.
    * @param CALL_BACK_FUNC - callback function when a vertex is accessed. The input parameters of this function contain
    * a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for developers to pass more
@@ -941,6 +948,8 @@ class GPerf {
    */
   void ConvertVertexReducedDataToPercent(std::string& metric, baguatool::type::perf_data_t total,
                                          std::string& new_metric);
+
+  void GenerateMultiThreadProgramAbstractionGraph();
 
   /** Generate multi-thread or multi-process program abstraction graph.
    *

@@ -44,5 +44,6 @@ int main(int argc, char** argv) {
   graph_perf_data->Dump(output_file_name_str);
 
   hybrid_analysis->GetProgramAbstractionGraph()->PreserveHotVertices("CYCAVGPERCENT");
+
   hybrid_analysis->GetProgramAbstractionGraph()->DumpGraphGML("root_3.gml");
 }

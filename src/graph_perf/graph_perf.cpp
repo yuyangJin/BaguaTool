@@ -344,7 +344,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
 
     // Sort the graph
     // TODO: support sorting from a specific vertex
-    // this->root_pag->VertexSortChild();
+    this->root_pag->VertexSortChild();
   }
 
   //   std::stack<unsigned long long> src_call_path;
@@ -648,6 +648,56 @@ void GPerf::ConvertVertexReducedDataToPercent(std::string &metric, type::perf_da
 
   this->root_pag->VertexTraversal(&PerfDataToPercent, arg);
 
+  delete arg;
+}
+
+struct pthread_expansion_arg_t {
+  core::ProgramAbstractionGraph *mpag;
+  std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id;
+  type::vertex_t src_vertex_id;
+};
+
+void in_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  struct pthread_expansion_arg_t *arg = (struct pthread_expansion_arg_t *)extra;
+  core::ProgramAbstractionGraph *mpag = arg->mpag;
+  std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id = arg->pag_vertex_id_2_mpag_vertex_id;
+
+  type::vertex_t new_vertex_id = mpag->AddVertex();
+  mpag->CopyVertex(new_vertex_id, pag, vertex_id);
+  (*pag_vertex_id_2_mpag_vertex_id)[vertex_id] = new_vertex_id;
+
+  if (arg->src_vertex_id >= 0) {
+    mpag->AddEdge(arg->src_vertex_id, new_vertex_id);
+  }
+  arg->src_vertex_id = new_vertex_id;
+}
+
+void out_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  struct pthread_expansion_arg_t *arg = (struct pthread_expansion_arg_t *)extra;
+  // core::ProgramAbstractionGraph *mpag = arg->mpag;
+  std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id = arg->pag_vertex_id_2_mpag_vertex_id;
+
+  type::vertex_t parent_vertex_id = pag->GetParentVertex(vertex_id);
+  if (strcmp(pag->GetVertexAttributeString("name", parent_vertex_id), "pthread_create") == 0) {
+    arg->src_vertex_id = (*pag_vertex_id_2_mpag_vertex_id)[parent_vertex_id];
+  }
+}
+
+void GPerf::GenerateMultiThreadProgramAbstractionGraph() {
+  this->root_mpag = new core::ProgramAbstractionGraph();
+  this->root_mpag->GraphInit("Multi-thread Program Abstraction Graph");
+
+  struct pthread_expansion_arg_t *arg = new (struct pthread_expansion_arg_t)();
+  std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id =
+      new std::map<type::vertex_t, type::vertex_t>();
+  arg->mpag = this->root_mpag;
+  arg->pag_vertex_id_2_mpag_vertex_id = pag_vertex_id_2_mpag_vertex_id;
+  arg->src_vertex_id = -1;
+
+  root_pag->DFS(0, in_pthread_expansion, out_pthread_expansion, arg);
+
+  FREE_CONTAINER(*pag_vertex_id_2_mpag_vertex_id);
+  delete pag_vertex_id_2_mpag_vertex_id;
   delete arg;
 }
 

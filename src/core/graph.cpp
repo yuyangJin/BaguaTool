@@ -441,6 +441,21 @@ void Graph::GetChildVertexSet(type::vertex_t vertex, std::vector<type::vertex_t>
   // return neighbor_vertices;
 }
 
+type::vertex_t Graph::GetParentVertex(type::vertex_t vertex_id) {
+  igraph_vector_t v;
+  // dbg(this->GetGraphAttributeString("name"), vertex);
+  igraph_vector_init(&v, 0);
+  igraph_neighbors(&ipag_->graph, &v, vertex_id, IGRAPH_IN);
+  long int neighbor_num = igraph_vector_size(&v);
+  // dbg(neighbor_num);
+  if (neighbor_num > 1) {
+    dbg("More than one parent");
+  }
+  type::vertex_t parent_vertex_id = (type::vertex_t)VECTOR(v)[0];
+  igraph_vector_destroy(&v);
+  return parent_vertex_id;
+}
+
 igraph_bool_t dfs_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
   std::vector<type::vertex_t> *pre_order_vertex_vec = (std::vector<type::vertex_t> *)extra;
   pre_order_vertex_vec->push_back(vid);

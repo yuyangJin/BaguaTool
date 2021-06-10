@@ -211,7 +211,8 @@ class GraphvizOutput(Output):
         output = []
         for i in range(len(vertices)):
             vertex = vertices[i]
-            if preserve_attrs != "" and vertex.attributes().__contains__(preserve_attrs) and vertex[preserve_attrs]:
+
+            if preserve_attrs == "" or (preserve_attrs != "" and vertex.attributes().__contains__(preserve_attrs) and vertex[preserve_attrs]):
                 if vertex_color_depth_attr != "" and vertex.attributes().__contains__(vertex_color_depth_attr):
                     attr = {
                         'color': self.node_color_func(vertex, float(vertex[vertex_color_depth_attr])).rgba_web(),

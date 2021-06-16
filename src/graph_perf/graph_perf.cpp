@@ -250,6 +250,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
 
       // Then find a corresponding pthread_join and create a new vertex for it.
       auto dest_thread_id = pthread_data->GetEdgeDataDestThreadId(i);
+      
       type::vertex_t pthread_join_vertex_id = -1;
       for (unsigned long int j = i + 1; j < edge_data_size; j++) {
         // dbg(j, edge_data_size, dest_thread_id, pthread_data->GetEdgeDataSrcThreadId(j));
@@ -282,6 +283,11 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
             pthread_join_vertex_id = queried_vertex_id_join;
             // dbg(pthread_join_vertex_id);
           }
+
+          // auto join_value = pthread_data->GetEdgeDataValue(j);
+          // //this->root_pag->SetVertexAttributeNum("TOT_CYC", pthread_join_vertex_id, join_value);
+          // this->graph_perf_data->SetPerfData(pthread_join_vertex_id, perf_data->GetMetricName(), process_id, thread_id, data);
+
           FREE_CONTAINER(dest_call_path_join);
 
           break;

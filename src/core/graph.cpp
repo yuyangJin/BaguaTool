@@ -191,6 +191,18 @@ int Graph::GetEdgeDest(type::edge_t edge_id) { return IGRAPH_TO(&ipag_->graph, e
 
 void Graph::GetEdgeOtherSide() { UNIMPLEMENTED(); }
 
+bool Graph::HasGraphAttribute(const char *attr_name) {
+  return igraph_cattribute_has_attr(&ipag_->graph, IGRAPH_ATTRIBUTE_GRAPH, attr_name);
+}
+
+bool Graph::HasVertexAttribute(const char *attr_name) {
+  return igraph_cattribute_has_attr(&ipag_->graph, IGRAPH_ATTRIBUTE_VERTEX, attr_name);
+}
+
+bool Graph::HasEdgeAttribute(const char *attr_name) {
+  return igraph_cattribute_has_attr(&ipag_->graph, IGRAPH_ATTRIBUTE_EDGE, attr_name);
+}
+
 void Graph::SetGraphAttributeString(const char *attr_name, const char *value) {
   SETGAS(&ipag_->graph, attr_name, value);
 }

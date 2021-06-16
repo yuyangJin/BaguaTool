@@ -337,8 +337,9 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
       } else {
         // dbg(pthread_create_vertex_id, func_vertex_id);
         this->root_pag->AddEdge(pthread_create_vertex_id, func_vertex_id);
-        // dbg(func_vertex_id, pthread_join_vertex_id);
-        // this->root_pag->AddEdge(func_vertex_id, pthread_join_vertex_id);
+        this->root_pag->SetVertexAttributeNum("wait", pthread_join_vertex_id, func_vertex_id);
+        dbg(func_vertex_id, pthread_join_vertex_id);
+        //this->root_pag->AddEdge(func_vertex_id, pthread_join_vertex_id);
       }
     }
 
@@ -425,6 +426,8 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
   this->root_pag->VertexTraversal(&ConnectCallerCallee, arg);
 
   delete arg;
+
+  this->root_pag->VertexSortChild();
 
   this->DynamicInterProceduralAnalysis(pthread_data);
 
@@ -670,15 +673,31 @@ void in_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, voi
     mpag->AddEdge(arg->src_vertex_id, new_vertex_id);
   }
   arg->src_vertex_id = new_vertex_id;
+
+  if (strcmp(pag->GetVertexAttributeString("name", vertex_id), "pthread_join") == 0) {
+    if (pag->HasVertexAttribute("wait")) {
+      type::vertex_t wait_vertex_id = pag->GetVertexAttributeNum("wait", vertex_id);
+      
+      if (wait_vertex_id > 0) {
+        type::vertex_t last_vertex_id = pag->GetVertexAttributeNum("last", wait_vertex_id);
+        dbg(vertex_id, wait_vertex_id, last_vertex_id);
+        mpag->AddEdge(last_vertex_id, new_vertex_id);
+      }
+    }
+  }
+
+
 }
 
 void out_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   struct pthread_expansion_arg_t *arg = (struct pthread_expansion_arg_t *)extra;
-  // core::ProgramAbstractionGraph *mpag = arg->mpag;
+  //core::ProgramAbstractionGraph *mpag = arg->mpag;
   std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id = arg->pag_vertex_id_2_mpag_vertex_id;
 
   type::vertex_t parent_vertex_id = pag->GetParentVertex(vertex_id);
   if (strcmp(pag->GetVertexAttributeString("name", parent_vertex_id), "pthread_create") == 0) {
+    dbg(vertex_id, arg->src_vertex_id);
+    pag->SetVertexAttributeNum("last", vertex_id, arg->src_vertex_id);
     arg->src_vertex_id = (*pag_vertex_id_2_mpag_vertex_id)[parent_vertex_id];
   }
 }

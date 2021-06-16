@@ -321,6 +321,16 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
   std::map<type::vertex_t, std::vector<type::edge_t>> vertex_id_to_tmp_edge_id_vec;
   for (int i = 0; i < num_children; i++) {
     if (children[i] != children_id[i]) {
+      // Get and record children of children[i]
+      std::vector<type::vertex_t> children_children;
+      pg->GetChildVertexSet(children[i], children_children);
+      vertex_id_to_tmp_edge_id_vec[children[i]] = children_children;
+    }
+  }
+
+
+  for (int i = 0; i < num_children; i++) {
+    if (children[i] != children_id[i]) {
       // Copy attributes except "id"
       type::vertex_t tmp_vertex_id = pg->AddVertex();
       pg->CopyVertex(tmp_vertex_id, pg, children[i]);
@@ -333,11 +343,9 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
       }
       vertex_id_to_tmp_vertex_id[children[i]] = tmp_vertex_id;
 
-      // Get and record children of children[i]
-      std::vector<type::vertex_t> children_children;
-      pg->GetChildVertexSet(children[i], children_children);
-      vertex_id_to_tmp_edge_id_vec[children[i]] = children_children;
+      // TODO : can not understand now
       // Delete all edges of children[i]
+      std::vector<type::vertex_t> &children_children = vertex_id_to_tmp_edge_id_vec[children[i]];
       for (auto &child_child : children_children) {
         // dbg(children[i], child_child);
         pg->DeleteEdge(children[i], child_child);
@@ -360,6 +368,7 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
         }
         FREE_CONTAINER(children_id_children);
       }
+
     }
   }
 

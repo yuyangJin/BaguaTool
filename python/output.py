@@ -58,10 +58,16 @@ class Output(object):
         # else:
         return Color.hsv(color, value, 0.9)
 
-    def edge_color(self, edge_src):
+    def edge_color(self, color):
         #value = float(edge_src * 2) / 3
-        value = 0.3
-        return Color.hsv(value / 2 + .5, value, 0.5)
+        if color == 0:
+            saturation = 0.3
+            value = 0.5
+        else:
+            saturation = 1
+            value = 1
+        
+        return Color.hsv(color, saturation, value)
 
     def node_label(self, vertex, vertex_attrs):
         parts = []

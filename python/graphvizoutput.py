@@ -135,6 +135,18 @@ class GraphvizOutput(Output):
 
         self.edges = self.generate_edges(graph.es, edge_attrs, preserve_attrs)
 
+    def draw_edge(self, edge_set, edge_attrs = [], color = 0.3):
+        output = []
+
+        for edge in edge_set:
+            attr = {
+                'color': self.edge_color_func(color).rgba_web(),
+                'penwidth': '5',
+                'label': self.edge_label_func(edge, edge_attrs),
+            }
+            output.append(self.edge(edge[0], edge[1], attr))
+
+        self.edges += output
 
     def generate(self):
         '''Returns a string with the contents of a DOT file for Graphviz to
@@ -234,7 +246,7 @@ class GraphvizOutput(Output):
         for edge in edges:
             if edge.source in self.preserve_vertices and edge.target in self.preserve_vertices:
                 attr = {
-                    'color': self.edge_color_func(edge).rgba_web(),
+                    'color': self.edge_color_func(0).rgba_web(),
                     'label': self.edge_label_func(edge, edge_attrs),
                 }
                 output.append(self.edge(int(edge.source), int(edge.target), attr))

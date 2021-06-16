@@ -226,6 +226,7 @@ int pthread_join(pthread_t thread, void **value_ptr) {
 //   if (module_init != MODULE_INITED) {
 //     init_mock();
 //   }
+//   auto t1 = std::chrono::high_resolution_clock::now();
 //   // baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
 //   // int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
 //   // for (int i = 0; i < call_path_len; i++) {
@@ -236,29 +237,48 @@ int pthread_join(pthread_t thread, void **value_ptr) {
 //   //mutex_to_lock_callsite[thread] = std::to_string(thread_gid);
 //   int ret = (*original_pthread_mutex_lock)(thread);
 
-//   dbg(thread_gid, thread->__data.__kind, thread->__data.__spins);
+//   //dbg(thread_gid, thread->__data.__kind, thread->__data.__spins);
+
+//   auto t2 = std::chrono::high_resolution_clock::now();
 
 //   return ret;
 // }
 
-// int pthread_mutex_unlock(pthread_mutex_t *thread) {
-//   if (module_init != MODULE_INITED) {
-//     init_mock();
-//   }
-//   //dbg(thread_gid, thread, &thread);
-//   int ret = (*original_pthread_mutex_unlock)(thread);
-//   // baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
-//   // int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
-//   // for (int i = 0; i < call_path_len; i++) {
-//   //   printf("%x ", call_path[i]);
-//   // }
-//   // printf("\n");
-//   // for (auto& item: mutex_to_lock_callsite) {
-//   //   if (*(item.first) == *thread) {
-//   //     std::cout << item.second << endl;
-//   //   }
-//   // }
-//   dbg(thread_gid, thread->__data.__kind, thread->__data.__spins);
+int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+  if (module_init != MODULE_INITED) {
+    init_mock();
+  }
+  //dbg(thread_gid, thread, &thread);
+  auto t1 = std::chrono::high_resolution_clock::now();
+  int ret = (*original_pthread_mutex_unlock)(mutex);
+  auto t2 = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+  baguatool::type::perf_data_t time = fp_ms.count() / 1000.0 * CYC_SAMPLE_COUNT;
+  //dbg(time);
+  //baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
+  //int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
+  
+  //perf_data->RecordVertexData(call_path, call_path_len, 0, thread_gid, time);
 
-//   return ret;
-// }
+  // auto value = perf_data->QueryVertexData(call_path, call_path_len, 0, thread_gid);
+  // dbg(value);
+  // if (value >= 0){
+  //   perf_data->RecordVertexData(call_path, call_path_len, 0, thread_gid, time + value); 
+  // } else {
+  //   perf_data->RecordVertexData(call_path, call_path_len, 0, thread_gid, time);
+  // }
+  
+
+  // for (int i = 0; i < call_path_len; i++) {
+  //   printf("%x ", call_path[i]);
+  // }
+  // printf("\n");
+  // for (auto& item: mutex_to_lock_callsite) {
+  //   if (*(item.first) == *thread) {
+  //     std::cout << item.second << endl;
+  //   }
+  // }
+  //dbg(thread_gid, mutex->__data.__kind, mutex->__data.__spins);
+
+  return ret;
+}

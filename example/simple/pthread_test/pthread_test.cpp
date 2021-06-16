@@ -19,7 +19,7 @@ typedef struct ct_sum {
 } ct_sum;
 void *add1(void *cnt) {
   double a = 0;
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < N / 4; i++) {
     a += i;
   }
   struct timeval start;
@@ -32,14 +32,13 @@ void *add1(void *cnt) {
   printf("add1 lock is %ld\n", diff);
   int i;
   gettimeofday(&start, NULL);
-  for (i = 0; i < N; i++) {
+  for (i = 0; i < N / 2; i++) {
     (*(ct_sum *)cnt).sum += i;
   }
   gettimeofday(&end, NULL);
   diff = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
   printf("add1 for is %ld\n", diff);
   pthread_mutex_unlock(&(((ct_sum *)cnt)->lock));
-  pthread_exit(NULL);
   return 0;
 }
 void *add2(void *cnt) {
@@ -60,7 +59,6 @@ void *add2(void *cnt) {
   diff = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
   printf("add2 for is %ld\n", diff);
   pthread_mutex_unlock(&(((ct_sum *)cnt)->lock));
-  pthread_exit(NULL);
   return 0;
 }
 int main(int argc, char **argv) {
@@ -82,13 +80,6 @@ int main(int argc, char **argv) {
 
   pthread_create(&ptid1, NULL, add1, &cnt);
   pthread_create(&ptid2, NULL, add2, &cnt);
-
-  print_thread_id(ptid1);
-  printf("\n");
-
-  pthread_mutex_lock(&(cnt.lock));
-  printf("sum %d\n", cnt.sum);
-  pthread_mutex_unlock(&(cnt.lock));
 
   pthread_join(ptid1, NULL);
   pthread_join(ptid2, NULL);

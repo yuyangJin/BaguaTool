@@ -169,9 +169,13 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
   int type = pag->GetVertexType(vertex_id);
   if (type == type::CALL_NODE || type == type::CALL_IND_NODE || type == type::CALL_REC_NODE) {
     int addr = pag->GetVertexAttributeNum("saddr", vertex_id);
-    // dbg(vertex_id, addr);
+    dbg(vertex_id, addr);
     type::vertex_t call_vertex_id = pcg->GetCallVertexWithAddr(addr);
-    // dbg(call_vertex_id);
+    dbg(call_vertex_id);
+
+    if (call_vertex_id == -1){
+      return ;
+    }
 
     // ProgramAbstractionGraph *callee_pag =
     //     (*func_name_2_pag)[std::string(pag->GetVertexAttributeString("name", vertex_id))];
@@ -183,9 +187,9 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
     }
 
     string callee_func_name_str = std::string(callee_func_name);
-    if (addr == 4227127) {
-      dbg(addr, callee_func_name_str);
-    }
+    // if (addr == 4227127) {
+    //   dbg(addr, callee_func_name_str);
+    // }
     // dbg(callee_func_name_str);
 
     if (callee_func_name) {
@@ -327,6 +331,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
             InterPAArg *arg = new InterPAArg();
             arg->pcg = this->pcg;
             arg->func_pag_map = &(this->func_pag_map);
+            func_pag->SetGraphAttributeFlag("scanned", true);
             func_pag->VertexTraversal(&ConnectCallerCallee, arg);
             delete arg;
 

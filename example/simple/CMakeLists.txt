@@ -8,7 +8,7 @@ add_executable(toml_test toml_test.cpp)
 add_executable(pthread_mpag_generation_example pthread_mpag_generation_example.cpp)
 #add_library(single_process_sampler SHARED single_process_sampler.cpp)
 #add_library(pthread_sampler SHARED pthread_sampler.cpp)
-
+add_executable(critical_path critical_path.cpp)
 
 target_link_libraries(pag_generation PRIVATE baguatool)
 target_link_libraries(dfs_test PRIVATE baguatool)
@@ -20,6 +20,8 @@ target_link_libraries(json_test PRIVATE baguatool)
 target_link_libraries(toml_test PRIVATE baguatool)
 #target_link_libraries(data_embedding_test PRIVATE baguatool)
 target_link_libraries(pthread_mpag_generation_example PRIVATE baguatool)
+target_link_libraries(critical_path PRIVATE baguatool)
+
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run.sh ${CMAKE_CURRENT_BINARY_DIR}/run.sh COPYONLY)
 #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cg.A.4 ${CMAKE_CURRENT_BINARY_DIR}/cg.A.4 COPYONLY)

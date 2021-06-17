@@ -135,21 +135,21 @@ class Graph {
    * @param attr_name - name of the graph attribute
    * @return Logical value, TRUE if the attribute exists, FALSE otherwise.
   */
-  bool HasGraphAttribute(const char *attr_name);
+  bool HasGraphAttribute(const char* attr_name);
 
   /** Checks whether a vertex attribute exists.
    *  Time complexity: O(A), the number of vertex attributes, assuming attribute names are not too long.
    * @param attr_name - name of the graph attribute
    * @return Logical value, TRUE if the attribute exists, FALSE otherwise.
   */
-  bool HasVertexAttribute(const char *attr_name);
+  bool HasVertexAttribute(const char* attr_name);
 
   /** Checks whether a edge attribute exists.
    *  Time complexity: O(A), the number of edge attributes, assuming attribute names are not too long.
    * @param attr_name - name of the graph attribute
    * @return Logical value, TRUE if the attribute exists, FALSE otherwise.
   */
-  bool HasEdgeAttribute(const char *attr_name);
+  bool HasEdgeAttribute(const char* attr_name);
 
   /** Set a string graph attribute
    * @param attr_name - name of the graph attribute

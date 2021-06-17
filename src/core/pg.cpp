@@ -328,7 +328,6 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
     }
   }
 
-
   for (int i = 0; i < num_children; i++) {
     if (children[i] != children_id[i]) {
       // Copy attributes except "id"
@@ -368,7 +367,6 @@ void SortChild(ProgramGraph *pg, int vertex_id, void *extra) {
         }
         FREE_CONTAINER(children_id_children);
       }
-
     }
   }
 

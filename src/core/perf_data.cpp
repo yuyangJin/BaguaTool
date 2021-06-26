@@ -57,9 +57,11 @@ void PerfData::Read(const char* infile_name) {
     std::vector<std::string> line_vec = split(line, delim);
     int cnt = line_vec.size();
 
+    int procs_id = atoi(line_vec[2].c_str());
+
     // dbg(cnt);
 
-    if (cnt == 4) {
+    if (cnt == 4 && procs_id >= 0) {
       unsigned long int x = __sync_fetch_and_add(&this->vertex_perf_data_count, 1);
 
       this->vertex_perf_data[x].value = atof(line_vec[1].c_str());

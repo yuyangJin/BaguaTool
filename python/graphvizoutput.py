@@ -141,7 +141,7 @@ class GraphvizOutput(Output):
         for edge in edge_set:
             attr = {
                 'color': self.edge_color_func(color).rgba_web(),
-                'penwidth': '5',
+                'penwidth': '15',
                 'label': self.edge_label_func(edge, edge_attrs),
             }
             output.append(self.edge(edge[0], edge[1], attr))

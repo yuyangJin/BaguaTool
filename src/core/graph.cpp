@@ -17,10 +17,14 @@ Graph::Graph() {
   ipag_ = std::make_unique<type::graph_t>();
   // open attributes
   igraph_set_attribute_table(&igraph_cattribute_table);
+
+  this->graph_perf_data = new core::GraphPerfData();
 }
 
 Graph::~Graph() {
   igraph_destroy(&ipag_->graph);
+
+  delete this->graph_perf_data;
   // delete ipag_;
 }
 
@@ -519,5 +523,7 @@ void Graph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, voi
              /*in_callback=*/g_in_callback, /*out_callback=*/g_out_callback, /*extra=*/extra_wrapper);
   ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
 }
+
+GraphPerfData *Graph::GetGraphPerfData() { return this->graph_perf_data; }
 
 }  // namespace baguatool::core

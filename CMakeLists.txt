@@ -148,7 +148,7 @@ endif()
 
 if (ENABLE_EXAMPLE)
   add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
-  # add_subdirectory(${PROJECT_SOURCE_DIR}/example/reproduction/GraphPerf)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/example/project/GraphPerf)
 endif()
 
 if (ENABLE_TEST)

@@ -55,10 +55,7 @@ void traversal(baguatool::core::ProgramAbstractionGraph* pag, int vertex_id) {
   }
 }
 
-critical_path
-
-    int
-    main(int argc, char** argv) {
+int main(int argc, char** argv) {
   const char* graph_name = argv[1];
   baguatool::core::ProgramAbstractionGraph* mpag = new baguatool::core::ProgramAbstractionGraph();
   mpag->ReadGraphGML(graph_name);

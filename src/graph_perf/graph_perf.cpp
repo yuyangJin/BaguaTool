@@ -8,9 +8,9 @@ namespace baguatool::type {}
 
 namespace baguatool::graph_perf {
 
-GPerf::GPerf() { this->graph_perf_data = new core::GraphPerfData(); }
+GPerf::GPerf() { this->root_mpag = new core::ProgramAbstractionGraph(); }
 
-GPerf::~GPerf() { delete this->graph_perf_data; }
+GPerf::~GPerf() {}
 
 void GPerf::ReadStaticControlFlowGraphs(const char *dir_name) {
   // Get name of files in this directory
@@ -51,9 +51,7 @@ void GPerf::ReadStaticProgramCallGraph(const char *binary_name) {
   this->pcg->ReadGraphGML(static_pcg_file_name.c_str());
 }
 
-void GPerf::ReadDynamicProgramCallGraph(std::string perf_data_file) {
-  core::PerfData *perf_data = new core::PerfData();
-  perf_data->Read(perf_data_file.c_str());
+void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
   auto data_size = perf_data->GetVertexDataSize();
   dbg(data_size);
 
@@ -101,9 +99,9 @@ void GPerf::ReadDynamicProgramCallGraph(std::string perf_data_file) {
   }
 }
 
-void GPerf::GenerateProgramCallGraph(const char *binary_name, const char *perf_data_file) {
+void GPerf::GenerateProgramCallGraph(const char *binary_name, core::PerfData *perf_data) {
   this->ReadStaticProgramCallGraph(binary_name);
-  this->ReadDynamicProgramCallGraph(std::string(perf_data_file));
+  this->ReadDynamicProgramCallGraph(perf_data);
 }
 
 core::ProgramCallGraph *GPerf::GetProgramCallGraph() { return this->pcg; }
@@ -454,7 +452,48 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
   return;
 }  // function InterProceduralAnalysis
 
+void GPerf::StaticInterProceduralAnalysis() {
+  // Search root node , "name" is "main"
+  // std::map<std::string, ProgramAbstractionGraph *> func_name_2_pag;
+
+  for (auto &kv : this->func_pag_map) {
+    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+    auto pag = kv.second;
+    pag->SetGraphAttributeFlag("scanned", false);
+    if (strcmp(kv.first.c_str(), "main") == 0) {
+      this->root_pag = pag;
+      std::cout << "Find 'main'" << std::endl;
+      // break;
+    }
+  }
+
+  // DFS From root node
+  InterPAArg *arg = new InterPAArg();
+  arg->pcg = this->pcg;
+  arg->func_pag_map = &(this->func_pag_map);
+
+  // void (*ConnectCallerCalleePointer)(Graph *, int, void *) = &ConnectCallerCallee;
+  // dbg(this->root_pag->GetGraphAttributeString("name"));
+  this->root_pag->VertexTraversal(&ConnectCallerCallee, arg);
+
+  delete arg;
+
+  this->root_pag->VertexSortChild();
+
+  // this->root_pag->VertexSortChild();
+
+  for (auto &kv : this->func_pag_map) {
+    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+    auto pag = kv.second;
+    pag->RemoveGraphAttribute("scanned");
+  }
+
+  return;
+}  // function InterProceduralAnalysis
+
 void GPerf::GenerateProgramAbstractionGraph(core::PerfData *perf_data) { this->InterProceduralAnalysis(perf_data); }
+
+void GPerf::GenerateStaticProgramAbstractionGraph() { this->StaticInterProceduralAnalysis(); }
 
 void GPerf::SetProgramAbstractionGraph(core::ProgramAbstractionGraph *pag) { this->root_pag = pag; }
 
@@ -530,11 +569,12 @@ void GPerf::DataEmbedding(core::PerfData *perf_data) {
     // type::vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
     auto queried_vertex_id = GetVertexWithInterThreadAnalysis(thread_id, call_path);
     // dbg(queried_vertex_id);
-    type::perf_data_t data =
-        this->graph_perf_data->GetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id);
+    type::perf_data_t data = this->root_pag->GetGraphPerfData()->GetPerfData(
+        queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id);
     // dbg(data);
     data += value;
-    this->graph_perf_data->SetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id, thread_id, data);
+    this->root_pag->GetGraphPerfData()->SetPerfData(queried_vertex_id, perf_data->GetMetricName(), process_id,
+                                                    thread_id, data);
     FREE_CONTAINER(call_path);
   }
 
@@ -544,127 +584,6 @@ void GPerf::DataEmbedding(core::PerfData *perf_data) {
   FREE_CONTAINER(created_tid_2_callpath_and_tid);
 
 }  // function Dataembedding
-
-core::GraphPerfData *GPerf::GetGraphPerfData() { return this->graph_perf_data; }
-
-type::perf_data_t ReduceOperation(std::vector<type::perf_data_t> &perf_data, int num, string &op) {
-  if (num == 0) {
-    return 0.0;
-  }
-  if (!strcmp(op.c_str(), "AVG")) {
-    type::perf_data_t avg = 0.0;
-    for (int i = 0; i < num; i++) {
-      avg += perf_data[i];
-    }
-    avg /= (type::perf_data_t)num;
-    // dbg(avg);
-    return avg;
-  } else if (!strcmp(op.c_str(), "SUM")) {
-    type::perf_data_t sum = 0.0;
-    for (int i = 0; i < num; i++) {
-      sum += perf_data[i];
-    }
-    return sum;
-  } else {
-    return perf_data[0];
-  }
-}
-
-typedef struct ReducePerfDataArg {
-  // input
-  core::GraphPerfData *graph_perf_data = nullptr;
-  std::string metric;
-  std::string op;
-  // output
-  type::perf_data_t total_reduced_data = 0.0;
-} RPDArg;
-
-void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
-  RPDArg *arg = (RPDArg *)extra;
-  core::GraphPerfData *graph_perf_data = arg->graph_perf_data;
-  std::string metric(arg->metric);
-  std::string op(arg->op);
-
-  // TODO: (FIX) need to return list of procs
-  int num_procs = graph_perf_data->GetMetricsPerfDataProcsNum(vertex_id, metric);
-
-  std::vector<type::perf_data_t> im_reduced_data;
-
-  for (int i = 0; i < num_procs; i++) {
-    // type::perf_data_t* procs_perf_data = nullptr;
-    std::vector<type::perf_data_t> procs_perf_data;
-    graph_perf_data->GetProcsPerfData(vertex_id, metric, i, procs_perf_data);
-    // int num_thread = graph_perf_data->GetProcsPerfDataThreadNum(vertex_id, metric, i);
-    int num_thread = procs_perf_data.size();
-    dbg(num_thread);
-
-    if (num_thread > 0) {
-      im_reduced_data.push_back(ReduceOperation(procs_perf_data, num_thread, op));
-      // dbg(im_reduced_data[i]);
-    } else {
-      im_reduced_data.push_back(0.0);
-    }
-
-    FREE_CONTAINER(procs_perf_data);
-  }
-
-  type::perf_data_t reduced_data = ReduceOperation(im_reduced_data, num_procs, op);
-  // dbg(reduced_data);
-
-  FREE_CONTAINER(im_reduced_data);
-
-  pag->SetVertexAttributeString(std::string(metric + std::string("_") + op).c_str(), (type::vertex_t)vertex_id,
-                                std::to_string(reduced_data).c_str());
-
-  arg->total_reduced_data += reduced_data;
-}
-
-// Reduce each vertex's perf data
-type::perf_data_t GPerf::ReduceVertexPerfData(std::string &metric, std::string &op) {
-  RPDArg *arg = new RPDArg();
-  arg->graph_perf_data = this->graph_perf_data;
-  arg->metric = std::string(metric);
-  arg->op = std::string(op);
-  arg->total_reduced_data = 0.0;
-
-  this->root_pag->VertexTraversal(&ReducePerfData, arg);
-
-  type::perf_data_t total = arg->total_reduced_data;
-  delete arg;
-  return total;
-}
-
-typedef struct PerfDataToPercentArg {
-  // input
-  std::string new_metric;
-  std::string metric;
-  type::perf_data_t total;
-  // output
-  //...
-} PDTPArg;
-
-void PerfDataToPercent(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
-  PDTPArg *arg = (PDTPArg *)extra;
-  std::string new_metric(arg->new_metric);
-  std::string metric(arg->metric);
-  type::perf_data_t total = arg->total;
-
-  type::perf_data_t data = strtod(pag->GetVertexAttributeString(metric.c_str(), (type::vertex_t)vertex_id), NULL);
-  type::perf_data_t percent = data / total;
-  pag->SetVertexAttributeString(new_metric.c_str(), (type::vertex_t)vertex_id, std::to_string(percent).c_str());
-}
-
-// convert vertex's reduced data to percent
-void GPerf::ConvertVertexReducedDataToPercent(std::string &metric, type::perf_data_t total, std::string &new_metric) {
-  PDTPArg *arg = new PDTPArg();
-  arg->new_metric = std::string(new_metric);
-  arg->metric = std::string(metric);
-  arg->total = total;
-
-  this->root_pag->VertexTraversal(&PerfDataToPercent, arg);
-
-  delete arg;
-}
 
 struct pthread_expansion_arg_t {
   core::ProgramAbstractionGraph *mpag;
@@ -713,7 +632,7 @@ void out_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, vo
 }
 
 void GPerf::GenerateMultiThreadProgramAbstractionGraph() {
-  this->root_mpag = new core::ProgramAbstractionGraph();
+  // this->root_mpag = new core::ProgramAbstractionGraph();
   this->root_mpag->GraphInit("Multi-thread Program Abstraction Graph");
 
   struct pthread_expansion_arg_t *arg = new (struct pthread_expansion_arg_t)();
@@ -730,23 +649,63 @@ void GPerf::GenerateMultiThreadProgramAbstractionGraph() {
   delete arg;
 }
 
-void GPerf::GenerateMultiProgramAbstractionGraph() {
-  root_mpag = new core::ProgramAbstractionGraph();
-  root_mpag->GraphInit("Multi-process Program Abstraction Graph");
+struct pre_order_traversal_t {
+  std::vector<type::vertex_t> *seq;
+};
 
-  std::vector<type::vertex_t> pre_order_vertex_seq;
-  root_pag->PreOrderTraversal(0, pre_order_vertex_seq);
+void in_pre_order_traversal(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  struct pre_order_traversal_t *arg = (struct pre_order_traversal_t *)extra;
+  std::vector<type::vertex_t> *seq = arg->seq;
 
-  type::vertex_t last_new_vertex_id = -1;
-  for (auto &vertex_id : pre_order_vertex_seq) {
-    type::vertex_t new_vertex_id = root_mpag->AddVertex();
-    root_mpag->CopyVertex(new_vertex_id, root_pag, vertex_id);
-    if (last_new_vertex_id != -1) {
-      root_mpag->AddEdge(last_new_vertex_id, new_vertex_id);
-    }
-    last_new_vertex_id = new_vertex_id;
-  }
+  seq->push_back(vertex_id);
 }
+
+void GPerf::GenerateMultiProcessProgramAbstractionGraph(int num_procs) {
+  this->root_mpag->GraphInit("Multi-process Program Abstraction Graph");
+
+  /** Pre-order traversal */
+  struct pre_order_traversal_t *arg = new (struct pre_order_traversal_t)();
+  std::vector<type::vertex_t> *pre_order_vertex_seq = new std::vector<type::vertex_t>();
+  arg->seq = pre_order_vertex_seq;
+  this->root_pag->DFS(0, in_pre_order_traversal, nullptr, arg);
+
+  /** Build mpag and mpag's graph perf data */
+
+  // First add a root vertex
+  type::vertex_t root_vertex_id = this->root_mpag->AddVertex();
+  this->root_mpag->SetVertexBasicInfo(root_vertex_id, type::FUNC_NODE, "root");
+  this->root_mpag->SetVertexAttributeNum(
+      "id", root_vertex_id, 0);  // I don't know why it turns to an unkown number if I don't set id to 0 manully.
+
+  // Build for each process
+  auto pag_graph_perf_data = this->root_pag->GetGraphPerfData();
+  auto mpag_graph_perf_data = this->root_mpag->GetGraphPerfData();
+  for (int i = 0; i < num_procs; i++) {
+    type::vertex_t last_new_vertex_id = root_vertex_id;
+    for (auto vertex_id : *pre_order_vertex_seq) {
+      type::vertex_t new_vertex_id = root_mpag->AddVertex();
+      this->root_mpag->CopyVertex(new_vertex_id, root_pag, vertex_id);
+      if (last_new_vertex_id != -1) {
+        this->root_mpag->AddEdge(last_new_vertex_id, new_vertex_id);
+      }
+      // Copy process i perf data of vertex in pag to process i perf data of new vertex in mpag
+      std::vector<std::string> metrics;
+      pag_graph_perf_data->GetVertexPerfDataMetrics(vertex_id, metrics);
+      for (auto metric : metrics) {
+        std::map<type::thread_t, type::perf_data_t> proc_perf_data;
+        pag_graph_perf_data->GetProcsPerfData(vertex_id, metric, i, proc_perf_data);
+        mpag_graph_perf_data->SetProcsPerfData(new_vertex_id, metric, i, proc_perf_data);
+      }
+      last_new_vertex_id = new_vertex_id;
+    }
+  }
+
+  FREE_CONTAINER(*pre_order_vertex_seq);
+  delete pre_order_vertex_seq;
+  delete arg;
+}
+
+void GPerf::GenerateMultiProgramAbstractionGraph() {}
 
 core::ProgramAbstractionGraph *GPerf::GetMultiProgramAbstractionGraph() { return root_mpag; }
 

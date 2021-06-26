@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
   hybrid_analysis->ReadFunctionAbstractionGraphs(pag_dir_name);
   // hybrid_analysis->ReadStaticProgramCallGraph(bin_name);
-  hybrid_analysis->GenerateProgramCallGraph(bin_name, perf_data_file_name);
+  hybrid_analysis->GenerateProgramCallGraph(bin_name, perf_data);
   hybrid_analysis->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 
   hybrid_analysis->GenerateProgramAbstractionGraph(perf_data);
@@ -34,12 +34,12 @@ int main(int argc, char** argv) {
   hybrid_analysis->DataEmbedding(perf_data);
   std::string metric("TOT_CYC");
   std::string op("SUM");
-  baguatool::type::perf_data_t total = hybrid_analysis->ReduceVertexPerfData(metric, op);
+  baguatool::type::perf_data_t total = pag->ReduceVertexPerfData(metric, op);
   std::string avg_metric("TOT_CYC_SUM");
   std::string new_metric("CYCAVGPERCENT");
-  hybrid_analysis->ConvertVertexReducedDataToPercent(avg_metric, total, new_metric);
+  pag->ConvertVertexReducedDataToPercent(avg_metric, total, new_metric);
 
-  auto graph_perf_data = hybrid_analysis->GetGraphPerfData();
+  auto graph_perf_data = hybrid_analysis->GetProgramAbstractionGraph()->GetGraphPerfData();
   std::string output_file_name_str("output.json");
   graph_perf_data->Dump(output_file_name_str);
 

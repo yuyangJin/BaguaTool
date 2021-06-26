@@ -1,4 +1,5 @@
 add_executable(pag_generation pag_generation.cpp)
+add_executable(static_pag_generation static_pag_generation.cpp)
 add_executable(dfs_test dfs_test.cpp)
 # add_executable(static_analysis_example static_analysis_example.cpp)
 add_executable(read_perf_data read_perf_data.cpp)
@@ -11,6 +12,7 @@ add_executable(pthread_mpag_generation_example pthread_mpag_generation_example.c
 add_executable(critical_path critical_path.cpp)
 
 target_link_libraries(pag_generation PRIVATE baguatool)
+target_link_libraries(static_pag_generation PRIVATE baguatool)
 target_link_libraries(dfs_test PRIVATE baguatool)
 #target_link_libraries(static_analysis_example PRIVATE baguatool)
 #target_link_libraries(single_process_sampler PRIVATE baguatool)

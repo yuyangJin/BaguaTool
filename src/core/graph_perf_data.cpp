@@ -83,11 +83,15 @@ void GraphPerfData::GetVertexPerfDataMetrics(type::vertex_t vertex_id, std::vect
   return;
 }
 
-int GraphPerfData::GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::string& metric) {
+int GraphPerfData::GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::string& metric,
+                                              std::vector<type::procs_t>& procs_vec) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
 
   int size = this->j_perf_data[vertex_id_str][metric_str].size();
+  for (auto& procs_data : this->j_perf_data[vertex_id_str][metric_str].items()) {
+    procs_vec.push_back(atoi(procs_data.key().c_str()));
+  }
 
   return size;
 }
@@ -104,23 +108,25 @@ int GraphPerfData::GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::stri
 
 // type::perf_data_t** GraphPerfData::GetMetricPerfData(type::vertex_t vertex_id, std::string& metric) {}
 void GraphPerfData::GetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
-                                     std::vector<type::perf_data_t>& proc_perf_data) {
+                                     std::map<type::thread_t, type::perf_data_t>& proc_perf_data) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
   std::string process_id_str = std::to_string(procs_id);
   std::string thread_id_str;
+  type::thread_t thread_id;
 
   for (auto& thread_perf_data : j_perf_data[vertex_id_str][metric_str][process_id_str].items()) {
     thread_id_str = std::string(thread_perf_data.key());
-
-    if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
-      proc_perf_data.push_back(
-          this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>());
-      // dbg(proc_perf_data[i]);
-    } else {
-      proc_perf_data.push_back(0.0);
-    }
-    std::string(thread_perf_data.key());
+    thread_id = atoi(thread_id_str.c_str());
+    dbg(thread_perf_data.key(), thread_id_str, thread_id);
+    // if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
+    //   proc_perf_data[thread_id] =
+    //       this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>();
+    //   // dbg(proc_perf_data[i]);
+    // } else {
+    //   proc_perf_data[thread_id] = 0.0;
+    // }
+    proc_perf_data[thread_id] = thread_perf_data.value();
   }
 
   // int size = this->j_perf_data[vertex_id_str][metric_str][process_id_str].size();
@@ -140,6 +146,21 @@ void GraphPerfData::GetProcsPerfData(type::vertex_t vertex_id, std::string& metr
   //     }
   //   }
   // }
+  return;
+}
+
+void GraphPerfData::SetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                                     std::map<type::thread_t, type::perf_data_t>& proc_perf_data) {
+  std::string vertex_id_str = std::to_string(vertex_id);
+  std::string metric_str = std::string(metric);
+  std::string process_id_str = std::to_string(procs_id);
+  std::string thread_id_str;
+  // type::thread_t thread_id;
+
+  for (auto& kv : proc_perf_data) {
+    thread_id_str = std::to_string(kv.first);
+    this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str] = kv.second;
+  }
   return;
 }
 

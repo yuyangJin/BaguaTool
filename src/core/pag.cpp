@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <map>
+#include <string>
 
 #include <vector>
 #include "baguatool.h"
@@ -177,6 +178,137 @@ void ProgramAbstractionGraph::DFS(type::vertex_t root,
              /*father=*/0, /*dist=*/0,
              /*in_callback=*/pag_in_callback, /*out_callback=*/pag_out_callback, /*extra=*/extra_wrapper);
   ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
+}
+
+type::perf_data_t ReduceOperation(std::vector<type::perf_data_t> &perf_data, int num, std::string &op) {
+  if (num == 0) {
+    return 0.0;
+  }
+  if (!strcmp(op.c_str(), "AVG")) {
+    type::perf_data_t avg = 0.0;
+    for (int i = 0; i < num; i++) {
+      avg += perf_data[i];
+    }
+    avg /= (type::perf_data_t)num;
+    // dbg(avg);
+    return avg;
+  } else if (!strcmp(op.c_str(), "SUM")) {
+    type::perf_data_t sum = 0.0;
+    for (int i = 0; i < num; i++) {
+      sum += perf_data[i];
+    }
+    dbg(num, sum);
+    return sum;
+  } else {
+    return perf_data[0];
+  }
+}
+
+typedef struct ReducePerfDataArg {
+  // input
+  core::GraphPerfData *graph_perf_data = nullptr;
+  std::string metric;
+  std::string op;
+  // output
+  type::perf_data_t total_reduced_data = 0.0;
+} RPDArg;
+
+void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  RPDArg *arg = (RPDArg *)extra;
+  core::GraphPerfData *graph_perf_data = arg->graph_perf_data;
+  std::string metric(arg->metric);
+  std::string op(arg->op);
+
+  dbg(vertex_id);
+
+  // TODO: (FIX) need to return list of procs
+  std::vector<type::procs_t> procs_list;
+  int num_procs = graph_perf_data->GetMetricsPerfDataProcsNum(vertex_id, metric, procs_list);
+
+  std::vector<type::perf_data_t> im_reduced_data;
+
+  for (int i = 0; i < num_procs; i++) {
+    // type::perf_data_t* procs_perf_data = nullptr;
+    std::map<type::thread_t, type::perf_data_t> procs_perf_data_map;
+    graph_perf_data->GetProcsPerfData(vertex_id, metric, procs_list[i], procs_perf_data_map);
+    // int num_thread = graph_perf_data->GetProcsPerfDataThreadNum(vertex_id, metric, i);
+    int num_thread = procs_perf_data_map.size();
+    dbg(num_thread);
+    std::vector<type::perf_data_t> procs_perf_data;
+
+    if (num_thread > 0) {
+      for (auto &kv : procs_perf_data_map) {
+        procs_perf_data.push_back(kv.second);
+      }
+      im_reduced_data.push_back(ReduceOperation(procs_perf_data, num_thread, op));
+      dbg(im_reduced_data[i]);
+    } else {
+      im_reduced_data.push_back(0.0);
+    }
+
+    FREE_CONTAINER(procs_perf_data);
+  }
+
+  type::perf_data_t reduced_data = ReduceOperation(im_reduced_data, num_procs, op);
+  if (num_procs) {
+    dbg(num_procs, reduced_data);
+  }
+
+  FREE_CONTAINER(im_reduced_data);
+
+  pag->SetVertexAttributeString(std::string(metric + std::string("_") + op).c_str(), (type::vertex_t)vertex_id,
+                                std::to_string(reduced_data).c_str());
+
+  arg->total_reduced_data += reduced_data;
+  FREE_CONTAINER(procs_list);
+}
+
+// Reduce each vertex's perf data
+type::perf_data_t ProgramAbstractionGraph::ReduceVertexPerfData(std::string &metric, std::string &op) {
+  RPDArg *arg = new RPDArg();
+  arg->graph_perf_data = this->GetGraphPerfData();
+  arg->metric = std::string(metric);
+  arg->op = std::string(op);
+  arg->total_reduced_data = 0.0;
+
+  this->VertexTraversal(&ReducePerfData, arg);
+
+  type::perf_data_t total = arg->total_reduced_data;
+  delete arg;
+  return total;
+}
+
+typedef struct PerfDataToPercentArg {
+  // input
+  std::string new_metric;
+  std::string metric;
+  type::perf_data_t total;
+  // output
+  //...
+} PDTPArg;
+
+void PerfDataToPercent(ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  PDTPArg *arg = (PDTPArg *)extra;
+  std::string new_metric(arg->new_metric);
+  std::string metric(arg->metric);
+  type::perf_data_t total = arg->total;
+
+  type::perf_data_t data = strtod(pag->GetVertexAttributeString(metric.c_str(), (type::vertex_t)vertex_id), NULL);
+  type::perf_data_t percent = data / total;
+  pag->SetVertexAttributeString(new_metric.c_str(), (type::vertex_t)vertex_id, std::to_string(percent).c_str());
+}
+
+// convert vertex's reduced data to percent
+void ProgramAbstractionGraph::ConvertVertexReducedDataToPercent(std::string &metric, type::perf_data_t total,
+                                                                std::string &new_metric) {
+  PDTPArg *arg = new PDTPArg();
+  arg->new_metric = std::string(new_metric);
+  arg->metric = std::string(metric);
+  arg->total = total;
+
+  this->VertexTraversal(&PerfDataToPercent, arg);
+
+  delete arg;
 }
 
 struct hot_spot_t {

@@ -105,7 +105,7 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
   // Get the top addr of the stack
   unsigned long long addr = call_path_stack.top();
 
-  dbg(addr);
+  // dbg(addr);
 
   if (addr > 0x40000000) {
     call_path_stack.pop();
@@ -117,7 +117,7 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
   type::vertex_t child_vertex = -1;
   while (1) {
     child_vertex = GetChildVertexWithAddr(found_vertex, addr);
-    dbg(child_vertex);
+    // dbg(child_vertex);
 
     // if child_vertex is not found
     if (-1 == child_vertex) {

@@ -23,6 +23,8 @@ typedef int edge_t;                    /**<edge id type (int)*/
 typedef unsigned long long int addr_t; /**<address type (unsigned long long int)*/
 typedef double perf_data_t;            /**<performance data type (double) */
 typedef std::stack<type::addr_t> call_path_t;
+typedef int thread_t;
+typedef int procs_t;
 }
 
 namespace core {
@@ -32,6 +34,66 @@ namespace core {
 // typedef int type::vertex_t;
 // typedef int type::edge_t;
 
+class GraphPerfData {
+ private:
+  json j_perf_data; /**<[json format] Record performance data in a graph*/
+
+ public:
+  /** Default Constructor
+   */
+  GraphPerfData();
+  /** Default Destructor
+   */
+  ~GraphPerfData();
+
+  /** Read json file (Input)
+   * @param file_name - name of input file
+   */
+  void Read(std::string& file_name);
+
+  /** Dump as json file (Output)
+   * @param file_name - name of output file
+   */
+  void Dump(std::string& file_name);
+
+  /** Record a piece of data of a specific vertex, including metric, process id, thread id, and value.
+   * @param vertex_id - id of the specific vertex
+   * @param metric - metric name of this value
+   * @param procs_id - process id
+   * @param thread_id - thread id
+   * @param value - value
+   */
+  void SetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id, int thread_id,
+                   baguatool::type::perf_data_t value);
+
+  /** Query the value of a piece of data of a specific vertex through metric, process id, thread id.
+   * @param vertex_id - id of the specific vertex
+   * @param metric - metric name of this value
+   * @param procs_id - process id
+   * @param thread_id - thread id
+   * @return value
+   */
+  baguatool::type::perf_data_t GetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id, int thread_id);
+
+  /** Query if a specific vertex has the input metric
+   * @param vertex_id - id of the specific vertex
+   * @param metric - metric name
+   * @return true for existance, false for
+   */
+  bool HasMetric(type::vertex_t vertex_id, std::string& metric);
+
+  /** Query metric list of
+   */
+  void GetVertexPerfDataMetrics(type::vertex_t vertex_id, std::vector<std::string>&);
+  int GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::string& metric, std::vector<type::procs_t>& procs_list);
+  int GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id);
+  void GetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                        std::map<type::thread_t, type::perf_data_t>& proc_perf_data);
+  void SetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                        std::map<type::thread_t, type::perf_data_t>& proc_perf_data);
+
+};  // class GraphPerfData
+
 /** @brief Wrapper class of igraph. Provide basic graph operations.
     @author Yuyang Jin, PACMAN, Tsinghua University
     @date March 2021
@@ -40,6 +102,7 @@ class Graph {
  protected:
   std::unique_ptr<type::graph_t> ipag_; /**<igraph_t wrapper struct */
   int cur_vertex_num;                   /**<initial the number of vertices in this graph */
+  GraphPerfData* graph_perf_data;       /**<performance data in a graph*/
 
  public:
   /** Constructor. Create an graph and enable graph attributes.
@@ -360,6 +423,8 @@ class Graph {
   */
   void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph*, int, void*),
            void (*OUT_CALL_BACK_FUNC)(Graph*, int, void*), void* extra);
+
+  GraphPerfData* GetGraphPerfData();
 };
 
 class ProgramGraph : public Graph {
@@ -480,6 +545,22 @@ class ProgramAbstractionGraph : public ProgramGraph {
   */
   void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*),
            void (*OUT_CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
+
+  /** Reduce performance data of each process and thread of a speific metric for each vertex (GraphPerfData)
+   * @param metric - a specfic metric
+   * @param op - reduce operation
+   * @return what????
+   */
+  baguatool::type::perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
+
+  /** Convert performance data to percentage format for each vertex (total value as 100 percent).
+   * @param metric - a specfic metric
+   * @param total - total value
+   * @param new_metric - new metric for record percentage format data
+   */
+  void ConvertVertexReducedDataToPercent(std::string& metric, baguatool::type::perf_data_t total,
+                                         std::string& new_metric);
+
   /** PreserveHotVertices
    *
   */
@@ -683,64 +764,6 @@ class PerfData {
   int GetEdgeDataDestThreadId(unsigned long int data_index);
 };
 
-class GraphPerfData {
- private:
-  json j_perf_data; /**<[json format] Record performance data in a graph*/
-
- public:
-  /** Default Constructor
-   */
-  GraphPerfData();
-  /** Default Destructor
-   */
-  ~GraphPerfData();
-
-  /** Read json file (Input)
-   * @param file_name - name of input file
-   */
-  void Read(std::string& file_name);
-
-  /** Dump as json file (Output)
-   * @param file_name - name of output file
-   */
-  void Dump(std::string& file_name);
-
-  /** Record a piece of data of a specific vertex, including metric, process id, thread id, and value.
-   * @param vertex_id - id of the specific vertex
-   * @param metric - metric name of this value
-   * @param procs_id - process id
-   * @param thread_id - thread id
-   * @param value - value
-   */
-  void SetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id, int thread_id,
-                   baguatool::type::perf_data_t value);
-
-  /** Query the value of a piece of data of a specific vertex through metric, process id, thread id.
-   * @param vertex_id - id of the specific vertex
-   * @param metric - metric name of this value
-   * @param procs_id - process id
-   * @param thread_id - thread id
-   * @return value
-   */
-  baguatool::type::perf_data_t GetPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id, int thread_id);
-
-  /** Query if a specific vertex has the input metric
-   * @param vertex_id - id of the specific vertex
-   * @param metric - metric name
-   * @return true for existance, false for
-   */
-  bool HasMetric(type::vertex_t vertex_id, std::string& metric);
-
-  /** Query metric list of
-   */
-  void GetVertexPerfDataMetrics(type::vertex_t vertex_id, std::vector<std::string>&);
-  int GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::string& metric);
-  int GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id);
-  void GetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
-                        std::vector<baguatool::type::perf_data_t>& proc_perf_data);
-
-};  // class GraphPerfData
-
 // class HybridAnalysis {
 //  private:
 //   std::map<std::string, ControlFlowGraph*> func_cfg_map; /**<control-flow graphs for each function*/
@@ -822,7 +845,6 @@ class GPerf {
       func_pag_map; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
   core::ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
   core::ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
-  core::GraphPerfData* graph_perf_data;     /**<performance data in a graph*/
 
  public:
   /** Constructor.
@@ -862,15 +884,15 @@ class GPerf {
 
   /** Read dynamic program call graph. This function includes two phases: indirect call relationship analysis, as well
    * as pthread_create and its created function.
-   * @param file_name - file name of performance data
+   * @param perf_data - performance data
   */
-  void ReadDynamicProgramCallGraph(std::string file_name);
+  void ReadDynamicProgramCallGraph(core::PerfData* perf_data);
 
   /** Generate complete program call graph through hybrid static-dynamic analysis.
    * @param binary_name - binary name
-   * @param perf_data_file_name - input file name of performance data
+   * @param perf_data - performance data
    */
-  void GenerateProgramCallGraph(const char* binary_name, const char* perf_data_file_name);
+  void GenerateProgramCallGraph(const char* binary_name, core::PerfData* perf_data);
 
   /** Get complete program call graph.
    * @return complete program call graph
@@ -919,11 +941,15 @@ class GPerf {
   */
   void InterProceduralAnalysis(core::PerfData* perf_data);
 
+  void StaticInterProceduralAnalysis();
+
   /** Generate an overall program abstraction graph through intra-procedural analysis and inter-procedural analysis.
    * param binary_name - name of binary for static analysis
    * @param perf_data - file name of performance data for dynamic analysis
   */
   void GenerateProgramAbstractionGraph(core::PerfData* perf_data);
+
+  void GenerateStaticProgramAbstractionGraph();
 
   /** Set a input pag as program abstraction graph. This function is for reusing pag after intra-procedural and
    * inter-procedural analysis.
@@ -950,27 +976,14 @@ class GPerf {
   */
   void DataEmbedding(core::PerfData* perf_data);
 
-  /** Get performance data on the graph (GraphPerfData)
-   * @return GraphPerfData
-   */
-  core::GraphPerfData* GetGraphPerfData();
-
-  /** Reduce performance data of each process and thread of a speific metric for each vertex (GraphPerfData)
-   * @param metric - a specfic metric
-   * @param op - reduce operation
-   * @return what????
-   */
-  baguatool::type::perf_data_t ReduceVertexPerfData(std::string& metric, std::string& op);
-
-  /** Convert performance data to percentage format for each vertex (total value as 100 percent).
-   * @param metric - a specfic metric
-   * @param total - total value
-   * @param new_metric - new metric for record percentage format data
-   */
-  void ConvertVertexReducedDataToPercent(std::string& metric, baguatool::type::perf_data_t total,
-                                         std::string& new_metric);
+  // /** Get performance data on the graph (GraphPerfData)
+  //  * @return GraphPerfData
+  //  */
+  // core::GraphPerfData* GetGraphPerfData();
 
   void GenerateMultiThreadProgramAbstractionGraph();
+
+  void GenerateMultiProcessProgramAbstractionGraph(int num_procs);
 
   /** Generate multi-thread or multi-process program abstraction graph.
    *

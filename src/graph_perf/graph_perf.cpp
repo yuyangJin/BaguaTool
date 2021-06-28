@@ -42,6 +42,10 @@ core::ControlFlowGraph *GPerf::GetControlFlowGraph(std::string func_name) { retu
 
 std::map<std::string, core::ControlFlowGraph *> &GPerf::GetControlFlowGraphs() { return this->func_cfg_map; }
 
+void SetCallTypeAsStatic(core::ProgramCallGraph *pcg, int edge_id, void *extra) {
+  pcg->SetEdgeType(edge_id, type::STA_CALL_EDGE);  // static
+}
+
 void GPerf::ReadStaticProgramCallGraph(const char *binary_name) {
   // Get name of static program call graph's file
   std::string static_pcg_file_name = std::string(binary_name) + std::string(".pcg");
@@ -49,6 +53,7 @@ void GPerf::ReadStaticProgramCallGraph(const char *binary_name) {
   // Read a ProgramCallGraph from each file
   this->pcg = new core::ProgramCallGraph();
   this->pcg->ReadGraphGML(static_pcg_file_name.c_str());
+  this->pcg->EdgeTraversal(&SetCallTypeAsStatic, nullptr);
 }
 
 void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
@@ -94,7 +99,10 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
       // if (call_addr == 0x408037 || callee_addr == 0x408b59) {
       //   dbg(call_addr, callee_addr);
       // }
-      this->pcg->AddEdgeWithAddr(call_addr, callee_addr);
+      auto edge_id = this->pcg->AddEdgeWithAddr(call_addr, callee_addr);
+      if (edge_id != -1) {
+        this->pcg->SetEdgeType(edge_id, type::DYN_CALL_EDGE);  // dynamic
+      }
     }
   }
 }

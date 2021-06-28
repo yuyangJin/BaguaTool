@@ -7,6 +7,32 @@ namespace baguatool::core {
 ProgramCallGraph::ProgramCallGraph() {}
 ProgramCallGraph::~ProgramCallGraph() {}
 
+void ProgramCallGraph::EdgeTraversal(void (*CALL_BACK_FUNC)(ProgramCallGraph *, int, void *), void *extra) {
+  igraph_es_t es;
+  igraph_eit_t eit;
+  // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
+  // dbg(this->GetGraphAttributeString("name"));
+
+  igraph_es_all(&es, IGRAPH_EDGEORDER_ID);
+  igraph_eit_create(&(this->ipag_->graph), es, &eit);
+  while (!IGRAPH_EIT_END(eit)) {
+    // Get edge id
+    type::edge_t edge_id = (type::edge_t)IGRAPH_EIT_GET(eit);
+    // printf("Traverse %d\n", edge_id);
+    // dbg(edge_id);
+
+    // Call user-defined function
+    (*CALL_BACK_FUNC)(this, edge_id, extra);
+
+    IGRAPH_EIT_NEXT(eit);
+  }
+  // printf("\n");
+
+  igraph_eit_destroy(&eit);
+  igraph_es_destroy(&es);
+  // printf("Function %s End\n", this->GetGraphAttributeString("name"));
+}
+
 // int ProgramCallGraph::SetVertexBasicInfo(const type::vertex_t vertex_id, const int vertex_type, const char
 // *vertex_name) {
 //   //

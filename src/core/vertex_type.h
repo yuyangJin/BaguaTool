@@ -18,6 +18,8 @@ enum vertex_type_t {
   LOOP_NODE = -1,
   MPI_NODE = 1
 };
+
+enum edge_type_t { STA_CALL_EDGE = -102, DYN_CALL_EDGE = -101, NONE_EDGE_TYPE = -100 };
 }
 
 #endif

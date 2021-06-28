@@ -96,12 +96,16 @@ int GraphPerfData::GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::str
   return size;
 }
 
-int GraphPerfData::GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id) {
+int GraphPerfData::GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                                             std::vector<type::thread_t>& thread_vec) {
   std::string vertex_id_str = std::to_string(vertex_id);
   std::string metric_str = std::string(metric);
   std::string process_id_str = std::to_string(procs_id);
 
   int size = this->j_perf_data[vertex_id_str][metric_str][process_id_str].size();
+  for (auto& thread_data : this->j_perf_data[vertex_id_str][metric_str].items()) {
+    thread_vec.push_back(atoi(thread_data.key().c_str()));
+  }
 
   return size;
 }

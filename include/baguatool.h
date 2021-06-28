@@ -86,7 +86,8 @@ class GraphPerfData {
    */
   void GetVertexPerfDataMetrics(type::vertex_t vertex_id, std::vector<std::string>&);
   int GetMetricsPerfDataProcsNum(type::vertex_t vertex_id, std::string& metric, std::vector<type::procs_t>& procs_list);
-  int GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id);
+  int GetProcsPerfDataThreadNum(type::vertex_t vertex_id, std::string& metric, int procs_id,
+                                std::vector<type::thread_t>& thread_vec);
   void GetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
                         std::map<type::thread_t, type::perf_data_t>& proc_perf_data);
   void SetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
@@ -460,6 +461,26 @@ class ProgramGraph : public Graph {
    */
   int GetVertexType(type::vertex_t vertex_id);
 
+  /** Set type of an edge.
+   * @param edge_id - id of the target edge
+   * @param edge_type - type of the target edge
+   * @return 0 is success
+   */
+  int SetEdgeType(const type::edge_t edge_id, const int edge_type);
+
+  /** Get the type of an edge.
+   * @param edge_id - id of the edge
+   * @return type of the edge
+   */
+  int GetEdgeType(type::edge_t edge_id);
+
+  /** Get the type of an edge (src vertex, dest vertex).
+   * @param src_vertex_id - id of the source vertex
+   * @param dest_vertex_id - id of the destination vertex
+   * @return type of the edge
+   */
+  int GetEdgeType(type::vertex_t src_vertex_id, type::vertex_t dest_vertex_id);
+
   /** Get the entry address of a specific vertex
    * @param vertex_id - id of the specific vertex
    * @return entry address of the specific vertex
@@ -522,6 +543,14 @@ class ProgramGraph : public Graph {
    * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
    */
   void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
+
+  /** [Graph Algorithm] Traverse all edges and execute CALL_BACK_FUNC when accessing each edge.
+   * @param CALL_BACK_FUNC - callback function when an edge is accessed. The input parameters of this function contain
+   * a pointer to the graph being traversed, id of the accessed edge, and an extra pointer for developers to pass more
+   * parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
+   */
+  void EdgeTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
 };
 
 class ProgramAbstractionGraph : public ProgramGraph {
@@ -540,6 +569,15 @@ class ProgramAbstractionGraph : public ProgramGraph {
    * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
    */
   void VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
+
+  /** [Graph Algorithm] Traverse all edges and execute CALL_BACK_FUNC when accessing each edge.
+   * @param CALL_BACK_FUNC - callback function when an edge is accessed. The input parameters of this function contain
+   * a pointer to the graph being traversed, id of the accessed edge, and an extra pointer for developers to pass more
+   * parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
+   */
+  void EdgeTraversal(void (*CALL_BACK_FUNC)(ProgramAbstractionGraph*, int, void*), void* extra);
+
   /** DFS
    *
   */
@@ -587,6 +625,14 @@ class ProgramCallGraph : public ProgramGraph {
   /** Default Destructor
    */
   ~ProgramCallGraph();
+
+  /** [Graph Algorithm] Traverse all edges and execute CALL_BACK_FUNC when accessing each edge.
+   * @param CALL_BACK_FUNC - callback function when an edge is accessed. The input parameters of this function contain
+   * a pointer to the graph being traversed, id of the accessed edge, and an extra pointer for developers to pass more
+   * parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
+   */
+  void EdgeTraversal(void (*CALL_BACK_FUNC)(ProgramCallGraph*, int, void*), void* extra);
 };
 
 typedef struct VERTEX_DATA_STRUCT VDS;

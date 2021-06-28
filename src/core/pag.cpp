@@ -197,7 +197,7 @@ type::perf_data_t ReduceOperation(std::vector<type::perf_data_t> &perf_data, int
     for (int i = 0; i < num; i++) {
       sum += perf_data[i];
     }
-    dbg(num, sum);
+    // dbg(num, sum);
     return sum;
   } else {
     return perf_data[0];
@@ -219,7 +219,7 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
   std::string metric(arg->metric);
   std::string op(arg->op);
 
-  dbg(vertex_id);
+  // dbg(vertex_id);
 
   // TODO: (FIX) need to return list of procs
   std::vector<type::procs_t> procs_list;
@@ -233,7 +233,7 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
     graph_perf_data->GetProcsPerfData(vertex_id, metric, procs_list[i], procs_perf_data_map);
     // int num_thread = graph_perf_data->GetProcsPerfDataThreadNum(vertex_id, metric, i);
     int num_thread = procs_perf_data_map.size();
-    dbg(num_thread);
+    // dbg(num_thread);
     std::vector<type::perf_data_t> procs_perf_data;
 
     if (num_thread > 0) {
@@ -241,7 +241,7 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
         procs_perf_data.push_back(kv.second);
       }
       im_reduced_data.push_back(ReduceOperation(procs_perf_data, num_thread, op));
-      dbg(im_reduced_data[i]);
+      // dbg(im_reduced_data[i]);
     } else {
       im_reduced_data.push_back(0.0);
     }
@@ -250,9 +250,9 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
   }
 
   type::perf_data_t reduced_data = ReduceOperation(im_reduced_data, num_procs, op);
-  if (num_procs) {
-    dbg(num_procs, reduced_data);
-  }
+  // if (num_procs) {
+  //   dbg(num_procs, reduced_data);
+  // }
 
   FREE_CONTAINER(im_reduced_data);
 
@@ -342,9 +342,9 @@ void out_func(baguatool::core::ProgramAbstractionGraph *pag, int vertex_id, void
     }
   }
 
-  dbg(vertex_id, metric_name,
-      strtod(pag->GetVertexAttributeString(std::string(metric_name).c_str(), (type::vertex_t)vertex_id), NULL),
-      preserve_flag);  //, extra_->preserve);
+  // dbg(vertex_id, metric_name,
+  //     strtod(pag->GetVertexAttributeString(std::string(metric_name).c_str(), (type::vertex_t)vertex_id), NULL),
+  //     preserve_flag);  //, extra_->preserve);
 
   pag->SetVertexAttributeFlag("preserve", vertex_id, preserve_flag);
 }

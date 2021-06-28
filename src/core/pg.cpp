@@ -36,6 +36,33 @@ void ProgramGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramGraph *, int, v
   // printf("Function %s End\n", this->GetGraphAttributeString("name"));
 }
 
+void ProgramGraph::EdgeTraversal(void (*CALL_BACK_FUNC)(ProgramGraph *, int, void *), void *extra) {
+  // this->DeleteExtraTailVertices();
+  igraph_es_t es;
+  igraph_eit_t eit;
+  // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
+  // dbg(this->GetGraphAttributeString("name"));
+
+  igraph_es_all(&es, IGRAPH_EDGEORDER_ID);
+  igraph_eit_create(&(this->ipag_->graph), es, &eit);
+  while (!IGRAPH_EIT_END(eit)) {
+    // Get vector id
+    type::edge_t edge_id = (type::edge_t)IGRAPH_EIT_GET(eit);
+    // printf("Traverse %d\n", vertex_id);
+    // dbg(vertex_id);
+
+    // Call user-defined function
+    (*CALL_BACK_FUNC)(this, edge_id, extra);
+
+    IGRAPH_EIT_NEXT(eit);
+  }
+  // printf("\n");
+
+  igraph_eit_destroy(&eit);
+  igraph_es_destroy(&es);
+  // printf("Function %s End\n", this->GetGraphAttributeString("name"));
+}
+
 int ProgramGraph::SetVertexBasicInfo(const type::vertex_t vertex_id, const int vertex_type, const char *vertex_name) {
   //
   // SetVertexAttributeNum("type", vertex_id, (igraph_real_t)vertex_type);
@@ -51,9 +78,26 @@ int ProgramGraph::SetVertexDebugInfo(const type::vertex_t vertex_id, const int e
   return 0;
 }
 
-int ProgramGraph::GetVertexType(type::vertex_t vertex) {
-  return this->GetVertexAttributeNum("type", vertex);
+int ProgramGraph::GetVertexType(type::vertex_t vertex_id) {
+  return this->GetVertexAttributeNum("type", vertex_id);
 }  // function GetVertexType
+
+int ProgramGraph::SetEdgeType(const type::edge_t edge_id, const int edge_type) {
+  this->SetEdgeAttributeNum("type", edge_id, edge_type);
+  return 0;
+}
+
+int ProgramGraph::GetEdgeType(type::edge_t edge_id) {
+  return this->GetEdgeAttributeNum("type", edge_id);
+}  // function GetEdgeType
+
+int ProgramGraph::GetEdgeType(type::vertex_t src_vertex_id, type::vertex_t dest_vertex_id) {
+  type::edge_t edge_id = QueryEdge(src_vertex_id, dest_vertex_id);
+  if (edge_id != -1) {
+    return this->GetEdgeAttributeNum("type", edge_id);
+  }
+  return type::NONE_EDGE_TYPE;
+}  // function GetEdgeType
 
 type::addr_t ProgramGraph::GetVertexEntryAddr(type::vertex_t vertex_id) {
   return this->GetVertexAttributeNum("saddr", vertex_id);
@@ -229,14 +273,15 @@ int ProgramGraph::AddEdgeWithAddr(unsigned long long call_addr, unsigned long lo
   // if (callee_addr == 4229977) {
   //   dbg(call_vertex, callee_vertex);
   // }
-  if (-1 == this->QueryEdge(call_vertex, callee_vertex)) {
-    type::edge_t edge_id = this->AddEdge(call_vertex, callee_vertex);
+  type::edge_t edge_id = this->QueryEdge(call_vertex, callee_vertex);
+  if (-1 == edge_id) {
+    edge_id = this->AddEdge(call_vertex, callee_vertex);
     // if (callee_addr == 4229977) {
     //   dbg(edge_id);
     // }
     return edge_id;
   }
-  return -1;
+  return edge_id;
 }
 
 const char *ProgramGraph::GetCallee(type::vertex_t vertex_id) {
@@ -249,6 +294,9 @@ const char *ProgramGraph::GetCallee(type::vertex_t vertex_id) {
 
   for (auto &child : children) {
     if (GetVertexType(child) == type::FUNC_NODE) {
+      if (GetEdgeType(vertex_id, child) != type::DYN_CALL_EDGE) {
+        continue;
+      }
       // dbg(GetVertexAttributeString("name", child));
       return GetVertexAttributeString("name", child);
     }

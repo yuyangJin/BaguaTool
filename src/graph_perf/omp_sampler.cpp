@@ -141,7 +141,9 @@ static void *fn_wrapper(void *arg) {
 
 void GOMP_parallel(void *(*fn)(void *), void *data, unsigned num_threads, unsigned int flags) {
   dbg("here");
-  if (module_init != MODULE_INITED) init_mock();
+  if (module_init != MODULE_INITED) {
+    init_mock();
+  }
   struct fn_wrapper_arg *arg = new (struct fn_wrapper_arg)();
   arg->fn = fn;
   arg->data = data;

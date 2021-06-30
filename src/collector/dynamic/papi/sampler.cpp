@@ -111,6 +111,8 @@ int SamplerImpl::GetOverflowEvent(LongLongVec* overflow_vector) {
   return y;
 }
 
+//#define MY_BT
+
 int SamplerImpl::GetBacktrace(type::addr_t* call_path, int max_call_path_depth) {
 #ifdef MY_BT
   unw_word_t buffer[MAX_STACK_DEPTH] = {0};

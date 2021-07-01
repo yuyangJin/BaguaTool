@@ -267,10 +267,14 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
       // pthread_data->GetEdgeDataDestCallPath(i, dest_call_path);
 
       // First add a pthread_create vertex to the graph.
-      if (!src_call_path.empty()) {
-        src_call_path.pop();
-      }
-      type::vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, src_call_path);
+      // if (!src_call_path.empty()) {
+      //   src_call_path.pop();
+      // }
+      
+      // type::vertex_t queried_vertex_id = this->root_pag->GetVertexWithCallPath(0, src_call_path);
+      auto src_thread_id = pthread_data->GetEdgeDataSrcThreadId(i);
+      type::vertex_t queried_vertex_id = GetVertexWithInterThreadAnalysis(src_thread_id, src_call_path);
+
       type::vertex_t pthread_create_vertex_id = -1;
       if (!src_call_path.empty()) {
         type::addr_t addr = src_call_path.top();
@@ -309,14 +313,16 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
           std::stack<unsigned long long> dest_call_path_join;
           pthread_data->GetEdgeDataDestCallPath(j, dest_call_path_join);
 
-          if (!dest_call_path_join.empty()) {
-            dest_call_path_join.pop();
-          }
+
           // auto time_j = pthread_data->GetVertexDataValue(j);
           // auto create_thread_id_j = pthread_data->GetEdgeDataId(j);
           // auto thread_id_j = pthread_data->GetVertexDataThreadId(j);
-
-          type::vertex_t queried_vertex_id_join = this->root_pag->GetVertexWithCallPath(0, dest_call_path_join);
+          auto dest_thread_id_join = pthread_data->GetEdgeDataDestThreadId(j);
+          // if (!dest_call_path_join.empty()) {
+          //   dest_call_path_join.pop();
+          // }
+          //type::vertex_t queried_vertex_id_join = this->root_pag->GetVertexWithCallPath(0, dest_call_path_join);
+          type::vertex_t queried_vertex_id_join = GetVertexWithInterThreadAnalysis(dest_thread_id_join, dest_call_path_join);
 
           if (!src_call_path.empty()) {
             type::addr_t addr_join = dest_call_path_join.top();
@@ -339,7 +345,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
           std::string metric = std::string("TOT_CYC");
           this->root_pag->GetGraphPerfData()->SetPerfData(pthread_join_vertex_id, metric,
                                                           pthread_data->GetEdgeDataDestProcsId(j),
-                                                          pthread_data->GetEdgeDataDestThreadId(j), join_value);
+                                                          dest_thread_id_join, join_value);
           // this->graph_perf_data->SetPerfData(pthread_join_vertex_id, perf_data->GetMetricName(), process_id,
           // thread_id, data);
 

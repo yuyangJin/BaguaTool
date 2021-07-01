@@ -8,9 +8,36 @@ namespace baguatool::type {}
 
 namespace baguatool::graph_perf {
 
+std::map<int, std::pair<type::call_path_t, int>> created_tid_2_callpath_and_tid;
+
+bool build_create_tid_to_callpath_and_tid_flag = false;
+void build_create_tid_to_callpath_and_tid(core::PerfData *perf_data) {
+  // Build created_tid_2_callpath_and_tid
+  auto edge_data_size = perf_data->GetEdgeDataSize();
+  for (unsigned long int i = 0; i < edge_data_size; i++) {
+    // Value of pthread_create is recorded as (-1)
+    auto value = perf_data->GetEdgeDataValue(i);
+    if (value == (type::perf_data_t)(-1)) {
+      type::call_path_t src_call_path;
+      perf_data->GetEdgeDataSrcCallPath(i, src_call_path);
+      auto create_thread_id = perf_data->GetEdgeDataDestThreadId(i);
+      auto thread_id = perf_data->GetEdgeDataSrcThreadId(i);
+      std::pair<type::call_path_t, int> tmp(src_call_path, thread_id);
+      created_tid_2_callpath_and_tid[create_thread_id] = tmp;
+      // printf("map[%d] = < %llx , %d > \n", create_thread_id, src_call_path.top(), thread_id);
+    }
+  }
+  build_create_tid_to_callpath_and_tid_flag = true;
+}
+
 GPerf::GPerf() { this->root_mpag = new core::ProgramAbstractionGraph(); }
 
-GPerf::~GPerf() {}
+GPerf::~GPerf() {
+  for (auto &kv : created_tid_2_callpath_and_tid) {
+    FREE_CONTAINER(kv.second.first);
+  }
+  FREE_CONTAINER(created_tid_2_callpath_and_tid);
+}
 
 void GPerf::ReadStaticControlFlowGraphs(const char *dir_name) {
   // Get name of files in this directory
@@ -219,6 +246,9 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
 }
 
 void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
+  if (!build_create_tid_to_callpath_and_tid_flag) {
+    build_create_tid_to_callpath_and_tid(pthread_data);
+  }
   // Only focus on adding relationships between pthread_create and created functions
 
   // Query for each call path
@@ -264,10 +294,21 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
       type::vertex_t pthread_join_vertex_id = -1;
       for (unsigned long int j = i + 1; j < edge_data_size; j++) {
         // dbg(j, edge_data_size, dest_thread_id, pthread_data->GetEdgeDataSrcThreadId(j));
+
         if (dest_thread_id == pthread_data->GetEdgeDataSrcThreadId(j)) {
+          std::stack<unsigned long long> src_call_path_join;
+          pthread_data->GetEdgeDataSrcCallPath(j, src_call_path_join);
+          if (src_call_path_join.size() > 1) {
+            dbg(src_call_path_join.size());
+            FREE_CONTAINER(src_call_path_join);
+            continue;
+          }
+          dbg(src_call_path_join.size());
+
           // dbg(dest_thread_id, pthread_data->GetEdgeDataSrcThreadId(j));
           std::stack<unsigned long long> dest_call_path_join;
           pthread_data->GetEdgeDataDestCallPath(j, dest_call_path_join);
+
           if (!dest_call_path_join.empty()) {
             dest_call_path_join.pop();
           }
@@ -294,13 +335,16 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
             // dbg(pthread_join_vertex_id);
           }
 
-          // auto join_value = pthread_data->GetEdgeDataValue(j);
-          // //this->root_pag->SetVertexAttributeNum("TOT_CYC", pthread_join_vertex_id, join_value);
+          auto join_value = pthread_data->GetEdgeDataValue(j);
+          std::string metric = std::string("TOT_CYC");
+          this->root_pag->GetGraphPerfData()->SetPerfData(pthread_join_vertex_id, metric,
+                                                          pthread_data->GetEdgeDataDestProcsId(j),
+                                                          pthread_data->GetEdgeDataDestThreadId(j), join_value);
           // this->graph_perf_data->SetPerfData(pthread_join_vertex_id, perf_data->GetMetricName(), process_id,
           // thread_id, data);
 
           FREE_CONTAINER(dest_call_path_join);
-
+          FREE_CONTAINER(src_call_path_join);
           break;
         }
       }
@@ -364,6 +408,34 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
     // Sort the graph
     // TODO: support sorting from a specific vertex
     this->root_pag->VertexSortChild();
+  }
+
+  /** pthread_mutex_lock waiting events */
+
+  for (unsigned long int i = 0; i < edge_data_size; i++) {
+    // Value of pthread_create is recorded as (-1)
+    auto value = pthread_data->GetEdgeDataValue(i);
+    if (value != (type::perf_data_t)(-1)) {
+      std::stack<unsigned long long> src_call_path;
+
+      std::stack<unsigned long long> dest_call_path;
+      pthread_data->GetEdgeDataSrcCallPath(i, src_call_path);
+      pthread_data->GetEdgeDataDestCallPath(i, dest_call_path);
+      type::thread_t src_thread_id = pthread_data->GetEdgeDataSrcThreadId(i);
+      type::thread_t dest_thread_id = pthread_data->GetEdgeDataDestThreadId(i);
+      type::vertex_t queried_vertex_id_src = GetVertexWithInterThreadAnalysis(src_thread_id, src_call_path);
+      type::vertex_t queried_vertex_id_dest = GetVertexWithInterThreadAnalysis(dest_thread_id, dest_call_path);
+      dbg(src_thread_id, queried_vertex_id_src, dest_thread_id, queried_vertex_id_dest);
+      if (-1 != queried_vertex_id_src && -1 != queried_vertex_id_dest) {
+        dbg(this->root_pag->GetVertexAttributeString("name", queried_vertex_id_src),
+            this->root_pag->GetVertexAttributeString("name", queried_vertex_id_dest));
+        // this->root_pag->AddEdge(pthread_create_vertex_id, func_vertex_id);
+        this->root_pag->SetVertexAttributeNum("wait", queried_vertex_id_src, queried_vertex_id_dest);
+        std::string metric = std::string("TOT_CYC");
+        this->root_pag->GetGraphPerfData()->SetPerfData(queried_vertex_id_dest, metric,
+                                                        pthread_data->GetEdgeDataDestProcsId(i), dest_thread_id, value);
+      }
+    }
   }
 
   //   std::stack<unsigned long long> src_call_path;
@@ -507,14 +579,14 @@ void GPerf::SetProgramAbstractionGraph(core::ProgramAbstractionGraph *pag) { thi
 
 core::ProgramAbstractionGraph *GPerf::GetProgramAbstractionGraph() { return this->root_pag; }
 
-std::map<int, std::pair<type::call_path_t, int>> created_tid_2_callpath_and_tid;
-
 type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(int thread_id, type::call_path_t &call_path) {
-  if (!call_path.empty()) {
+  if (call_path.empty()) {
+    return 0;
+  } else {
     call_path.pop();
   }
 
-  // dbg(thread_id, call_path.top());
+  dbg(thread_id, call_path.top());
 
   if (thread_id == 0) {
     if (call_path.empty()) {
@@ -522,7 +594,7 @@ type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(int thread_id, type::call
     }
     //
     auto vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
-    // dbg(vertex_id);
+    dbg(vertex_id);
     return vertex_id;
   }
 
@@ -530,11 +602,11 @@ type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(int thread_id, type::call
   std::pair<type::call_path_t, int> next_pair = created_tid_2_callpath_and_tid[thread_id];
   type::call_path_t &parent_call_path = next_pair.first;
   int parent_thread_id = next_pair.second;
-  // dbg(parent_thread_id, parent_call_path.top());
+  dbg(parent_thread_id, parent_call_path.top());
 
   // Trace the pthread_create vertex that created this thread
   auto starting_vertex = GetVertexWithInterThreadAnalysis(parent_thread_id, parent_call_path);
-  // dbg(starting_vertex);
+  dbg(starting_vertex);
 
   // Starting from the pthread_create vertex,
   if (call_path.empty()) {
@@ -548,20 +620,8 @@ type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(int thread_id, type::call
 }
 
 void GPerf::DataEmbedding(core::PerfData *perf_data) {
-  // Build created_tid_2_callpath_and_tid
-  auto edge_data_size = perf_data->GetEdgeDataSize();
-  for (unsigned long int i = 0; i < edge_data_size; i++) {
-    // Value of pthread_create is recorded as (-1)
-    auto value = perf_data->GetEdgeDataValue(i);
-    if (value == (type::perf_data_t)(-1)) {
-      type::call_path_t src_call_path;
-      perf_data->GetEdgeDataSrcCallPath(i, src_call_path);
-      auto create_thread_id = perf_data->GetEdgeDataDestThreadId(i);
-      auto thread_id = perf_data->GetEdgeDataSrcThreadId(i);
-      std::pair<type::call_path_t, int> tmp(src_call_path, thread_id);
-      created_tid_2_callpath_and_tid[create_thread_id] = tmp;
-      // printf("map[%d] = < %llx , %d > \n", create_thread_id, src_call_path.top(), thread_id);
-    }
+  if (!build_create_tid_to_callpath_and_tid_flag) {
+    build_create_tid_to_callpath_and_tid(perf_data);
   }
 
   // Query for each call path
@@ -585,11 +645,6 @@ void GPerf::DataEmbedding(core::PerfData *perf_data) {
                                                     thread_id, data);
     FREE_CONTAINER(call_path);
   }
-
-  for (auto &kv : created_tid_2_callpath_and_tid) {
-    FREE_CONTAINER(kv.second.first);
-  }
-  FREE_CONTAINER(created_tid_2_callpath_and_tid);
 
 }  // function Dataembedding
 
@@ -639,6 +694,24 @@ void out_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, vo
   }
 }
 
+void add_unlock_to_lock_edge(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id =
+      (std::map<type::vertex_t, type::vertex_t> *)extra;
+
+  if (strcmp(pag->GetVertexAttributeString("name", vertex_id), "pthread_mutex_unlock") == 0) {
+    if (pag->HasVertexAttribute("wait")) {
+      type::vertex_t wait_vertex_id = pag->GetVertexAttributeNum("wait", vertex_id);
+
+      if (wait_vertex_id > 0) {
+        type::vertex_t dest_vertex_id = (*pag_vertex_id_2_mpag_vertex_id)[wait_vertex_id];
+
+        dbg(vertex_id, pag->GetVertexAttributeString("name", dest_vertex_id));
+        pag->AddEdge(vertex_id, dest_vertex_id);
+      }
+    }
+  }
+}
+
 void GPerf::GenerateMultiThreadProgramAbstractionGraph() {
   // this->root_mpag = new core::ProgramAbstractionGraph();
   this->root_mpag->GraphInit("Multi-thread Program Abstraction Graph");
@@ -650,7 +723,10 @@ void GPerf::GenerateMultiThreadProgramAbstractionGraph() {
   arg->pag_vertex_id_2_mpag_vertex_id = pag_vertex_id_2_mpag_vertex_id;
   arg->src_vertex_id = -1;
 
-  root_pag->DFS(0, in_pthread_expansion, out_pthread_expansion, arg);
+  this->root_pag->DFS(0, in_pthread_expansion, out_pthread_expansion, arg);
+
+  /** pthread_mutex_lock waiting */
+  this->root_mpag->VertexTraversal(add_unlock_to_lock_edge, pag_vertex_id_2_mpag_vertex_id);
 
   FREE_CONTAINER(*pag_vertex_id_2_mpag_vertex_id);
   delete pag_vertex_id_2_mpag_vertex_id;

@@ -30,20 +30,20 @@ static int (*original_pthread_mutex_unlock)(pthread_mutex_t *mutex) = NULL;
 std::unique_ptr<baguatool::collector::Sampler> sampler = nullptr;
 std::unique_ptr<baguatool::core::PerfData> perf_data = nullptr;
 
-struct pairhash {
- public:
-  template <typename T, typename U>
-  std::size_t operator()(const std::pair<T, U> &x) const {
-    return std::hash<T>()(x.first) ^ std::hash<U>()(x.second);
-  }
-};
+// struct pairhash {
+//  public:
+//   template <typename T, typename U>
+//   std::size_t operator()(const std::pair<T, U> &x) const {
+//     return std::hash<T>()(x.first) ^ std::hash<U>()(x.second);
+//   }
+// };
 
 struct call_path_t {
   baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = 0;
 };
 
-std::unordered_map<std::pair<u_int64_t, u_int64_t>, call_path_t *, pairhash> mutex_and_tid_to_callpath;
+std::unordered_map<u_int64_t, std::pair<u_int64_t, call_path_t *>> *mutex_to_tid_and_callpath;
 
 std::unordered_map<long, int> *tid_to_thread_gid;
 
@@ -129,6 +129,7 @@ static void init_mock() {
   thread_gid = new_thread_gid();
 
   tid_to_thread_gid = new std::unordered_map<long, int>();
+  mutex_to_tid_and_callpath = new std::unordered_map<u_int64_t, std::pair<u_int64_t, call_path_t *>>();
   (*tid_to_thread_gid)[gettid()] = thread_gid;
 
   // sampler setup for main thread
@@ -280,8 +281,6 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
       printf("thread_gid = %d, lock, mutex = %lx\n", thread_gid, mutex);
       // dbg(gettid(), mutex->__data.__lock, mutex->__data.__owner);
 
-      int src_tid = mutex->__data.__owner;
-
       /** timer starts */
       auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -295,12 +294,18 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
       std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
       baguatool::type::perf_data_t time = fp_ms.count() / 1000.0 * CYC_SAMPLE_COUNT;
       dbg(time);
-      call_path_t *cp = mutex_and_tid_to_callpath[{(u_int64_t)mutex, (u_int64_t)src_tid}];
+      std::pair<u_int64_t, call_path_t *> tid_cp_pair = (*mutex_to_tid_and_callpath)[(u_int64_t)mutex];
 
       baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
       int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
-      print_call_path(call_path, call_path_len);
-      printf("lock by \n");
+      // print_call_path(call_path, call_path_len);
+      // printf("lock by \n");
+
+      int src_tid = tid_cp_pair.first;
+
+      printf("record lock by , mutex = %lx, %ld ", mutex, src_tid);
+
+      call_path_t *cp = tid_cp_pair.second;
       print_call_path(cp->call_path, cp->call_path_len);
 
       int src_thread_id = (*tid_to_thread_gid)[src_tid];
@@ -314,16 +319,6 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
     ret = (*original_pthread_mutex_lock)(mutex);
     /** ------------------------- */
   }
-
-  // auto t1 = std::chrono::high_resolution_clock::now();
-  // baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
-  // int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
-  // for (int i = 0; i < call_path_len; i++) {
-  //   printf("%x ", call_path[i]);
-  // }
-  // printf("\n");
-  // dbg(thread_gid, thread, &thread);
-  // mutex_to_lock_callsite[thread] = std::to_string(thread_gid);
 
   return ret;
 }
@@ -347,7 +342,8 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     call_path_t *cp = new (struct call_path_t)();
     cp->call_path_len = sampler->GetBacktrace(cp->call_path, MAX_CALL_PATH_DEPTH);
     // print_call_path(cp->call_path, cp->call_path_len);
-    mutex_and_tid_to_callpath[{(u_int64_t)mutex, (u_int64_t)gettid()}] = cp;
+    (*mutex_to_tid_and_callpath)[(u_int64_t)mutex] = std::make_pair((u_int64_t)gettid(), cp);
+    printf("record unlock, mutex = %lx, %ld, %p\n", mutex, (u_int64_t)gettid(), ret_addr);
   }
 
   /** ------------------------- */

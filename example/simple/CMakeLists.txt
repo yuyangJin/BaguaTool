@@ -31,3 +31,4 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/basicgraph_test.py ${CMAKE_CURRENT_BI
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/example.toml ${CMAKE_CURRENT_BINARY_DIR}/example.toml COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/Makefile ${CMAKE_CURRENT_BINARY_DIR}/pthread_test/Makefile COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/pthread_test.cpp ${CMAKE_CURRENT_BINARY_DIR}/pthread_test/pthread_test.cpp COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/pthread_test_1.cpp ${CMAKE_CURRENT_BINARY_DIR}/pthread_test/pthread_test_1.cpp COPYONLY)

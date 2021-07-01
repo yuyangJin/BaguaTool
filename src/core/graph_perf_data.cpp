@@ -6,9 +6,9 @@
 namespace baguatool::core {
 
 GraphPerfData::GraphPerfData() {
-  std::cout << this->j_perf_data.size() << std::endl;
+  // std::cout << this->j_perf_data.size() << std::endl;
   this->j_perf_data.clear();
-  std::cout << this->j_perf_data.size() << std::endl;
+  // std::cout << this->j_perf_data.size() << std::endl;
 }
 GraphPerfData::~GraphPerfData() {}
 
@@ -122,7 +122,7 @@ void GraphPerfData::GetProcsPerfData(type::vertex_t vertex_id, std::string& metr
   for (auto& thread_perf_data : j_perf_data[vertex_id_str][metric_str][process_id_str].items()) {
     thread_id_str = std::string(thread_perf_data.key());
     thread_id = atoi(thread_id_str.c_str());
-    dbg(thread_perf_data.key(), thread_id_str, thread_id);
+    // dbg(thread_perf_data.key(), thread_id_str, thread_id);
     // if (this->j_perf_data[vertex_id_str][metric_str][process_id_str].contains(thread_id_str)) {
     //   proc_perf_data[thread_id] =
     //       this->j_perf_data[vertex_id_str][metric_str][process_id_str][thread_id_str].get<type::perf_data_t>();

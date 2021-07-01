@@ -85,7 +85,7 @@ void GPerf::ReadStaticProgramCallGraph(const char *binary_name) {
 
 void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
   auto data_size = perf_data->GetVertexDataSize();
-  dbg(data_size);
+  // dbg(data_size);
 
   /** Optimization: First scan all call path and store <call_addr, callee_addr> pairs,
    * then AddEdgeWithAddr. It can reduce redundant graph query **/
@@ -202,9 +202,9 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
   int type = pag->GetVertexType(vertex_id);
   if (type == type::CALL_NODE || type == type::CALL_IND_NODE || type == type::CALL_REC_NODE) {
     int addr = pag->GetVertexAttributeNum("saddr", vertex_id);
-    dbg(vertex_id, addr);
+    // dbg(vertex_id, addr);
     type::vertex_t call_vertex_id = pcg->GetCallVertexWithAddr(addr);
-    dbg(call_vertex_id);
+    // dbg(call_vertex_id);
 
     if (call_vertex_id == -1) {
       return;
@@ -215,7 +215,7 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
     auto callee_func_name = pcg->GetCallee(call_vertex_id);
     // free(callee_func_name);
     if (!callee_func_name) {
-      dbg(addr, call_vertex_id);
+      // dbg(addr, call_vertex_id);
       return;
     }
 
@@ -299,11 +299,11 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
           std::stack<unsigned long long> src_call_path_join;
           pthread_data->GetEdgeDataSrcCallPath(j, src_call_path_join);
           if (src_call_path_join.size() > 1) {
-            dbg(src_call_path_join.size());
+            // dbg(src_call_path_join.size());
             FREE_CONTAINER(src_call_path_join);
             continue;
           }
-          dbg(src_call_path_join.size());
+          // dbg(src_call_path_join.size());
 
           // dbg(dest_thread_id, pthread_data->GetEdgeDataSrcThreadId(j));
           std::stack<unsigned long long> dest_call_path_join;
@@ -375,7 +375,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
           if (!func_pag) {
             dbg("func_pag is not found!");
           } else {
-            dbg(func_pag->GetGraphAttributeString("name"));
+            // dbg(func_pag->GetGraphAttributeString("name"));
 
             /** Expand the graph, connect call&callee, inter-procedural analysis */
             // DFS From root node of function created by pthread_create
@@ -400,7 +400,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
         // dbg(pthread_create_vertex_id, func_vertex_id);
         this->root_pag->AddEdge(pthread_create_vertex_id, func_vertex_id);
         this->root_pag->SetVertexAttributeNum("wait", pthread_join_vertex_id, func_vertex_id);
-        dbg(func_vertex_id, pthread_join_vertex_id);
+        // dbg(func_vertex_id, pthread_join_vertex_id);
         // this->root_pag->AddEdge(func_vertex_id, pthread_join_vertex_id);
       }
     }
@@ -425,10 +425,10 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
       type::thread_t dest_thread_id = pthread_data->GetEdgeDataDestThreadId(i);
       type::vertex_t queried_vertex_id_src = GetVertexWithInterThreadAnalysis(src_thread_id, src_call_path);
       type::vertex_t queried_vertex_id_dest = GetVertexWithInterThreadAnalysis(dest_thread_id, dest_call_path);
-      dbg(src_thread_id, queried_vertex_id_src, dest_thread_id, queried_vertex_id_dest);
+      // dbg(src_thread_id, queried_vertex_id_src, dest_thread_id, queried_vertex_id_dest);
       if (-1 != queried_vertex_id_src && -1 != queried_vertex_id_dest) {
-        dbg(this->root_pag->GetVertexAttributeString("name", queried_vertex_id_src),
-            this->root_pag->GetVertexAttributeString("name", queried_vertex_id_dest));
+        // dbg(this->root_pag->GetVertexAttributeString("name", queried_vertex_id_src),
+        //    this->root_pag->GetVertexAttributeString("name", queried_vertex_id_dest));
         // this->root_pag->AddEdge(pthread_create_vertex_id, func_vertex_id);
         this->root_pag->SetVertexAttributeNum("wait", queried_vertex_id_src, queried_vertex_id_dest);
         std::string metric = std::string("TOT_CYC");
@@ -586,7 +586,7 @@ type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(int thread_id, type::call
     call_path.pop();
   }
 
-  dbg(thread_id, call_path.top());
+  // dbg(thread_id, call_path.top());
 
   if (thread_id == 0) {
     if (call_path.empty()) {
@@ -594,7 +594,7 @@ type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(int thread_id, type::call
     }
     //
     auto vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
-    dbg(vertex_id);
+    // dbg(vertex_id);
     return vertex_id;
   }
 
@@ -602,11 +602,11 @@ type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(int thread_id, type::call
   std::pair<type::call_path_t, int> next_pair = created_tid_2_callpath_and_tid[thread_id];
   type::call_path_t &parent_call_path = next_pair.first;
   int parent_thread_id = next_pair.second;
-  dbg(parent_thread_id, parent_call_path.top());
+  // dbg(parent_thread_id, parent_call_path.top());
 
   // Trace the pthread_create vertex that created this thread
   auto starting_vertex = GetVertexWithInterThreadAnalysis(parent_thread_id, parent_call_path);
-  dbg(starting_vertex);
+  // dbg(starting_vertex);
 
   // Starting from the pthread_create vertex,
   if (call_path.empty()) {
@@ -674,7 +674,7 @@ void in_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, voi
 
       if (wait_vertex_id > 0) {
         type::vertex_t last_vertex_id = pag->GetVertexAttributeNum("last", wait_vertex_id);
-        dbg(vertex_id, wait_vertex_id, last_vertex_id);
+        // dbg(vertex_id, wait_vertex_id, last_vertex_id);
         mpag->AddEdge(last_vertex_id, new_vertex_id);
       }
     }
@@ -688,7 +688,7 @@ void out_pthread_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, vo
 
   type::vertex_t parent_vertex_id = pag->GetParentVertex(vertex_id);
   if (strcmp(pag->GetVertexAttributeString("name", parent_vertex_id), "pthread_create") == 0) {
-    dbg(vertex_id, arg->src_vertex_id);
+    // dbg(vertex_id, arg->src_vertex_id);
     pag->SetVertexAttributeNum("last", vertex_id, arg->src_vertex_id);
     arg->src_vertex_id = (*pag_vertex_id_2_mpag_vertex_id)[parent_vertex_id];
   }
@@ -705,7 +705,7 @@ void add_unlock_to_lock_edge(core::ProgramAbstractionGraph *pag, int vertex_id, 
       if (wait_vertex_id > 0) {
         type::vertex_t dest_vertex_id = (*pag_vertex_id_2_mpag_vertex_id)[wait_vertex_id];
 
-        dbg(vertex_id, pag->GetVertexAttributeString("name", dest_vertex_id));
+        // dbg(vertex_id, pag->GetVertexAttributeString("name", dest_vertex_id));
         pag->AddEdge(vertex_id, dest_vertex_id);
       }
     }

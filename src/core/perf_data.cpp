@@ -42,7 +42,7 @@ void PerfData::Read(const char* infile_name) {
   // Read a line for VDS counts
   this->perf_data_in_file.getline(line, MAX_CALL_PATH_LEN);
   unsigned long int count = strtoul(line, nullptr, 10);
-  dbg(count);
+  // dbg(count);
 
   // Read lines, each line is a VDS
 
@@ -85,14 +85,14 @@ void PerfData::Read(const char* infile_name) {
 
       // size ++
     } else {
-      dbg(cnt, line);
+      // dbg(cnt, line);
     }
   }
 
   // Read a line for EDS counts
   this->perf_data_in_file.getline(line, MAX_CALL_PATH_LEN);
   count = strtoul(line, nullptr, 10);
-  dbg(count);
+  // dbg(count);
 
   while (count-- && !(this->perf_data_in_file.eof())) {
     // Read a line

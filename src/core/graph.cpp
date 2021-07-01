@@ -43,6 +43,7 @@ type::vertex_t Graph::AddVertex() {
     igraph_add_vertices(&ipag_->graph, TRUNK_SIZE, 0);
   }
   // Add a new vertex
+  // dbg("add vertex", cur_vertex_num);
   igraph_integer_t new_vertex_id = this->cur_vertex_num++;
 
   // dbg(new_vertex_id, this->cur_vertex_num);
@@ -360,7 +361,7 @@ void Graph::DeleteVertices(type::vertex_set_t *vs) { igraph_delete_vertices(&ipa
 
 void Graph::DeleteExtraTailVertices() {
   // unnecessary to delete
-  // dbg(this->GetGraphAttributeString("name"), this->cur_vertex_num, igraph_vcount(&ipag_->graph));
+  dbg(this->GetGraphAttributeString("name"), this->cur_vertex_num, igraph_vcount(&ipag_->graph));
   if (this->GetCurVertexNum() - 1 == igraph_vcount(&ipag_->graph)) {
     return;
   } else if (this->GetCurVertexNum() - 1 > igraph_vcount(&ipag_->graph)) {

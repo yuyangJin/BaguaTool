@@ -149,8 +149,10 @@ static void fini_mock() {
   // sampler->RecordLdLib();
 
   perf_data->Dump("SAMPLE.TXT");
-  std::unordered_map<long, int>().swap(*tid_to_thread_gid);
-  delete (tid_to_thread_gid);
+
+  // check memory leak
+  // std::unordered_map<long, int>().swap(*tid_to_thread_gid);
+  // delete (tid_to_thread_gid);
 }
 
 /** struct for pthread instrumentation start_routine */
@@ -173,7 +175,7 @@ static void *start_routine_wrapper(void *arg) {
   sampler->SetOverflow(&RecordCallPath);
   sampler->Start();
 
-  dbg(start_routine);
+  // dbg(start_routine);
 
   void *ret = (start_routine)(real_arg);  // acutally launch new thread
 
@@ -205,7 +207,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
   baguatool::type::addr_t *out_call_path = nullptr;
   /** recording */
-  dbg(thread_gid);
+  dbg(arg->create_thread_id);
   perf_data->RecordEdgeData(call_path, call_path_len, out_call_path, 0, 0, 0, thread_gid, arg->create_thread_id, -1);
   pthread_t_to_create_thread_id[(int)*thread] = arg->create_thread_id;
 
@@ -266,7 +268,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 
   if (tid_to_thread_gid->find(tid) == tid_to_thread_gid->end()) {
     (*tid_to_thread_gid)[tid] = thread_gid;
-    dbg(tid, thread_gid);
+    // dbg(tid, thread_gid);
   }
 
   int ret;
@@ -276,9 +278,9 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
     if (ret_addr && ret_addr > (void *)0x40000 &&
         ret_addr < (void *)0x40000000) { /** pthread_mutex_lock is invoked directly in the program */
 
-      printf("%p, ", ret_addr);
+      // printf("%p, ", ret_addr);
       // dbg(ret_addr);
-      printf("thread_gid = %d, lock, mutex = %lx\n", thread_gid, mutex);
+      // printf("thread_gid = %d, lock, mutex = %lx\n", thread_gid, mutex);
       // dbg(gettid(), mutex->__data.__lock, mutex->__data.__owner);
 
       /** timer starts */
@@ -303,10 +305,10 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 
       int src_tid = tid_cp_pair.first;
 
-      printf("record lock by , mutex = %lx, %ld ", mutex, src_tid);
+      // printf("record lock by , mutex = %lx, %ld ", mutex, src_tid);
 
       call_path_t *cp = tid_cp_pair.second;
-      print_call_path(cp->call_path, cp->call_path_len);
+      // print_call_path(cp->call_path, cp->call_path_len);
 
       int src_thread_id = (*tid_to_thread_gid)[src_tid];
 
@@ -343,7 +345,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     cp->call_path_len = sampler->GetBacktrace(cp->call_path, MAX_CALL_PATH_DEPTH);
     // print_call_path(cp->call_path, cp->call_path_len);
     (*mutex_to_tid_and_callpath)[(u_int64_t)mutex] = std::make_pair((u_int64_t)gettid(), cp);
-    printf("record unlock, mutex = %lx, %ld, %p\n", mutex, (u_int64_t)gettid(), ret_addr);
+    // printf("record unlock, mutex = %lx, %ld, %p\n", mutex, (u_int64_t)gettid(), ret_addr);
   }
 
   /** ------------------------- */

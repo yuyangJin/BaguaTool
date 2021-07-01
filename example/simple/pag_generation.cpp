@@ -25,11 +25,11 @@ int main(int argc, char** argv) {
   hybrid_analysis->GenerateProgramAbstractionGraph(perf_data);
 
   baguatool::core::ProgramAbstractionGraph* pag = hybrid_analysis->GetProgramAbstractionGraph();
-  pag->DumpGraphGML("root_1.gml");
+  // pag->DumpGraphGML("root_1.gml");
 
   // pag->PreOrderTraversal(0);
 
-  pag->DumpGraphDot("root_1.dot");
+  // pag->DumpGraphDot("root_1.dot");
 
   hybrid_analysis->DataEmbedding(perf_data);
   std::string metric("TOT_CYC");
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   std::string output_file_name_str("output.json");
   graph_perf_data->Dump(output_file_name_str);
 
-  hybrid_analysis->GetProgramAbstractionGraph()->PreserveHotVertices("CYCAVGPERCENT");
+  // hybrid_analysis->GetProgramAbstractionGraph()->PreserveHotVertices("CYCAVGPERCENT");
 
-  hybrid_analysis->GetProgramAbstractionGraph()->DumpGraphGML("root_3.gml");
+  hybrid_analysis->GetProgramAbstractionGraph()->DumpGraphGML("pag.gml");
 }

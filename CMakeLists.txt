@@ -22,11 +22,6 @@ target_compile_options(igraph PRIVATE -fPIC)
 
 find_package(PAPI REQUIRED)
 find_package(Dyninst REQUIRED)
-find_package(MPI REQUIRED)
-find_package(OpenMP REQUIRED)
-# if(OpenMP_CXX_FOUND)
-#     target_link_libraries(parallel_task PUBLIC OpenMP::OpenMP_CXX)
-# endif()
 
 if (Dyninst_FOUND) 
   message(STATUS "Found Dyninst: " ${DYNINST_INCLUDE_DIR})
@@ -41,6 +36,8 @@ add_library(
   baguatool
   SHARED
   
+  src/common/common.h
+  src/common/tprintf.h
   src/common/utils.cpp
   src/core/graph.cpp
   src/core/pg.cpp
@@ -55,21 +52,17 @@ add_library(
   src/collector/static/dyninst/static_analysis.cpp
   src/collector/dynamic/papi/sampler.cpp
 
-  src/graph_perf/graph_perf.cpp
+  # src/hybrid_analysis/graph_perf.cpp
 )
 
-add_executable(binary_analyzer src/graph_perf/binary_analyzer.cpp)
-add_library(sequential_sampler SHARED src/graph_perf/sequential_sampler.cpp)
-add_library(mpi_sampler SHARED src/graph_perf/mpi_sampler.cpp src/graph_perf/mpi_init.cpp)
-add_library(omp_sampler SHARED src/graph_perf/omp_sampler.cpp)
-add_library(pthread_sampler SHARED src/graph_perf/pthread_sampler.cpp)
+
 
 
 set_target_properties(
   baguatool
-  binary_analyzer
-  sequential_sampler
-  pthread_sampler
+  # binary_analyzer
+  # sequential_sampler
+  # pthread_sampler
 
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
@@ -96,14 +89,6 @@ target_compile_options(
   -fno-omit-frame-pointer -fstack-protector-all
 )
 
-# target_compile_options(
-#   mpi_sampler PRIVATE
-#   -Wall -Wno-missing-braces
-#   #-fno-rtti # We cannot open it because dyninst use `typeid` in header
-#   -fno-omit-frame-pointer -fstack-protector-all -lmpi
-# )
-
-
 
 # FIXME: how to use sanitize for subproject?
 if (ENABLE_SANITIZE) 
@@ -114,7 +99,7 @@ if (ENABLE_SANITIZE)
 endif()
 
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(baguatool PRIVATE src)
+target_include_directories(baguatool PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/dbg)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/json)
 target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/toml)
@@ -130,25 +115,15 @@ target_link_libraries(
   # TODO: we do not need all these
   dyninstAPI parseAPI instructionAPI symtabAPI symLite dynDwarf dynElf boost_system common elf unwind papi)
 target_link_libraries(baguatool PRIVATE ${PAPI_LIBRARIES})
-target_link_libraries(binary_analyzer PRIVATE baguatool)
-target_link_libraries(sequential_sampler PRIVATE baguatool)
-#target_link_libraries(parallel_task PUBLIC MPI::MPI_CXX)
-target_link_libraries(mpi_sampler PUBLIC baguatool MPI::MPI_CXX)
-target_link_libraries(pthread_sampler PRIVATE baguatool)
 
 
-# -fopenmp flag (enables OpenMP)
-# set(GCC_COVERAGE_COMPILE_FLAGS "-Wall -pedantic -lm -O3 -funroll-loops -fopenmp")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(omp_sampler PUBLIC baguatool OpenMP::OpenMP_CXX)
-endif()
-#target_link_libraries(omp_sampler PUBLIC baguatool)
+
+
 
 
 if (ENABLE_EXAMPLE)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/example/project/GraphPerf)
+  #add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/example/project/graph_perf)
 endif()
 
 if (ENABLE_TEST)
@@ -157,8 +132,8 @@ if (ENABLE_TEST)
 endif()
 
 install(TARGETS baguatool DESTINATION lib)
-install(TARGETS binary_analyzer DESTINATION bin)
-install(TARGETS sequential_sampler DESTINATION lib)
-install(TARGETS pthread_sampler DESTINATION lib)
-install(TARGETS mpi_sampler DESTINATION lib)
-install(TARGETS omp_sampler DESTINATION lib)
+# install(TARGETS binary_analyzer DESTINATION bin)
+# install(TARGETS sequential_sampler DESTINATION lib)
+# install(TARGETS pthread_sampler DESTINATION lib)
+# install(TARGETS mpi_sampler DESTINATION lib)
+# install(TARGETS omp_sampler DESTINATION lib)

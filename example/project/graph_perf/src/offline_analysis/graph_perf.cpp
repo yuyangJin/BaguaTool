@@ -1,12 +1,10 @@
 #include "graph_perf.h"
-#include <stdlib.h>
-#include "common/utils.h"
-#include "core/graph_perf_data.h"
-#include "core/vertex_type.h"
 
-namespace baguatool::type {}
+// some functions are based on graph perf-specific sampler & static analyzer
 
-namespace baguatool::graph_perf {
+namespace graph_perf {
+
+using namespace baguatool;
 
 std::map<int, std::pair<type::call_path_t, int>> created_tid_2_callpath_and_tid;
 
@@ -219,7 +217,7 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
       return;
     }
 
-    string callee_func_name_str = std::string(callee_func_name);
+    std::string callee_func_name_str = std::string(callee_func_name);
     // if (addr == 4227127) {
     //   dbg(addr, callee_func_name_str);
     // }

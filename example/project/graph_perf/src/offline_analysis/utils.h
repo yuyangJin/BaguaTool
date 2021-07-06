@@ -14,8 +14,8 @@
 #include <string>
 #include <vector>
 
-#include "dbg.h"
 #include "common.h"
+#include "dbg.h"
 
 #ifndef MAX_STR_LEN
 #define MAX_STR_LEN 256
@@ -73,7 +73,6 @@ void DumpMap(std::map<keyType, valueType> &m, std::string &file_name) {
 //   }
 //   fin.close();
 // }
-
 
 void getFiles(std::string path, std::vector<std::string> &files) {
   DIR *dir;
@@ -134,6 +133,5 @@ std::vector<std::string> split(char *str, const char *delim) {
   }
   return res;
 }
-
 
 #endif

@@ -7,8 +7,8 @@
 #include <stack>
 #include <string>
 #include <vector>
-#include "../src/common/tprintf.h"
 #include "../src/common/common.h"
+#include "../src/common/tprintf.h"
 
 using namespace nlohmann;
 
@@ -17,12 +17,12 @@ using namespace nlohmann;
 namespace baguatool {
 
 namespace type {
-class graph_t;                         /**<igragh-graph wrapper */
-class vertex_set_t;                    /**<igraph_vs_t wrapper */
-typedef int vertex_t;                  /**<vertex id type (int)*/
-typedef int edge_t;                    /**<edge id type (int)*/
-typedef unsigned long long int addr_t; /**<address type (unsigned long long int)*/
-typedef double perf_data_t;            /**<performance data type (double) */
+class graph_t;                                /**<igragh-graph wrapper */
+class vertex_set_t;                           /**<igraph_vs_t wrapper */
+typedef int vertex_t;                         /**<vertex id type (int)*/
+typedef int edge_t;                           /**<edge id type (int)*/
+typedef unsigned long long int addr_t;        /**<address type (unsigned long long int)*/
+typedef double perf_data_t;                   /**<performance data type (double) */
 typedef std::stack<type::addr_t> call_path_t; /**<call path type (need to modify)*/
 typedef int thread_t;
 typedef int procs_t;
@@ -44,7 +44,6 @@ enum vertex_type_t {
 };
 
 enum edge_type_t { STA_CALL_EDGE = -102, DYN_CALL_EDGE = -101, NONE_EDGE_TYPE = -100 };
-
 }
 
 namespace core {
@@ -439,13 +438,28 @@ class Graph {
    */
   void PreOrderTraversal(type::vertex_t root_vertex_id, std::vector<type::vertex_t>& pre_order_vertex_vec);
 
-  /** DFS
-   *
+  /** [Graph Algorithm] Perform Depth-First Search on the graph.
+   * @param IN_CALL_BACK_FUNC - callback function when a new vertex is discovered / accessed. The input parameters of
+   * this function contain
+   * a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for developers to pass more
+   * parameters.
+   * @param OUT_CALL_BACK_FUNC - callback function when the subtree of a vertex is completed. The input parameters of
+   * this function contain
+   * a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for developers to pass more
+   * parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of IN_CALL_BACK_FUNC and
+   * OUT_CALL_BACK_FUNC
   */
   void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph*, int, void*),
            void (*OUT_CALL_BACK_FUNC)(Graph*, int, void*), void* extra);
 
   GraphPerfData* GetGraphPerfData();
+
+  /** Sort child vertices from a starting vertex recursively
+   * @param starting_vertex - a starting vertex.
+   * @param attr_name - a key attribute to sort by.
+  */
+  void SortBy(type::vertex_t starting_vertex, const char* attr_name);
 };
 
 class ProgramGraph : public Graph {

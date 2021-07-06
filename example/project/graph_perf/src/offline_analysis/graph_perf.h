@@ -1,8 +1,8 @@
 #ifndef GRAPHPERF_H_
 #define GRAPHPERF_H_
+#include <stdlib.h>
 #include <map>
 #include <string>
-#include <stdlib.h>
 #include "baguatool.h"
 #include "common.h"
 #include "utils.h"

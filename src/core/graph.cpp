@@ -473,7 +473,7 @@ type::vertex_t Graph::GetParentVertex(type::vertex_t vertex_id) {
   return parent_vertex_id;
 }
 
-igraph_bool_t dfs_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
+igraph_bool_t pre_order_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
   std::vector<type::vertex_t> *pre_order_vertex_vec = (std::vector<type::vertex_t> *)extra;
   pre_order_vertex_vec->push_back(vid);
   return 0;
@@ -486,7 +486,7 @@ void Graph::PreOrderTraversal(type::vertex_t root, std::vector<type::vertex_t> &
   igraph_dfs(&(this->ipag_->graph), /*root=*/root, /*neimode=*/IGRAPH_OUT,
              /*unreachable=*/1, /*order=*/0, /*order_out=*/0,
              /*father=*/0, /*dist=*/0,
-             /*in_callback=*/dfs_callback, /*out_callback=*/0, /*extra=*/&pre_order_vertex_vec);
+             /*in_callback=*/pre_order_callback, /*out_callback=*/0, /*extra=*/&pre_order_vertex_vec);
 }
 
 struct dfs_call_back_t {
@@ -526,5 +526,7 @@ void Graph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, voi
 }
 
 GraphPerfData *Graph::GetGraphPerfData() { return this->graph_perf_data; }
+
+void Graph::SortBy(type::vertex_t starting_vertex, const char *attr_name) {}
 
 }  // namespace baguatool::core

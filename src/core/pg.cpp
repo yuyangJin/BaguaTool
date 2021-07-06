@@ -267,18 +267,12 @@ type::vertex_t ProgramGraph::GetFuncVertexWithAddr(unsigned long long addr) {
 int ProgramGraph::AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr) {
   type::vertex_t call_vertex = GetCallVertexWithAddr(call_addr);
   type::vertex_t callee_vertex = GetFuncVertexWithAddr(callee_addr);
-  if (callee_vertex == -1) {
+  if (call_vertex == -1 || callee_vertex == -1) {
     return -1;
   }
-  // if (callee_addr == 4229977) {
-  //   dbg(call_vertex, callee_vertex);
-  // }
   type::edge_t edge_id = this->QueryEdge(call_vertex, callee_vertex);
   if (-1 == edge_id) {
     edge_id = this->AddEdge(call_vertex, callee_vertex);
-    // if (callee_addr == 4229977) {
-    //   dbg(edge_id);
-    // }
     return edge_id;
   }
   return edge_id;

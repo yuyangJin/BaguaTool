@@ -4,3 +4,5 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/pthread_test_1.cpp ${CMA
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/hybrid_collect.sh ${CMAKE_CURRENT_BINARY_DIR}/pthread_test/hybrid_collect.sh COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/offline_analysis.sh ${CMAKE_CURRENT_BINARY_DIR}/pthread_test/offline_analysis.sh COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/README ${CMAKE_CURRENT_BINARY_DIR}/pthread_test/README COPYONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pthread_test/sort_test.sh ${CMAKE_CURRENT_BINARY_DIR}/pthread_test/sort_test.sh COPYONLY)

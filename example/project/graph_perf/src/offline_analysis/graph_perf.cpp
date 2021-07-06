@@ -563,8 +563,6 @@ void GPerf::StaticInterProceduralAnalysis() {
 
   this->root_pag->VertexSortChild();
 
-  // this->root_pag->VertexSortChild();
-
   for (auto &kv : this->func_pag_map) {
     // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     auto pag = kv.second;

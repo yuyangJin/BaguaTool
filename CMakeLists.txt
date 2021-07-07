@@ -22,6 +22,7 @@ target_compile_options(igraph PRIVATE -fPIC)
 
 find_package(PAPI REQUIRED)
 find_package(Dyninst REQUIRED)
+find_package(Boost REQUIRED)
 
 if (Dyninst_FOUND) 
   message(STATUS "Found Dyninst: " ${DYNINST_INCLUDE_DIR})
@@ -107,14 +108,16 @@ target_include_directories(baguatool PUBLIC ${PROJECT_SOURCE_DIR}/third_party/pm
 target_include_directories(baguatool PRIVATE igraph)
 target_include_directories(baguatool PRIVATE ${DYNINST_INCLUDE_DIR})
 target_include_directories(baguatool PRIVATE ${PAPI_INCLUDE_DIRS})
+target_include_directories(baguatool PRIVATE ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(baguatool PRIVATE igraph)
 target_link_libraries(
   baguatool
   PRIVATE
   # TODO: we do not need all these
-  dyninstAPI parseAPI instructionAPI symtabAPI symLite dynDwarf dynElf boost_system common elf unwind papi)
+  dyninstAPI parseAPI instructionAPI symtabAPI symLite dynDwarf dynElf common unwind)
 target_link_libraries(baguatool PRIVATE ${PAPI_LIBRARIES})
+target_link_libraries(baguatool PRIVATE ${Boost_LIBRARIES})
 
 
 

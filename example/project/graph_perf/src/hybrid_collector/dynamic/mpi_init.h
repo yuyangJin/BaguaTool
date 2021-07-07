@@ -1,8 +1,6 @@
 #ifndef MPI_INIT_H_
 #define MPI_INIT_H_
 
-#include <papi.h>
-
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 

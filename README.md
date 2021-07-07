@@ -30,7 +30,7 @@ Note that if dyninst is built from source, the boost will be downloaded and inst
 
 In this case, the cmake commands will be like
 ```
-cmake .. -DBOOST_ROOT=/path_to_your_dyninst_dir  -DDyninst_DIR=/path_to_your_dyninst_install_dir/lib/cmake/Dyninst -DPAPI_PREFIX=/path_to_your_papi_install_dir
+cmake .. -DBOOST_ROOT=/path_to_your_dyninst_install_dir  -DDyninst_DIR=/path_to_your_dyninst_install_dir/lib/cmake/Dyninst -DPAPI_PREFIX=/path_to_your_papi_install_dir
 ```
 
 

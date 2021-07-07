@@ -14,7 +14,9 @@ BaguaTool is dependent on
 ```igraph``` has been integrated into baguatool as submodule. Dyninst and PAPI need user to build themselves.
 
 
-### Specify Location
+There are two ways to build baguatool. One is to build dependency from source and specify their location when building baguatool, the other is to use spack to build these.
+
+### Build Dependency from Source
 
 ```bash
 cmake .. -DBOOST_ROOT=/path_to_your_boost_install_dir -DDyninst_DIR=/path_to_your_dyninst_install_dir/lib/cmake/Dyninst -DPAPI_PREFIX=/path_to_your_papi_install_dir
@@ -32,7 +34,7 @@ cmake .. -DBOOST_ROOT=/path_to_your_dyninst_dir  -DDyninst_DIR=/path_to_your_dyn
 ```
 
 
-### Spack
+### Build Dependency from Spack
 The recommended way to build Dyninst (with Boost) and PAPI is to use [Spack](https://github.com/spack/spack)
 
 ```bash

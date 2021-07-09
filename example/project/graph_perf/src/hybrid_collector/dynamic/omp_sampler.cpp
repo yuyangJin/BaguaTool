@@ -1,4 +1,3 @@
-#define BAGUA
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <omp.h>
@@ -6,36 +5,32 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/syscall.h>
-#ifdef BAGUA
+#include <unistd.h>
 #include "baguatool.h"
 #include "dbg.h"
-#endif
-#include <unistd.h>
 #include "omp_init.h"
 
 #define MODULE_INITED 1
 #define RESOLVE_SYMBOL_VERSIONED 1
 #define RESOLVE_SYMBOL_UNVERSIONED 2
 #define PTHREAD_VERSION "GLIBC_2.3.2"
-
 #define NUM_EVENTS 1
-
 #define MAX_CALL_PATH_DEPTH 100
+#define MAX_THREAD_PER_PROCS 65530 // cat /proc/sys/vm/max_map_count 
 
-#ifdef BAGUA
+#define gettid() syscall(__NR_gettid)
+
 std::unique_ptr<baguatool::collector::Sampler> sampler = nullptr;
 std::unique_ptr<baguatool::core::PerfData> perf_data = nullptr;
-#endif
-
 static void (*original_GOMP_parallel)(void (*fn)(void *), void *data, unsigned num_threads, unsigned int flags) = NULL;
 
 static int CYC_SAMPLE_COUNT = 0;
 static int module_init = 0;
 
 int mpi_rank = 0;
-
 static __thread int thread_gid;
-// thread_local int thread_id;
+static int main_thread_gid;
+static int main_tid;
 static int thread_global_id;
 
 int new_thread_gid() {
@@ -48,14 +43,21 @@ void close_thread_gid() {
   // LOG_INFO("GET thread_gid = %d\n", thread_gid);
   return;
 }
+int get_thread_gid() {
+  return thread_global_id;
+}
 
-#ifdef BAGUA
+
 void RecordCallPath(int y) {
   baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
-  perf_data->RecordVertexData(call_path, call_path_len, 0 /* process_id */, thread_gid /* thread_id */, 1);
+  if (main_tid != gettid()) {
+    perf_data->RecordVertexData(call_path, call_path_len, 0 /* process_id */, thread_gid /* thread_id */, 1);
+  } else {
+    perf_data->RecordVertexData(call_path, call_path_len, 0 /* process_id */, main_thread_gid /* thread_id */, 1);
+  }
 }
-#endif
+
 
 static void *resolve_symbol(const char *symbol_name, int config) {
   void *result;
@@ -67,9 +69,7 @@ static void *resolve_symbol(const char *symbol_name, int config) {
       // exit(1);
     }
   } else if (config == RESOLVE_SYMBOL_UNVERSIONED) {
-    handle = dlopen("libgomp.so.1", RTLD_LAZY);
-    result = dlsym(handle, symbol_name);
-    // result = dlsym(RTLD_NEXT, symbol_name);
+    result = dlsym(RTLD_NEXT, symbol_name);
     if (result == NULL) {
       LOG_ERROR("Unable to resolve symbol %s\n", symbol_name);
       // exit(1);
@@ -81,18 +81,15 @@ static void *resolve_symbol(const char *symbol_name, int config) {
 static void init_mock() __attribute__((constructor));
 static void fini_mock() __attribute__((destructor));
 
-// User-defined what to do at constructor
+/** User-defined what to do at constructor */
 static void init_mock() {
   if (module_init == MODULE_INITED) {
     return;
   }
 
-#ifdef BAGUA
   // TODO one perf_data corresponds to one metric, export it to an array
   sampler = std::make_unique<baguatool::collector::Sampler>();
   perf_data = std::make_unique<baguatool::core::PerfData>();
-  dbg("here");
-#endif
 
   original_GOMP_parallel =
       (decltype(original_GOMP_parallel))resolve_symbol("GOMP_parallel", RESOLVE_SYMBOL_UNVERSIONED);
@@ -100,68 +97,73 @@ static void init_mock() {
   module_init = MODULE_INITED;
 
   thread_global_id = 0;
-  thread_gid = new_thread_gid();
+  main_thread_gid = new_thread_gid();
+  main_tid = gettid();
 
-#ifdef BAGUA
+
   sampler->Setup();
   sampler->SetSamplingFreq(CYC_SAMPLE_COUNT);
 
   void (*RecordCallPathPointer)(int) = &(RecordCallPath);
   sampler->SetOverflow(RecordCallPathPointer);
   sampler->Start();
-#endif
+
 }
 
-// User-defined what to do at destructor
+/** User-defined what to do at destructor */
 static void fini_mock() {
-#ifdef BAGUA
+
   sampler->Stop();
   perf_data->Dump("SAMPLE.TXT");
-#endif
-  // sampler->~Sampler();
-  // perf_data->~PerfData();
-  // free();
+
   // sampler->RecordLdLib();
 }
+
+/** ------------------------------------------------------------------------- 
+ * For OpenMP 
+ * --------------------------------------------------------------------------
+*/
 
 struct fn_wrapper_arg {
   void (*fn)(void *);
   void *data;
+  baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
+  int call_path_len;
 };
 
+/** fn wrapper
+ * one of openmp threads is the main thread
+ */
 static void fn_wrapper(void *arg) {
   struct fn_wrapper_arg *args_ = (struct fn_wrapper_arg *)arg;
   void (*fn)(void *) = args_->fn;
   void *data = args_->data;
 
-  // TRY(PAPI_register_thread(), PAPI_OK);
-  // set_papi_overflow();
-
   thread_gid = new_thread_gid();
-  printf("Thread Start, thread_gid = %d\n", thread_gid);
-// args_->create_thread_id = thread_gid;
+  LOG_INFO("Thread Start, thread_gid = %d\n", thread_gid);
 
-#ifdef BAGUA
-  dbg("here");
+
+  /** recording which GOMP_parallel create which threads */
+  if (main_tid != gettid()) {
+    dbg(thread_gid);
+    perf_data->RecordEdgeData(args_->call_path, args_->call_path_len, (baguatool::type::addr_t*)nullptr, 0, 0, 0, main_thread_gid, thread_gid, -2);
+  }
   sampler->AddThread();
   sampler->SetOverflow(&RecordCallPath);
   sampler->Start();
-#endif
 
-  // void * ret = fn(data); // acutally launch new fn
-  // void *ret = nullptr;
+  /** ------------------------- */
+  /** execute real fn */
+  fn(data);  // acutally launch fn
+  /** ------------------------- */
 
-  fn(data);  // acutally launch new fn
-#ifdef BAGUA
   sampler->Stop();
   sampler->UnsetOverflow();
   sampler->RemoveThread();
-#endif
 
-  close_thread_gid();
-  printf("Thread Finish, thread_gid = %d\n", thread_gid);
+  //close_thread_gid();
+  LOG_INFO("Thread Finish, thread_gid = %d\n", thread_gid);
 
-  // return ret;
   return;
 }
 
@@ -169,27 +171,20 @@ void GOMP_parallel(void (*fn)(void *), void *data, unsigned num_threads, unsigne
   if (module_init != MODULE_INITED) {
     init_mock();
   }
-  struct fn_wrapper_arg *arg = (struct fn_wrapper_arg *)malloc(sizeof(struct fn_wrapper_arg));
-  arg->fn = fn;
-  arg->data = data;
-
-// TRY(PAPI_stop(EventSet, NULL), PAPI_OK);
-// remove_papi_overflow();
-// GOMP_parallel_start(fn_wrapper, arg, num_threads);
-
-#ifdef BAGUA
-  dbg("here");
   sampler->Stop();
   sampler->UnsetOverflow();
-#endif
 
+  /** ------------------------------------------------------------------------- */
+  struct fn_wrapper_arg *arg = new (struct fn_wrapper_arg)();
+  arg->fn = fn;
+  arg->data = data;
+  arg->call_path_len = sampler->GetBacktrace(arg->call_path, MAX_CALL_PATH_DEPTH);
+  /** execute real GOMP_parallel */
   (*original_GOMP_parallel)(fn_wrapper, arg, num_threads, flags);
+  /** ------------------------------------------------------------------------- */
 
-#ifdef BAGUA
   sampler->SetOverflow(&RecordCallPath);
   sampler->Start();
-#endif
-  // GOMP_parallel_end();
-  // set_papi_overflow();
-  free(arg);
+
+  delete arg;
 }

@@ -13,9 +13,9 @@ void build_create_tid_to_callpath_and_tid(core::PerfData *perf_data) {
   // Build created_tid_2_callpath_and_tid
   auto edge_data_size = perf_data->GetEdgeDataSize();
   for (unsigned long int i = 0; i < edge_data_size; i++) {
-    // Value of pthread_create is recorded as (-1)
+    // Value of pthread_create is recorded as (-1), Value of GOMP_parallel is recorded as (-2)
     auto value = perf_data->GetEdgeDataValue(i);
-    if (value == (type::perf_data_t)(-1)) {
+    if (value <= (type::perf_data_t)(-1)) {
       type::call_path_t src_call_path;
       perf_data->GetEdgeDataSrcCallPath(i, src_call_path);
       auto create_thread_id = perf_data->GetEdgeDataDestThreadId(i);
@@ -345,6 +345,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
               pthread_join_vertex_id, metric, pthread_data->GetEdgeDataDestProcsId(j), dest_thread_id_join, join_value);
           // this->graph_perf_data->SetPerfData(pthread_join_vertex_id, perf_data->GetMetricName(), process_id,
           // thread_id, data);
+          dbg(pthread_join_vertex_id, join_value);
 
           FREE_CONTAINER(dest_call_path_join);
           FREE_CONTAINER(src_call_path_join);
@@ -418,7 +419,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
   for (unsigned long int i = 0; i < edge_data_size; i++) {
     // Value of pthread_create is recorded as (-1)
     auto value = pthread_data->GetEdgeDataValue(i);
-    if (value != (type::perf_data_t)(-1)) {
+    if (value >= (type::perf_data_t)(0)) {
       std::stack<unsigned long long> src_call_path;
 
       std::stack<unsigned long long> dest_call_path;

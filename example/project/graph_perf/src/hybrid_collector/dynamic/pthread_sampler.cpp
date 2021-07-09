@@ -199,6 +199,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   auto *arg = (start_routine_wrapper_arg *)malloc(sizeof(struct start_routine_wrapper_arg));
   arg->start_routine = start_routine;
   arg->real_arg = real_arg;
+  arg->create_thread_id = 0; // init
   int ret = (*original_pthread_create)(thread, attr, start_routine_wrapper, arg);
   /** ------------------------- */
 

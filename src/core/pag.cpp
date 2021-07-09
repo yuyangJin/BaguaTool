@@ -120,7 +120,7 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
   igraph_vs_t vs;
   igraph_vit_t vit;
   // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
-  igraph_vs_all(&vs);
+  igraph_vs_seq(&vs, 0, this->cur_vertex_num - 1);
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {
     // Get vector id
@@ -219,7 +219,7 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
   std::string metric(arg->metric);
   std::string op(arg->op);
 
-  // dbg(vertex_id);
+  dbg(vertex_id);
 
   // TODO: (FIX) need to return list of procs
   std::vector<type::procs_t> procs_list;
@@ -233,7 +233,7 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
     graph_perf_data->GetProcsPerfData(vertex_id, metric, procs_list[i], procs_perf_data_map);
     // int num_thread = graph_perf_data->GetProcsPerfDataThreadNum(vertex_id, metric, i);
     int num_thread = procs_perf_data_map.size();
-    // dbg(num_thread);
+    dbg(num_thread);
     std::vector<type::perf_data_t> procs_perf_data;
 
     if (num_thread > 0) {
@@ -250,9 +250,9 @@ void ReducePerfData(core::ProgramAbstractionGraph *pag, int vertex_id, void *ext
   }
 
   type::perf_data_t reduced_data = ReduceOperation(im_reduced_data, num_procs, op);
-  // if (num_procs) {
-  //   dbg(num_procs, reduced_data);
-  // }
+  if (num_procs) {
+    dbg(num_procs, reduced_data);
+  }
 
   FREE_CONTAINER(im_reduced_data);
 

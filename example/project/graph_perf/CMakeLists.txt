@@ -5,12 +5,9 @@ find_package(OpenMP REQUIRED)
 add_executable(binary_analyzer src/hybrid_collector/static/binary_analyzer.cpp)
 add_library(sequential_sampler SHARED src/hybrid_collector/dynamic/sequential_sampler.cpp)
 add_library(mpi_sampler SHARED src/hybrid_collector/dynamic/mpi_sampler.cpp src/hybrid_collector/dynamic/mpi_init.cpp)
-
-# add_library(sampler_omp SHARED src/hybrid_collector/dynamic/sampler_omp_1.c)
 add_library(pthread_sampler SHARED src/hybrid_collector/dynamic/pthread_sampler.cpp)
-
 add_library(omp_sampler SHARED src/hybrid_collector/dynamic/omp_sampler.cpp)
-#add_library(omp_sampler SHARED $<TARGET_OBJECTS:omp_sampler_1>)
+
 
 # graph perf offline analysis library
 add_library(

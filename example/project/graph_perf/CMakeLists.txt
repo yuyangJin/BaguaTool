@@ -18,8 +18,6 @@ add_library(
 )
 
 target_include_directories(graph_perf PUBLIC src/offline_analysis)
-target_include_directories(sampler_omp PRIVATE ${PAPI_INCLUDE_DIRS})
-
 
 target_link_libraries(graph_perf PRIVATE baguatool)
 target_link_libraries(binary_analyzer PRIVATE baguatool)

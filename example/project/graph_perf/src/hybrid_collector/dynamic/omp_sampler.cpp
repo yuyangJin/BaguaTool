@@ -23,8 +23,8 @@
 #define MAX_CALL_PATH_DEPTH 100
 
 #ifdef BAGUA
-baguatool::core::PerfData *perf_data = nullptr;
-baguatool::collector::Sampler *sampler = nullptr;
+std::unique_ptr<baguatool::collector::Sampler> sampler = nullptr;
+std::unique_ptr<baguatool::core::PerfData> perf_data = nullptr;
 #endif
 
 static void (*original_GOMP_parallel)(void (*fn)(void *), void *data, unsigned num_threads, unsigned int flags) = NULL;
@@ -88,13 +88,9 @@ static void init_mock() {
   }
 
 #ifdef BAGUA
-  // sampler = (baguatool::collector::Sampler*)malloc( sizeof(baguatool::collector::Sampler));
-  sampler = new baguatool::collector::Sampler();
-  // sampler->Sampler();
   // TODO one perf_data corresponds to one metric, export it to an array
-  // perf_data = (baguatool::core::PerfData*) malloc( sizeof(baguatool::core::PerfData ));
-  perf_data = new baguatool::core::PerfData();
-  // perf_data->PerfData();
+  sampler = std::make_unique<baguatool::collector::Sampler>();
+  perf_data = std::make_unique<baguatool::core::PerfData>();
   dbg("here");
 #endif
 

@@ -5,8 +5,12 @@ find_package(OpenMP REQUIRED)
 add_executable(binary_analyzer src/hybrid_collector/static/binary_analyzer.cpp)
 add_library(sequential_sampler SHARED src/hybrid_collector/dynamic/sequential_sampler.cpp)
 add_library(mpi_sampler SHARED src/hybrid_collector/dynamic/mpi_sampler.cpp src/hybrid_collector/dynamic/mpi_init.cpp)
-add_library(omp_sampler SHARED src/hybrid_collector/dynamic/omp_sampler.cpp)
+
+# add_library(sampler_omp SHARED src/hybrid_collector/dynamic/sampler_omp_1.c)
 add_library(pthread_sampler SHARED src/hybrid_collector/dynamic/pthread_sampler.cpp)
+
+add_library(omp_sampler SHARED src/hybrid_collector/dynamic/omp_sampler.cpp)
+#add_library(omp_sampler SHARED $<TARGET_OBJECTS:omp_sampler_1>)
 
 # graph perf offline analysis library
 add_library(
@@ -17,6 +21,8 @@ add_library(
 )
 
 target_include_directories(graph_perf PUBLIC src/offline_analysis)
+target_include_directories(sampler_omp PRIVATE ${PAPI_INCLUDE_DIRS})
+
 
 target_link_libraries(graph_perf PRIVATE baguatool)
 target_link_libraries(binary_analyzer PRIVATE baguatool)
@@ -24,6 +30,11 @@ target_link_libraries(sequential_sampler PRIVATE baguatool)
 target_link_libraries(mpi_sampler PUBLIC baguatool MPI::MPI_CXX)
 target_link_libraries(pthread_sampler PRIVATE baguatool)
 
+
+# if(OpenMP_C_FOUND)
+#     target_link_libraries(sampler_omp PUBLIC unwind ${PAPI_LIBRARIES} OpenMP::OpenMP_C)
+#     # target_link_libraries(omp_sampler PUBLIC baguatool OpenMP::OpenMP_C)
+# endif()
 if(OpenMP_CXX_FOUND)
     target_link_libraries(omp_sampler PUBLIC baguatool OpenMP::OpenMP_CXX)
 endif()

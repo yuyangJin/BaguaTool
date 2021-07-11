@@ -811,6 +811,105 @@ void GPerf::GenerateMultiThreadProgramAbstractionGraph() {
   delete arg;
 }
 
+bool openmp_seq_record_flag = false;
+std::vector<type::vertex_t> openmp_seq;
+
+struct openmp_expansion_arg_t {
+  core::ProgramAbstractionGraph *mpag;
+  type::vertex_t src_vertex_id;
+  int num_threads;
+};
+
+void in_openmp_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  struct openmp_expansion_arg_t *arg = (struct openmp_expansion_arg_t *)extra;
+  core::ProgramAbstractionGraph *mpag = arg->mpag;
+  //std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id = arg->pag_vertex_id_2_mpag_vertex_id;
+
+  if (openmp_seq_record_flag) {
+    openmp_seq.push_back(vertex_id);
+    return ;
+  } 
+ 
+  type::vertex_t new_vertex_id = mpag->AddVertex();
+  mpag->CopyVertex(new_vertex_id, pag, vertex_id);
+  //(*pag_vertex_id_2_mpag_vertex_id)[vertex_id] = new_vertex_id;
+
+  if (arg->src_vertex_id >= 0) {
+    mpag->AddEdge(arg->src_vertex_id, new_vertex_id);
+  }
+  arg->src_vertex_id = new_vertex_id;
+
+  if (strcmp(pag->GetVertexAttributeString("name", vertex_id), "GOMP_parallel") == 0) {
+    std::vector<baguatool::type::vertex_t> child_vec;
+    pag->GetChildVertexSet(vertex_id, child_vec);
+    if (child_vec.size() > 0) {
+      openmp_seq_record_flag = true;
+    }
+    FREE_CONTAINER(child_vec);
+  }
+}
+
+void out_openmp_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  struct openmp_expansion_arg_t *arg = (struct openmp_expansion_arg_t *)extra;
+  core::ProgramAbstractionGraph *mpag = arg->mpag;
+
+  if (openmp_seq_record_flag){
+  type::vertex_t parent_vertex_id = pag->GetParentVertex(vertex_id);
+  if (strcmp(pag->GetVertexAttributeString("name", parent_vertex_id), "GOMP_parallel") == 0) {
+    openmp_seq_record_flag = false;
+
+    //auto pag_graph_perf_data = this->root_pag->GetGraphPerfData();
+    //auto mpag_graph_perf_data = this->root_mpag->GetGraphPerfData();
+    type::vertex_t end_vertex_id = mpag->AddVertex();
+    mpag->CopyVertex(end_vertex_id, pag, vertex_id);
+    mpag->SetVertexAttributeString("name", end_vertex_id, "GOMP_parallel.end");
+
+    for (int i = 0; i < arg->num_threads; i++) {
+      type::vertex_t last_new_vertex_id = arg->src_vertex_id;
+      for (auto vertex_id : openmp_seq) {
+        type::vertex_t new_vertex_id = mpag->AddVertex();
+        mpag->CopyVertex(new_vertex_id, pag, vertex_id);
+        if (last_new_vertex_id != -1) {
+          mpag->AddEdge(last_new_vertex_id, new_vertex_id);
+        }
+        // Copy process i perf data of vertex in pag to process i perf data of new vertex in mpag
+        // std::vector<std::string> metrics;
+        // pag_graph_perf_data->GetVertexPerfDataMetrics(vertex_id, metrics);
+        // for (auto metric : metrics) {
+        //   std::map<type::thread_t, type::perf_data_t> proc_perf_data;
+        //   pag_graph_perf_data->GetProcsPerfData(vertex_id, metric, i, proc_perf_data);
+        //   mpag_graph_perf_data->SetProcsPerfData(new_vertex_id, metric, i, proc_perf_data);
+        // }
+        last_new_vertex_id = new_vertex_id;
+      }
+      mpag->AddEdge(last_new_vertex_id, end_vertex_id);
+    }
+
+    arg->src_vertex_id = end_vertex_id;
+
+    FREE_CONTAINER(openmp_seq);
+  }
+  }
+}
+
+void GPerf::GenerateOpenMPProgramAbstractionGraph(int num_threads) {
+  this->root_mpag->GraphInit("OpenMP Program Abstraction Graph");
+
+  struct openmp_expansion_arg_t *arg = new (struct openmp_expansion_arg_t)();
+  arg->mpag = this->root_mpag;
+  arg->src_vertex_id = -1;
+  arg->num_threads = num_threads;
+
+  this->root_pag->DFS(0, in_openmp_expansion, out_openmp_expansion, arg);
+
+  // /** pthread_mutex_lock waiting */
+  // this->root_mpag->VertexTraversal(add_unlock_to_lock_edge, pag_vertex_id_2_mpag_vertex_id);
+
+  // FREE_CONTAINER(*pag_vertex_id_2_mpag_vertex_id);
+  // delete pag_vertex_id_2_mpag_vertex_id;
+  delete arg;
+}
+
 struct pre_order_traversal_t {
   std::vector<type::vertex_t> *seq;
 };

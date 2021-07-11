@@ -160,6 +160,8 @@ class GPerf {
 
   void GenerateMultiThreadProgramAbstractionGraph();
 
+  void GenerateOpenMPProgramAbstractionGraph(int num_threads);
+
   void GenerateMultiProcessProgramAbstractionGraph(int num_procs);
 
   /** Generate multi-thread or multi-process program abstraction graph.

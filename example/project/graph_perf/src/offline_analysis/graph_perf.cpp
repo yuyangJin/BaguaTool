@@ -37,11 +37,18 @@ GPerf::~GPerf() {
   FREE_CONTAINER(created_tid_2_callpath_and_tid);
 }
 
+void GPerf::ReadProgramAbstractionGraphMap(const char *file_name) {
+  std::string file_name_str = std::string(file_name);
+  ReadMap<int, type::addr_t>(this->hash_to_entry_addr, file_name_str);
+}
+
 void GPerf::ReadStaticControlFlowGraphs(const char *dir_name) {
   // Get name of files in this directory
   std::vector<std::string> file_names;
   getFiles(std::string(dir_name), file_names);
 
+  std::string pag_map = dir_name + std::string(".map");
+  ReadProgramAbstractionGraphMap(pag_map.c_str());
   // std::stringstream ss;
   //   ss << dir_name << ".map";
   // auto file_name = ss.str();
@@ -50,22 +57,38 @@ void GPerf::ReadStaticControlFlowGraphs(const char *dir_name) {
   // ReadMap<int, std::string>(hash_2_func, file_name);
 
   // Traverse the files
-  for (const auto &hash : file_names) {
-    // dbg(hash);
+  for (const auto &hash_str : file_names) {
+    // dbg(hash_str);
 
     // Read a ControlFlowGraph from each file
     core::ControlFlowGraph *func_cfg = new core::ControlFlowGraph();
-    func_cfg->ReadGraphGML(hash.c_str());
+    func_cfg->ReadGraphGML(hash_str.c_str());
+
+    std::vector<std::string> split_vec, split_vec_1;
+    split(hash_str, std::string("/"), split_vec);
+
+    split(split_vec[split_vec.size() - 1], std::string("."), split_vec_1);
     // new_pag->DumpGraph((file_name + std::string(".bak")).c_str());
-    this->func_cfg_map[std::string(func_cfg->GetGraphAttributeString("name"))] = func_cfg;
+    int hash = strtoull(split_vec_1[0].c_str(), NULL, 10);
+
+    FREE_CONTAINER(split_vec);
+    FREE_CONTAINER(split_vec_1);
+
+    if (this->hash_to_entry_addr.find(hash) != this->hash_to_entry_addr.end()) {
+      type::addr_t entry_addr = this->hash_to_entry_addr[hash];
+      // this->func_entry_addr_to_cfg[std::string(func_cfg->GetGraphAttributeString("name"))] = func_cfg;
+      this->func_entry_addr_to_cfg[entry_addr] = func_cfg;
+    }
   }
 }
 
 void GPerf::GenerateControlFlowGraphs(const char *dir_name) { this->ReadStaticControlFlowGraphs(dir_name); }
 
-core::ControlFlowGraph *GPerf::GetControlFlowGraph(std::string func_name) { return this->func_cfg_map[func_name]; }
+core::ControlFlowGraph *GPerf::GetControlFlowGraph(type::addr_t entry_addr) {
+  return this->func_entry_addr_to_cfg[entry_addr];
+}
 
-std::map<std::string, core::ControlFlowGraph *> &GPerf::GetControlFlowGraphs() { return this->func_cfg_map; }
+std::map<type::addr_t, core::ControlFlowGraph *> &GPerf::GetControlFlowGraphs() { return this->func_entry_addr_to_cfg; }
 
 void SetCallTypeAsStatic(core::ProgramCallGraph *pcg, int edge_id, void *extra) {
   pcg->SetEdgeType(edge_id, type::STA_CALL_EDGE);  // static
@@ -144,30 +167,62 @@ void GPerf::ReadFunctionAbstractionGraphs(const char *dir_name) {
   std::vector<std::string> file_names;
   getFiles(std::string(dir_name), file_names);
 
+  int dir_name_len = strlen(dir_name);
+  char dir_name_copy[MAX_STR_LEN] = {0};
+  for (int i = 0; i < dir_name_len - 1; i++) {
+    dir_name_copy[i] = dir_name[i];
+  }
+  if (dir_name[dir_name_len - 1] != '/') {
+    dir_name_copy[dir_name_len - 1] = dir_name[dir_name_len - 1];
+  }
+
+  std::string pag_map = dir_name_copy + std::string(".map");
+  ReadProgramAbstractionGraphMap(pag_map.c_str());
+  std::string(test_str) = std::string("test.txt");
+  DumpMap<int, type::addr_t>(this->hash_to_entry_addr, test_str);
+
   // Traverse the files
-  for (const auto &fn : file_names) {
-    // dbg(fn);
+  for (const auto &hash_str : file_names) {
+    dbg(hash_str);
 
     // Read a ProgramAbstractionGraph from each file
     core::ProgramAbstractionGraph *new_pag = new core::ProgramAbstractionGraph();
-    new_pag->ReadGraphGML(fn.c_str());
-    // new_pag->DumpGraph((file_name + std::string(".bak")).c_str());
-    func_pag_map[std::string(new_pag->GetGraphAttributeString("name"))] = new_pag;
+    new_pag->ReadGraphGML(hash_str.c_str());
+    // func_entry_addr_to_pag[std::string(new_pag->GetGraphAttributeString("name"))] = new_pag;
+
+    /**
+     * Extract entry_addr from ./[bin_name]/[hash_str].pag and [bin_name].pag.map ([hash_str, entry_addr])
+    */
+
+    std::vector<std::string> split_vec, split_vec_1;
+    split(hash_str, std::string("/"), split_vec);
+    dbg(split_vec.size());
+    split(split_vec[split_vec.size() - 1], std::string("."), split_vec_1);
+    int hash = strtoull(split_vec_1[0].c_str(), NULL, 10);
+
+    FREE_CONTAINER(split_vec);
+    FREE_CONTAINER(split_vec_1);
+    dbg(hash);
+    if (this->hash_to_entry_addr.find(hash) != this->hash_to_entry_addr.end()) {
+      type::addr_t entry_addr = this->hash_to_entry_addr[hash];
+      dbg(entry_addr);
+      this->func_entry_addr_to_pag[entry_addr] = new_pag;
+    }
   }
 }
 
 /** Intra-procedural Analysis **/
 
-core::ProgramAbstractionGraph *GPerf::GetFunctionAbstractionGraph(std::string func_name) {
-  return this->func_pag_map[func_name];
+core::ProgramAbstractionGraph *GPerf::GetFunctionAbstractionGraph(type::addr_t func_entry_addr) {
+  return this->func_entry_addr_to_pag[func_entry_addr];
 }
 
-std::map<std::string, core::ProgramAbstractionGraph *> &GPerf::GetFunctionAbstractionGraphs() {
-  return this->func_pag_map;
+std::map<type::addr_t, core::ProgramAbstractionGraph *> &GPerf::GetFunctionAbstractionGraphs() {
+  return this->func_entry_addr_to_pag;
 }
 
 core::ProgramAbstractionGraph *GPerf::GetFunctionAbstractionGraphByAddr(type::addr_t addr) {
-  for (auto &m : func_pag_map) {
+  for (auto &m : func_entry_addr_to_pag) {
     auto s_addr = m.second->GetVertexEntryAddr(0);
     auto e_addr = m.second->GetVertexExitAddr(0);
     // dbg(m.first, addr, s_addr, e_addr);
@@ -186,14 +241,15 @@ void GPerf::IntraProceduralAnalysis() {}
 // std::map<type::addr_t, type::vertex_t> addr_2_vertex_call_stack;
 
 typedef struct InterProceduralAnalysisArg {
-  std::map<std::string, core::ProgramAbstractionGraph *> *func_pag_map;
+  // std::map<std::string, core::ProgramAbstractionGraph *> *func_entry_addr_to_pag;
+  std::map<type::addr_t, core::ProgramAbstractionGraph *> *func_entry_addr_to_pag;
   core::ProgramCallGraph *pcg;
 } InterPAArg;
 
 // FIXME: `void *` should not appear in cpp
 void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   InterPAArg *arg = (InterPAArg *)extra;
-  std::map<std::string, core::ProgramAbstractionGraph *> *func_name_2_pag = arg->func_pag_map;
+  std::map<type::addr_t, core::ProgramAbstractionGraph *> *func_entry_addr_to_pag = arg->func_entry_addr_to_pag;
   core::ProgramCallGraph *pcg = arg->pcg;
 
   // dbg(pag->GetGraphAttributeString("name"));
@@ -208,38 +264,56 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
       return;
     }
 
-    // ProgramAbstractionGraph *callee_pag =
-    //     (*func_name_2_pag)[std::string(pag->GetVertexAttributeString("name", vertex_id))];
-    auto callee_func_name = pcg->GetCallee(call_vertex_id);
-    // free(callee_func_name);
-    if (!callee_func_name) {
-      // dbg(addr, call_vertex_id);
+    // auto callee_func_name = pcg->GetCallee(call_vertex_id);
+    // if (!callee_func_name) {
+    //   return;
+    // }
+    // std::string callee_func_name_str = std::string(callee_func_name);
+
+    // if (callee_func_name) {
+    //   core::ProgramAbstractionGraph *callee_pag = (*func_entry_addr_to_pag)[callee_func_name_str];
+
+    //   if (!callee_pag->GetGraphAttributeFlag("scanned")) {
+    //     void (*ConnectCallerCalleePointer)(core::ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
+    //     // dbg(callee_pag->GetGraphAttributeString("name"));
+    //     callee_pag->SetGraphAttributeFlag("scanned", true);
+    //     callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
+    //   }
+
+    //   // Add Vertex to
+    //   int vertex_count = pag->GetCurVertexNum();
+
+    //   pag->AddGraph(callee_pag);
+
+    //   pag->AddEdge(vertex_id, vertex_count);
+    // }
+
+    type::addr_t callee_func_entry_addr = pcg->GetCalleeEntryAddr(call_vertex_id);
+    if (!callee_func_entry_addr) {
       return;
     }
 
-    std::string callee_func_name_str = std::string(callee_func_name);
-    // if (addr == 4227127) {
-    //   dbg(addr, callee_func_name_str);
-    // }
-    // dbg(callee_func_name_str);
+    // if (callee_func_entry_addr) {
+    for (type::addr_t entry_addr = callee_func_entry_addr - 4; entry_addr <= callee_func_entry_addr + 4; entry_addr++) {
+      if (func_entry_addr_to_pag->find(entry_addr) != func_entry_addr_to_pag->end()) {
+        core::ProgramAbstractionGraph *callee_pag = (*func_entry_addr_to_pag)[entry_addr];
 
-    if (callee_func_name) {
-      core::ProgramAbstractionGraph *callee_pag = (*func_name_2_pag)[callee_func_name_str];
+        if (!callee_pag->GetGraphAttributeFlag("scanned")) {
+          void (*ConnectCallerCalleePointer)(core::ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
+          // dbg(callee_pag->GetGraphAttributeString("name"));
+          callee_pag->SetGraphAttributeFlag("scanned", true);
+          callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
+        }
 
-      if (!callee_pag->GetGraphAttributeFlag("scanned")) {
-        void (*ConnectCallerCalleePointer)(core::ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
-        // dbg(callee_pag->GetGraphAttributeString("name"));
-        callee_pag->SetGraphAttributeFlag("scanned", true);
-        callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
+        // Add Vertex to
+        int vertex_count = pag->GetCurVertexNum();
+
+        pag->AddGraph(callee_pag);
+
+        pag->AddEdge(vertex_id, vertex_count);
       }
-
-      // Add Vertex to
-      int vertex_count = pag->GetCurVertexNum();
-
-      pag->AddGraph(callee_pag);
-
-      pag->AddEdge(vertex_id, vertex_count);
     }
+    //}
   }
 }
 
@@ -385,7 +459,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
             // DFS From root node of function created by pthread_create
             InterPAArg *arg = new InterPAArg();
             arg->pcg = this->pcg;
-            arg->func_pag_map = &(this->func_pag_map);
+            arg->func_entry_addr_to_pag = &(this->func_entry_addr_to_pag);
             func_pag->SetGraphAttributeFlag("scanned", true);
             func_pag->VertexTraversal(&ConnectCallerCallee, arg);
             delete arg;
@@ -411,7 +485,7 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
 
     // Sort the graph
     // TODO: support sorting from a specific vertex
-    this->root_pag->VertexSortChild();
+    // this->root_pag->SortByAddr();
   }
 
   /** pthread_mutex_lock waiting events */
@@ -497,13 +571,15 @@ void GPerf::DynamicInterProceduralAnalysis(core::PerfData *pthread_data) {
 
 void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
   // Search root node , "name" is "main"
-  // std::map<std::string, ProgramAbstractionGraph *> func_name_2_pag;
+  // std::map<std::string, ProgramAbstractionGraph *> func_entry_addr_to_pag;
 
-  for (auto &kv : this->func_pag_map) {
-    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+  for (auto &kv : this->func_entry_addr_to_pag) {
+    dbg(kv.first);
+    // func_entry_addr_to_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     auto pag = kv.second;
     pag->SetGraphAttributeFlag("scanned", false);
-    if (strcmp(kv.first.c_str(), "main") == 0) {
+    dbg(pag->GetVertexAttributeString("name", 0));
+    if (strcmp(pag->GetVertexAttributeString("name", 0), "main") == 0) {
       this->root_pag = pag;
       std::cout << "Find 'main'" << std::endl;
       // break;
@@ -513,7 +589,7 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
   // DFS From root node
   InterPAArg *arg = new InterPAArg();
   arg->pcg = this->pcg;
-  arg->func_pag_map = &(this->func_pag_map);
+  arg->func_entry_addr_to_pag = &(this->func_entry_addr_to_pag);
 
   // void (*ConnectCallerCalleePointer)(Graph *, int, void *) = &ConnectCallerCallee;
   // dbg(this->root_pag->GetGraphAttributeString("name"));
@@ -521,14 +597,14 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
 
   delete arg;
 
-  this->root_pag->VertexSortChild();
+  // this->root_pag->VertexSortChild();
 
   this->DynamicInterProceduralAnalysis(pthread_data);
 
   // this->root_pag->VertexSortChild();
 
-  for (auto &kv : this->func_pag_map) {
-    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+  for (auto &kv : this->func_entry_addr_to_pag) {
+    // func_entry_addr_to_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     auto pag = kv.second;
     pag->RemoveGraphAttribute("scanned");
   }
@@ -538,13 +614,13 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
 
 void GPerf::StaticInterProceduralAnalysis() {
   // Search root node , "name" is "main"
-  // std::map<std::string, ProgramAbstractionGraph *> func_name_2_pag;
+  // std::map<std::string, ProgramAbstractionGraph *> func_entry_addr_to_pag;
 
-  for (auto &kv : this->func_pag_map) {
-    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+  for (auto &kv : this->func_entry_addr_to_pag) {
+    // func_entry_addr_to_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     auto pag = kv.second;
     pag->SetGraphAttributeFlag("scanned", false);
-    if (strcmp(kv.first.c_str(), "main") == 0) {
+    if (strcmp(pag->GetVertexAttributeString("name", 0), "main") == 0) {
       this->root_pag = pag;
       std::cout << "Find 'main'" << std::endl;
       // break;
@@ -554,7 +630,7 @@ void GPerf::StaticInterProceduralAnalysis() {
   // DFS From root node
   InterPAArg *arg = new InterPAArg();
   arg->pcg = this->pcg;
-  arg->func_pag_map = &(this->func_pag_map);
+  arg->func_entry_addr_to_pag = &(this->func_entry_addr_to_pag);
 
   // void (*ConnectCallerCalleePointer)(Graph *, int, void *) = &ConnectCallerCallee;
   // dbg(this->root_pag->GetGraphAttributeString("name"));
@@ -562,10 +638,10 @@ void GPerf::StaticInterProceduralAnalysis() {
 
   delete arg;
 
-  this->root_pag->VertexSortChild();
+  // this->root_pag->VertexSortChild();
 
-  for (auto &kv : this->func_pag_map) {
-    // func_name_2_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
+  for (auto &kv : this->func_entry_addr_to_pag) {
+    // func_entry_addr_to_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     auto pag = kv.second;
     pag->RemoveGraphAttribute("scanned");
   }

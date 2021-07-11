@@ -7,6 +7,8 @@ add_library(sequential_sampler SHARED src/hybrid_collector/dynamic/sequential_sa
 add_library(mpi_sampler SHARED src/hybrid_collector/dynamic/mpi_sampler.cpp src/hybrid_collector/dynamic/mpi_init.cpp)
 add_library(pthread_sampler SHARED src/hybrid_collector/dynamic/pthread_sampler.cpp)
 add_library(omp_sampler SHARED src/hybrid_collector/dynamic/omp_sampler.cpp)
+add_library(mpi_omp_sampler SHARED src/hybrid_collector/dynamic/mpi_omp_sampler.cpp src/hybrid_collector/dynamic/mpi_init.cpp)
+
 
 
 # graph perf offline analysis library
@@ -32,6 +34,7 @@ target_link_libraries(pthread_sampler PRIVATE baguatool)
 # endif()
 if(OpenMP_CXX_FOUND)
     target_link_libraries(omp_sampler PUBLIC baguatool OpenMP::OpenMP_CXX)
+    target_link_libraries(mpi_omp_sampler PUBLIC baguatool MPI::MPI_CXX OpenMP::OpenMP_CXX)
 endif()
 
 option(ENABLE_TOOL "Enable tool" ON)

@@ -473,6 +473,90 @@ type::vertex_t Graph::GetParentVertex(type::vertex_t vertex_id) {
   return parent_vertex_id;
 }
 
+struct dfs_call_back_t {
+  void (*IN_CALL_BACK_FUNC)(Graph *, int, void *);
+  void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *);
+  Graph *g;
+  void *extra;
+};
+
+igraph_bool_t g_in_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
+  struct dfs_call_back_t *extra_wrapper = (struct dfs_call_back_t *)extra;
+  if (extra_wrapper->IN_CALL_BACK_FUNC) {
+    (*(extra_wrapper->IN_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
+  }
+  return 0;
+}
+
+igraph_bool_t g_out_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
+  struct dfs_call_back_t *extra_wrapper = (struct dfs_call_back_t *)extra;
+  if (extra_wrapper->OUT_CALL_BACK_FUNC) {
+    (*(extra_wrapper->OUT_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
+  }
+  return 0;
+}
+
+void Graph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, void *),
+                void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *), void *extra) {
+  // Graph* new_graph = new Graph();
+  // new_graph->GraphInit();
+  struct dfs_call_back_t *extra_wrapper = new (struct dfs_call_back_t)();
+  extra_wrapper->IN_CALL_BACK_FUNC = IN_CALL_BACK_FUNC;
+  extra_wrapper->OUT_CALL_BACK_FUNC = OUT_CALL_BACK_FUNC;
+  extra_wrapper->g = this;
+  extra_wrapper->extra = extra;
+
+  igraph_dfs(&(this->ipag_->graph), /*root=*/root, /*neimode=*/IGRAPH_OUT,
+             /*unreachable=*/0, /*order=*/0, /*order_out=*/0,
+             /*father=*/0, /*dist=*/0,
+             /*in_callback=*/g_in_callback, /*out_callback=*/g_out_callback, /*extra=*/extra_wrapper);
+  ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
+}
+
+struct bfs_call_back_t {
+  void (*CALL_BACK_FUNC)(Graph *, int, void *);
+  Graph *g;
+  void *extra;
+};
+
+igraph_bool_t bfs_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t pred, igraph_integer_t succ,
+                           igraph_integer_t rank, igraph_integer_t dist, void *extra) {
+  struct bfs_call_back_t *extra_wrapper = (struct bfs_call_back_t *)extra;
+  if (extra_wrapper->CALL_BACK_FUNC) {
+    (*(extra_wrapper->CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
+  }
+  return 0;
+}
+
+void Graph::BFS(type::vertex_t root, void (*CALL_BACK_FUNC)(Graph *, int, void *), void *extra) {
+  struct bfs_call_back_t *extra_wrapper = new (struct bfs_call_back_t)();
+  extra_wrapper->CALL_BACK_FUNC = CALL_BACK_FUNC;
+  extra_wrapper->g = this;
+  extra_wrapper->extra = extra;
+
+  // igraph_vector_t order, rank, father, pred, succ, dist;
+  // /* Initialize the vectors where the result will be stored. Any of these
+  //    * can be omitted and replaced with a null pointer when calling
+  //    * igraph_bfs() */
+  //   igraph_vector_init(&order, 0);
+  //   igraph_vector_init(&rank, 0);
+  //   igraph_vector_init(&father, 0);
+  //   igraph_vector_init(&pred, 0);
+  //   igraph_vector_init(&succ, 0);
+  //   igraph_vector_init(&dist, 0);
+  igraph_bfs(&(this->ipag_->graph), /*root=*/root, /*roots=*/0, /*neimode=*/IGRAPH_OUT,
+             /*unreachable=*/0, /*restricted=*/0,
+             /*order=*/0, /*rank=*/0, /*father=*/0, /*pred=*/0, /*succ=*/0, /*dist=*/0,
+             /*callback=*/bfs_callback, /*extra=*/extra_wrapper);
+  // /* Clean up after ourselves */
+  // igraph_vector_destroy(&order);
+  // igraph_vector_destroy(&rank);
+  // igraph_vector_destroy(&father);
+  // igraph_vector_destroy(&pred);
+  // igraph_vector_destroy(&succ);
+  // igraph_vector_destroy(&dist);
+}
+
 igraph_bool_t pre_order_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
   std::vector<type::vertex_t> *pre_order_vertex_vec = (std::vector<type::vertex_t> *)extra;
   pre_order_vertex_vec->push_back(vid);
@@ -489,44 +573,157 @@ void Graph::PreOrderTraversal(type::vertex_t root, std::vector<type::vertex_t> &
              /*in_callback=*/pre_order_callback, /*out_callback=*/0, /*extra=*/&pre_order_vertex_vec);
 }
 
-struct dfs_call_back_t {
-  void (*IN_CALL_BACK_FUNC)(Graph *, int, void *);
-  void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *);
-  Graph *g;
-  void *extra;
-};
-
-igraph_bool_t g_in_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
-  struct dfs_call_back_t *extra_wrapper = (struct dfs_call_back_t *)extra;
-  (*(extra_wrapper->IN_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
-  return 0;
-}
-
-igraph_bool_t g_out_callback(const igraph_t *graph, igraph_integer_t vid, igraph_integer_t dist, void *extra) {
-  struct dfs_call_back_t *extra_wrapper = (struct dfs_call_back_t *)extra;
-  (*(extra_wrapper->OUT_CALL_BACK_FUNC))(extra_wrapper->g, vid, extra_wrapper->extra);
-  return 0;
-}
-
-void Graph::DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph *, int, void *),
-                void (*OUT_CALL_BACK_FUNC)(Graph *, int, void *), void *extra) {
-  // Graph* new_graph = new Graph();
-  // new_graph->GraphInit();
-  struct dfs_call_back_t *extra_wrapper = new (struct dfs_call_back_t)();
-  extra_wrapper->IN_CALL_BACK_FUNC = IN_CALL_BACK_FUNC;
-  extra_wrapper->OUT_CALL_BACK_FUNC = OUT_CALL_BACK_FUNC;
-  extra_wrapper->g = this;
-  extra_wrapper->extra = extra;
-
-  igraph_dfs(&(this->ipag_->graph), /*root=*/root, /*neimode=*/IGRAPH_OUT,
-             /*unreachable=*/1, /*order=*/0, /*order_out=*/0,
-             /*father=*/0, /*dist=*/0,
-             /*in_callback=*/g_in_callback, /*out_callback=*/g_out_callback, /*extra=*/extra_wrapper);
-  ///*in_callback=*/0, /*out_callback=*/0, /*extra=*/extra_wrapper);
-}
-
 GraphPerfData *Graph::GetGraphPerfData() { return this->graph_perf_data; }
 
-void Graph::SortBy(type::vertex_t starting_vertex, const char *attr_name) {}
+template <typename T>
+inline void print_vector(std::vector<T> &vec) {
+  for (auto e : vec) {
+    printf("%d ", e);
+  }
+  printf("\n");
+}
+
+struct vid_value_t {
+  type::vertex_t vertex_id;
+  type::perf_data_t value;
+  vid_value_t(type::vertex_t vid, type::perf_data_t v) : vertex_id(vid), value(v) {}
+  bool operator<(const vid_value_t &viva) const { return (value < viva.value); }
+};
+
+void SortChildren(Graph *g, int vertex_id, void *extra) {
+  char *attr = (char *)extra;
+  // dbg(attr);
+
+  std::vector<type::vertex_t> children_id;
+  g->GetChildVertexSet(vertex_id, children_id);
+
+  /** If this vertex has no child, return now */
+  if (0 == children_id.size()) {
+    return;
+  }
+
+  /** ---------- Start sorting ---------- */
+  /** Collect child pairs <vid, value> */
+  std::vector<vid_value_t> children_id_value_pair;
+
+  for (auto &child : children_id) {
+    type::perf_data_t value = (type::perf_data_t)g->GetVertexAttributeNum(attr, child);
+    // dbg(child, value);
+    children_id_value_pair.push_back(vid_value_t(child, value));
+  }
+  /** Sort by input attr */
+  std::sort(children_id_value_pair.begin(), children_id_value_pair.end());
+
+  /** Convert pair <id, s_addr> to two vector **/
+  std::vector<type::vertex_t> sorted_children_id;
+  // std::vector<type::perf_data_t> children_value;
+
+  for (auto &viva : children_id_value_pair) {
+    sorted_children_id.push_back(viva.vertex_id);
+    // children_value.push_back(viva.value);
+  }
+  // dbg(vertex_id);
+  // print_vector<type::vertex_t>(children_id);
+  // print_vector<type::vertex_t>(sorted_children_id);
+  // dbg(children_id, sorted_children_id);
+  /** ---------- Sorting complete ---------- */
+
+  /** ---------- Start swaping vertices ---------- */
+  /** vector children_id is original sequence, vector sorted_children_id is sorted sequence */
+  int num_children = children_id.size();
+  std::map<type::vertex_t, type::vertex_t> vertex_id_to_tmp_vertex_id;
+  std::map<type::vertex_t, std::vector<type::edge_t>> vertex_id_to_tmp_edge_dest_id_vec;
+
+  /** Record original <child vertex, vector<destination of child's edge>> at first*/
+  for (int i = 0; i < num_children; i++) {
+    if (children_id[i] != sorted_children_id[i]) {
+      // Get and record children_id of children_id[i]
+      std::vector<type::vertex_t> children_of_child;
+      g->GetChildVertexSet(children_id[i], children_of_child);
+      vertex_id_to_tmp_edge_dest_id_vec[children_id[i]] = children_of_child;
+    }
+  }
+
+  /** Swap attributes and edges */
+  for (int i = 0; i < num_children; i++) {
+    if (children_id[i] != sorted_children_id[i]) {
+      /** TODO: store temporary vertex in a new graph which will not inflect original graph */
+
+      /** Copy attributes except "id" from children_id[i] to a new temporary vertex */
+      type::vertex_t tmp_vertex_id = g->AddVertex();
+      g->CopyVertex(tmp_vertex_id, g, children_id[i]);
+
+      /** If sorted_children_id[i] is covered, use corresponding temporary vertex in vertex_id_to_tmp_vertex_id,
+       * otherwise, original vertex is used for copy.
+      */
+      if (vertex_id_to_tmp_vertex_id.count(sorted_children_id[i]) > 0) {
+        g->CopyVertex(children_id[i], g, vertex_id_to_tmp_vertex_id[sorted_children_id[i]]);
+        // g->SetVertexAttributeNum("id", children_id[i], sorted_children_id[i]);
+      } else {
+        g->CopyVertex(children_id[i], g, sorted_children_id[i]);
+      }
+      vertex_id_to_tmp_vertex_id[children_id[i]] = tmp_vertex_id;
+
+      // /** TODO: can not understand now */
+      /** Delete all edges of children_id[i] */
+      std::vector<type::vertex_t> &children_of_child = vertex_id_to_tmp_edge_dest_id_vec[children_id[i]];
+      for (auto &child_of_child : children_of_child) {
+        // dbg(children_id[i], child_of_child);
+        g->DeleteEdge(children_id[i], child_of_child);
+      }
+
+      /** Add new edges for children_id[i] */
+      if (vertex_id_to_tmp_edge_dest_id_vec.count(sorted_children_id[i]) > 0) {
+        std::vector<type::vertex_t> &new_children_of_child = vertex_id_to_tmp_edge_dest_id_vec[sorted_children_id[i]];
+        for (auto &new_child_of_child : new_children_of_child) {
+          // dbg(children_id[i], new_child_of_child);
+          g->AddEdge(children_id[i], new_child_of_child);
+        }
+      } else {
+        dbg("sorted_children_id[i] not found in vertex_id_to_tmp_edge_dest_id_vec");
+        // Get children_id of sorted_children_id[i]
+        std::vector<type::vertex_t> children_id_children;
+        g->GetChildVertexSet(sorted_children_id[i], children_id_children);
+        // dbg(sorted_children_id[i], children_id_children);
+
+        for (auto &child_of_child : children_id_children) {
+          // dbg(children_id[i], child_of_child);
+          g->AddEdge(children_id[i], child_of_child);
+        }
+        FREE_CONTAINER(children_id_children);
+      }
+    }
+  }
+
+  // for (auto& vertex: vertex_id_to_tmp_vertex_id) {
+  //   dbg(g->GetCurVertexNum() - 1);
+  //   g->DeleteVertex(g->GetCurVertexNum() - 1);
+  // }
+
+  for (auto &v_pair : vertex_id_to_tmp_vertex_id) {
+    // dbg(v_pair.second);
+    g->DeleteVertex(v_pair.second);
+  }
+  /** ---------- Swaping vertices complete ---------- */
+
+  FREE_CONTAINER(children_id);
+  FREE_CONTAINER(children_id_value_pair);
+  FREE_CONTAINER(sorted_children_id);
+  // FREE_CONTAINER(children_value);
+  FREE_CONTAINER(vertex_id_to_tmp_vertex_id);
+  for (auto &item : vertex_id_to_tmp_edge_dest_id_vec) {
+    FREE_CONTAINER(item.second);
+  }
+  FREE_CONTAINER(vertex_id_to_tmp_edge_dest_id_vec);
+
+  return;
+}
+
+void Graph::SortBy(type::vertex_t starting_vertex, const char *attr_name) {
+  // char* attr = attr_name;
+  // dbg()l
+  this->BFS(starting_vertex, &SortChildren, (void *)attr_name);
+  return;
+}
 
 }  // namespace baguatool::core

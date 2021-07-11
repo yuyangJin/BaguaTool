@@ -28,8 +28,8 @@
 using namespace std;
 
 void getFiles(std::string path, std::vector<std::string> &files);
-vector<string> split(const string &str, const string &delim);
-int split(char *str, const char *delim, char dst[][MAX_STR_LEN]);
+// vector<string> split(const string &str, const string &delim);
+// int split(char *str, const char *delim, char dst[][MAX_STR_LEN]);
 
 template <class keyType, class valueType>
 void DumpMap(std::map<keyType, valueType> &m, std::string &file_name) {
@@ -38,11 +38,42 @@ void DumpMap(std::map<keyType, valueType> &m, std::string &file_name) {
   std::ofstream fout;
   fout.open(file_name_str);
 
+  if (!fout.is_open()) {
+    std::cout << "Failed to open" << file_name_str << std::endl;
+  }
+
   for (auto &kv : m) {
     fout << kv.first << " " << kv.second << std::endl;
   }
 
   fout.close();
+}
+
+template <class keyType, class valueType>
+void ReadMap(std::map<keyType, valueType> &m, std::string &file_name) {
+  char file_name_str[MAX_STR_LEN];
+  strcpy(file_name_str, file_name.c_str());
+  dbg(file_name_str);
+  std::ifstream fin;
+  fin.open(file_name_str);
+  if (!fin.is_open()) {
+    std::cout << "Failed to open" << file_name_str << std::endl;
+  }
+
+  keyType key;
+  valueType value;
+
+  std::string line;
+  while (getline(fin, line)) {
+    std::stringstream ss(line);
+    ss >> key >> value;
+    dbg(key, value);
+    m[key] = value;
+  }
+
+  dbg(m.size());
+
+  fin.close();
 }
 
 // template <class keyType, class valueType>
@@ -97,9 +128,8 @@ void getFiles(std::string path, std::vector<std::string> &files) {
   closedir(dir);
 }
 
-vector<string> split(const string &str, const string &delim) {
-  vector<string> res;
-  if ("" == str) return res;
+void split(const string &str, const string &delim, vector<string> &res) {
+  if ("" == str) return;
   // convert str from string to char*
   char *strs = new char[str.length() + 1];
   strcpy(strs, str.c_str());
@@ -114,15 +144,14 @@ vector<string> split(const string &str, const string &delim) {
     p = strtok(NULL, d);
   }
 
-  return res;
+  return;
 }
 
-std::vector<std::string> split(char *str, const char *delim) {
-  std::vector<std::string> res;
+void split(char *str, const char *delim, std::vector<std::string> &res) {
   char *s = strdup(str);
   char *token;
   if (strlen(s) == 0) {
-    return res;
+    return;
   }
 
   int n = 0;
@@ -131,7 +160,7 @@ std::vector<std::string> split(char *str, const char *delim) {
     res.push_back(token_str);       // store in res(result)
                                     // strcpy(dst[n++], token);
   }
-  return res;
+  return;
 }
 
 #endif

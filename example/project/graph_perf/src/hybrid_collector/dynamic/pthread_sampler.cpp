@@ -47,12 +47,13 @@ std::unordered_map<u_int64_t, std::pair<u_int64_t, call_path_t *>> *mutex_to_tid
 
 std::unordered_map<long, int> *tid_to_thread_gid;
 
-std::map<int, int> pthread_t_to_create_thread_id;
+std::unordered_map<pthread_t, int> pthread_t_to_create_thread_id;
 
 static int CYC_SAMPLE_COUNT = 100;  // 10ms
 static int module_init = 0;
 
 static __thread int thread_gid = -1;
+static int main_thread_gid = -1;
 static int thread_global_id;
 
 int new_thread_gid() {
@@ -80,9 +81,7 @@ void print_call_path(baguatool::type::addr_t *call_path, int cal_path_len) {
 
 void RecordCallPath(int y) {
   baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
-
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
-
   perf_data->RecordVertexData(call_path, call_path_len, 0, thread_gid, 1);
 }
 
@@ -126,7 +125,7 @@ static void init_mock() {
       (decltype(original_pthread_mutex_unlock))resolve_symbol("pthread_mutex_unlock", RESOLVE_SYMBOL_UNVERSIONED);
 
   thread_global_id = 0;
-  thread_gid = new_thread_gid();
+  main_thread_gid = new_thread_gid();
 
   tid_to_thread_gid = new std::unordered_map<long, int>();
   mutex_to_tid_and_callpath = new std::unordered_map<u_int64_t, std::pair<u_int64_t, call_path_t *>>();
@@ -160,6 +159,9 @@ struct start_routine_wrapper_arg {
   void *(*start_routine)(void *);
   void *real_arg;
   int create_thread_id;
+  // baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
+  // int call_path_len;
+  // pthread_t thread;
 };
 
 static void *start_routine_wrapper(void *arg) {
@@ -167,10 +169,15 @@ static void *start_routine_wrapper(void *arg) {
   void *(*start_routine)(void *) = args_->start_routine;
   void *real_arg = args_->real_arg;
 
-  thread_gid = new_thread_gid();
-  LOG_INFO("Thread Start, thread_gid = %d\n", thread_gid);
+  int create_thread_id = new_thread_gid();
+  LOG_INFO("Thread Start, thread_gid = %d\n", create_thread_id);
 
-  args_->create_thread_id = thread_gid;
+  // dbg(thread_gid);
+  // perf_data->RecordEdgeData(args_->call_path, args_->call_path_len, (baguatool::type::addr_t*) nullptr, 0, 0, 0,
+  // main_thread_gid, create_thread_id, -1);
+  // dbg(args_->thread, create_thread_id);
+  // pthread_t_to_create_thread_id[args_->thread] = create_thread_id;
+  args_->create_thread_id = create_thread_id;
   sampler->AddThread();
   sampler->SetOverflow(&RecordCallPath);
   sampler->Start();
@@ -195,14 +202,22 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   }
 
   /** ------------------------- */
-  /** execute real pthread_create */
-  auto *arg = (start_routine_wrapper_arg *)malloc(sizeof(struct start_routine_wrapper_arg));
+  sampler->Stop();
+  struct start_routine_wrapper_arg *arg =
+      (struct start_routine_wrapper_arg *)malloc(sizeof(struct start_routine_wrapper_arg));
   arg->start_routine = start_routine;
   arg->real_arg = real_arg;
-  arg->create_thread_id = 0; // init
+  arg->create_thread_id = 0;  // init
+  // arg->call_path_len = sampler->GetBacktrace(arg->call_path, MAX_CALL_PATH_DEPTH);
+  // arg->thread = (*thread);
+  // dbg(arg->thread);
+  sampler->Start();
+
+  /** execute real pthread_create */
   int ret = (*original_pthread_create)(thread, attr, start_routine_wrapper, arg);
   /** ------------------------- */
 
+  sampler->Stop();
   /** get call path / call stack / calling context */
   baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
   int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
@@ -210,7 +225,9 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
   /** recording */
   dbg(arg->create_thread_id);
   perf_data->RecordEdgeData(call_path, call_path_len, out_call_path, 0, 0, 0, thread_gid, arg->create_thread_id, -1);
-  pthread_t_to_create_thread_id[(int)*thread] = arg->create_thread_id;
+  // dbg(*thread);
+  pthread_t_to_create_thread_id[*thread] = arg->create_thread_id;
+  sampler->Start();
 
   free(arg);
   return ret;
@@ -237,10 +254,13 @@ int pthread_join(pthread_t thread, void **value_ptr) {
   /** get call path / call stack / calling context */
   baguatool::type::addr_t out_call_path[MAX_CALL_PATH_DEPTH] = {0};
   int out_call_path_len = sampler->GetBacktrace(out_call_path, MAX_CALL_PATH_DEPTH);
-  baguatool::type::addr_t *call_path = nullptr;
-  int create_thread_id = pthread_t_to_create_thread_id[(int)thread];
+  int create_thread_id = 0;
+  if (pthread_t_to_create_thread_id.find(thread) != pthread_t_to_create_thread_id.end()) {
+    create_thread_id = pthread_t_to_create_thread_id[thread];
+  }
   /** recording */
-  perf_data->RecordEdgeData(call_path, 0, out_call_path, out_call_path_len, 0, 0, create_thread_id, thread_gid, time);
+  perf_data->RecordEdgeData((baguatool::type::addr_t *)nullptr, 0, out_call_path, out_call_path_len, 0, 0,
+                            create_thread_id, thread_gid, time);
 
   return ret;
 }
@@ -297,7 +317,11 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
       std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
       baguatool::type::perf_data_t time = fp_ms.count() / 1000.0 * CYC_SAMPLE_COUNT;
       dbg(time);
-      std::pair<u_int64_t, call_path_t *> tid_cp_pair = (*mutex_to_tid_and_callpath)[(u_int64_t)mutex];
+
+      std::pair<u_int64_t, call_path_t *> tid_cp_pair;
+      if (mutex_to_tid_and_callpath->find((u_int64_t)mutex) != mutex_to_tid_and_callpath->end()) {
+        tid_cp_pair = (*mutex_to_tid_and_callpath)[(u_int64_t)mutex];
+      }
 
       baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
       int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
@@ -311,7 +335,11 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
       call_path_t *cp = tid_cp_pair.second;
       // print_call_path(cp->call_path, cp->call_path_len);
 
-      int src_thread_id = (*tid_to_thread_gid)[src_tid];
+      int src_thread_id = 0;
+
+      if (tid_to_thread_gid->find(src_tid) != tid_to_thread_gid->end()) {
+        src_thread_id = (*tid_to_thread_gid)[src_tid];
+      }
 
       perf_data->RecordEdgeData(cp->call_path, cp->call_path_len, call_path, call_path_len, 0, 0, src_thread_id,
                                 thread_gid, time);

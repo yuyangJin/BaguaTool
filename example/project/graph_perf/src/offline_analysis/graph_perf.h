@@ -13,10 +13,11 @@ using namespace baguatool;
 
 class GPerf {
  private:
-  std::map<std::string, core::ControlFlowGraph*> func_cfg_map; /**<control-flow graphs for each function*/
-  core::ProgramCallGraph* pcg;                                 /**<program call graph*/
-  std::map<std::string, core::ProgramAbstractionGraph*>
-      func_pag_map; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
+  std::map<type::addr_t, core::ControlFlowGraph*> func_entry_addr_to_cfg; /**<control-flow graphs for each function*/
+  core::ProgramCallGraph* pcg;                                            /**<program call graph*/
+  std::map<type::addr_t, core::ProgramAbstractionGraph*>
+      func_entry_addr_to_pag; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
+  std::map<int, type::addr_t> hash_to_entry_addr;
   core::ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
   core::ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
 
@@ -27,6 +28,8 @@ class GPerf {
   /** Destructor.
    */
   ~GPerf();
+
+  void ReadProgramAbstractionGraphMap(const char* file_name);
 
   /** Read static control-flow graph of each function (Input)
    * @param dir_name - dictory name of all functions' CFG
@@ -42,12 +45,12 @@ class GPerf {
    * @param func_name - function name
    * @return CFG of a specific function
    */
-  core::ControlFlowGraph* GetControlFlowGraph(std::string func_name);
+  core::ControlFlowGraph* GetControlFlowGraph(type::addr_t entry_addr);
 
   /** Get control-flow graphs of all functions.
    * @return CFGs of all functions
    */
-  std::map<std::string, core::ControlFlowGraph*>& GetControlFlowGraphs();
+  std::map<type::addr_t, core::ControlFlowGraph*>& GetControlFlowGraphs();
 
   /** Program Call Graph **/
 
@@ -89,7 +92,7 @@ class GPerf {
    * @param func_name - name of a specific function
    * @return fucntion abstraction graph of the specific function
   */
-  core::ProgramAbstractionGraph* GetFunctionAbstractionGraph(std::string func_name);
+  core::ProgramAbstractionGraph* GetFunctionAbstractionGraph(type::addr_t entry_addr);
 
   /** Get function abstraction graph by address. (entry address of this function <= input address <= exit address of
    * this function)
@@ -101,7 +104,7 @@ class GPerf {
   /** Get function abstraction graphs of all functions.
    * @return a map of function names and corresponding fucntion abstraction graphs
   */
-  std::map<std::string, core::ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
+  std::map<type::addr_t, core::ProgramAbstractionGraph*>& GetFunctionAbstractionGraphs();
 
   /** Inter-procedural Analysis **/
 

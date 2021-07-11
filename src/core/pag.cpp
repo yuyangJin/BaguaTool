@@ -120,6 +120,7 @@ void ProgramAbstractionGraph::VertexTraversal(void (*CALL_BACK_FUNC)(ProgramAbst
   igraph_vs_t vs;
   igraph_vit_t vit;
   // printf("Function %s Start:\n", this->GetGraphAttributeString("name"));
+  dbg(this->cur_vertex_num - 1);
   igraph_vs_seq(&vs, 0, this->cur_vertex_num - 1);
   igraph_vit_create(&ipag_->graph, vs, &vit);
   while (!IGRAPH_VIT_END(vit)) {

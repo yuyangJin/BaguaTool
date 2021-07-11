@@ -27,6 +27,7 @@
 #include "baguatool.h"
 #include "common/utils.h"
 #include "core/pag.h"
+#include "dbg.h"
 #include "static_analysis.h"
 
 using namespace Dyninst;
@@ -71,7 +72,8 @@ StaticAnalysisImpl::~StaticAnalysisImpl() {
   FREE_CONTAINER(call_graph_map);
 
   // TODO: it is better to use unique_ptr instead of raw pointer?
-  for (auto &it : func_2_graph) delete it.second;
+  // for (auto &it : func_2_graph) delete it.second;
+  for (auto &it : entry_addr_to_graph) delete it.second;
 }
 
 // Capture a Program Call Graph (PCG)
@@ -271,11 +273,13 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
   for (auto func : this->co->funcs()) {
     Address entry_addr = func->addr();
     std::string func_name = func->name();
+    // dbg(func_name, );
 
     // Create a graph for each function
     auto func_cfg = new core::ControlFlowGraph();
     func_cfg->GraphInit(func_name.c_str());
-    this->func_2_graph[func_name] = func_cfg;
+    // this->func_2_graph[func_name] = func_cfg;
+    this->entry_addr_to_graph[entry_addr] = func_cfg;
 
     const ParseAPI::Function::blocklist &blist = func->blocks();
     std::vector<Block *> bvec(blist.begin(), blist.end());
@@ -306,6 +310,8 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
 }
 
 void StaticAnalysisImpl::DumpFunctionGraph(core::ControlFlowGraph *func_cfg, const char *file_name) {
+  func_cfg->DeleteExtraTailVertices();
+  func_cfg->SortByAddr(0);
   func_cfg->DumpGraphGML(file_name);
 }
 
@@ -327,15 +333,21 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
     }
   }
 
-  std::map<int, std::string> hash_2_func;
+  // std::map<int, std::string> hash_2_func;
+  std::map<int, Address> hash_2_func_entry_addr;
 
   int i = 0;
   // Traverse through all functions
   for (auto func : this->co->funcs()) {
-    std::string func_name = func->name();
-    hash_2_func[i] = std::string(func_name);
+    // std::string func_name = func->name();
+    // hash_2_func[i] = std::string(func_name);
+    // core::ControlFlowGraph *func_cfg = this->func_2_graph[func_name];
 
-    core::ControlFlowGraph *func_cfg = this->func_2_graph[func_name];
+    Address entry_addr = func->addr();
+    hash_2_func_entry_addr[i] = entry_addr;
+
+    core::ControlFlowGraph *func_cfg = this->entry_addr_to_graph[entry_addr];
+
     std::stringstream ss;
 #ifdef LOOP_GRANULARITY
     ss << "./" << this->binary_name << ".pag/" << i << ".gml";
@@ -344,6 +356,7 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
 #endif
     auto file_name = ss.str();
     this->DumpFunctionGraph(func_cfg, file_name.c_str());
+
     i++;
   }
 
@@ -354,7 +367,7 @@ void StaticAnalysisImpl::DumpAllFunctionGraph() {
   ss << "./" << this->binary_name << ".cfg.map";
 #endif
   auto file_name = ss.str();
-  DumpMap<int, std::string>(hash_2_func, file_name);
+  DumpMap<int, Address>(hash_2_func_entry_addr, file_name);
 }
 
 void StaticAnalysisImpl::DumpProgramCallGraph() {

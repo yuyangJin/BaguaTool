@@ -439,6 +439,7 @@ class Graph {
   void PreOrderTraversal(type::vertex_t root_vertex_id, std::vector<type::vertex_t>& pre_order_vertex_vec);
 
   /** [Graph Algorithm] Perform Depth-First Search on the graph.
+   * @param root - The id of the root vertex.
    * @param IN_CALL_BACK_FUNC - callback function when a new vertex is discovered / accessed. The input parameters of
    * this function contain
    * a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for developers to pass more
@@ -452,6 +453,16 @@ class Graph {
   */
   void DFS(type::vertex_t root, void (*IN_CALL_BACK_FUNC)(Graph*, int, void*),
            void (*OUT_CALL_BACK_FUNC)(Graph*, int, void*), void* extra);
+
+  /** [Graph Algorithm] Perform Breadth-First Search on the graph.
+   * @param root - The id of the root vertex.
+   * @param CALL_BACK_FUNC - callback function when a new vertex is discovered / accessed. The input parameters of
+   * this function contain a pointer to the graph being traversed, id of the accessed vertex, and an extra pointer for
+   * developers to pass more
+   * parameters.
+   * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
+  */
+  void BFS(type::vertex_t root, void (*CALL_BACK_FUNC)(Graph*, int, void*), void* extra);
 
   GraphPerfData* GetGraphPerfData();
 
@@ -566,6 +577,12 @@ class ProgramGraph : public Graph {
    */
   const char* GetCallee(type::vertex_t vertex_id);
 
+  /** Get entry address of a vertex's callee vertex
+   * @param vertex_id - id of vertex
+   * @return entry address of the callee vertex
+   */
+  type::addr_t GetCalleeEntryAddr(type::vertex_t vertex_id);
+
   /** Sort vertices by entry addresses
    */
   void VertexSortChild();
@@ -585,6 +602,10 @@ class ProgramGraph : public Graph {
    * @param extra - a pointer for developers to pass more parameters as the last parameter of CALL_BACK_FUNC
    */
   void EdgeTraversal(void (*CALL_BACK_FUNC)(ProgramGraph*, int, void*), void* extra);
+
+  /** Sort by address
+  */
+  void SortByAddr(type::vertex_t starting_vertex);
 };
 
 class ProgramAbstractionGraph : public ProgramGraph {
@@ -633,7 +654,7 @@ class ProgramAbstractionGraph : public ProgramGraph {
   void ConvertVertexReducedDataToPercent(std::string& metric, baguatool::type::perf_data_t total,
                                          std::string& new_metric);
 
-  /** PreserveHotVertices
+  /** Preserve hotspot vertices
    *
   */
   void PreserveHotVertices(char* metric_name);

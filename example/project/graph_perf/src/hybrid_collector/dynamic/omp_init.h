@@ -5,7 +5,6 @@
 extern "C" {
 #endif
 
-extern int mpi_rank;
 void GOMP_parallel(void (*fn)(void *), void *data, unsigned num_threads, unsigned int flags);
 
 #ifdef __cplusplus

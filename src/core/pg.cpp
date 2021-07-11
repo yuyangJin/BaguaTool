@@ -303,6 +303,31 @@ const char *ProgramGraph::GetCallee(type::vertex_t vertex_id) {
   return nullptr;
 }
 
+type::addr_t ProgramGraph::GetCalleeEntryAddr(type::vertex_t vertex_id) {
+  // dbg(GetVertexAttributeString("name", vertex_id));
+  std::vector<type::vertex_t> children;
+  GetChildVertexSet(vertex_id, children);
+  if (0 == children.size()) {
+    return 0;
+  }
+
+  for (auto &child : children) {
+    if (GetVertexType(child) == type::FUNC_NODE) {
+      if (GetEdgeType(vertex_id, child) != type::DYN_CALL_EDGE) {
+        continue;
+      }
+      // dbg(GetVertexAttributeString("name", child));
+      return GetVertexAttributeNum("saddr", child);
+    }
+  }
+
+  FREE_CONTAINER(children);
+  // std::vector<type::vertex_t>().swap(children);
+
+  // Not found
+  return 0;
+}
+
 struct compare_addr {
   const std::vector<unsigned long long> &_v;
   compare_addr(const std::vector<unsigned long long> &v) : _v(v) {}
@@ -440,4 +465,6 @@ void ProgramGraph::VertexSortChild() {
   this->VertexTraversal(&SortChild, nullptr);
   return;
 }
+
+void ProgramGraph::SortByAddr(type::vertex_t starting_vertex) { this->SortBy(starting_vertex, "eaddr"); }
 }

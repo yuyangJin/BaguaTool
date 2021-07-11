@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   gperf->ReadFunctionAbstractionGraphs(pag_dir_name);
   // gperf->ReadStaticProgramCallGraph(bin_name);
   gperf->GenerateProgramCallGraph(bin_name, perf_data);
-  // gperf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
+  gperf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 
   gperf->GenerateProgramAbstractionGraph(perf_data);
 

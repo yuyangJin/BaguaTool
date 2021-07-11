@@ -16,7 +16,7 @@
 #define PTHREAD_VERSION "GLIBC_2.3.2"
 #define NUM_EVENTS 1
 #define MAX_CALL_PATH_DEPTH 100
-#define MAX_THREAD_PER_PROCS 65530 // cat /proc/sys/vm/max_map_count 
+#define MAX_THREAD_PER_PROCS 65530  // cat /proc/sys/vm/max_map_count
 
 #define gettid() syscall(__NR_gettid)
 
@@ -43,10 +43,7 @@ void close_thread_gid() {
   // LOG_INFO("GET thread_gid = %d\n", thread_gid);
   return;
 }
-int get_thread_gid() {
-  return thread_global_id;
-}
-
+int get_thread_gid() { return thread_global_id; }
 
 void RecordCallPath(int y) {
   baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
@@ -57,7 +54,6 @@ void RecordCallPath(int y) {
     perf_data->RecordVertexData(call_path, call_path_len, 0 /* process_id */, main_thread_gid /* thread_id */, 1);
   }
 }
-
 
 static void *resolve_symbol(const char *symbol_name, int config) {
   void *result;
@@ -100,27 +96,27 @@ static void init_mock() {
   main_thread_gid = new_thread_gid();
   main_tid = gettid();
 
-
   sampler->Setup();
   sampler->SetSamplingFreq(CYC_SAMPLE_COUNT);
 
   void (*RecordCallPathPointer)(int) = &(RecordCallPath);
   sampler->SetOverflow(RecordCallPathPointer);
   sampler->Start();
-
 }
 
 /** User-defined what to do at destructor */
 static void fini_mock() {
-
   sampler->Stop();
-  perf_data->Dump("SAMPLE.TXT");
+  dbg(perf_data->GetEdgeDataSize(), perf_data->GetVertexDataSize());
+  char output_file_name[MAX_LINE_LEN] = {0};
+  sprintf(output_file_name, "SAMPLE-%lu.TXT", gettid());
+  perf_data->Dump(output_file_name);
 
   // sampler->RecordLdLib();
 }
 
-/** ------------------------------------------------------------------------- 
- * For OpenMP 
+/** -------------------------------------------------------------------------
+ * For OpenMP
  * --------------------------------------------------------------------------
 */
 
@@ -140,13 +136,13 @@ static void fn_wrapper(void *arg) {
   void *data = args_->data;
 
   thread_gid = new_thread_gid();
-  LOG_INFO("Thread Start, thread_gid = %d\n", thread_gid);
-
+  // LOG_INFO("Thread Start, thread_gid = %d\n", thread_gid);
 
   /** recording which GOMP_parallel create which threads */
   if (main_tid != gettid()) {
-    dbg(thread_gid);
-    perf_data->RecordEdgeData(args_->call_path, args_->call_path_len, (baguatool::type::addr_t*)nullptr, 0, 0, 0, main_thread_gid, thread_gid, -2);
+    // dbg(thread_gid);
+    perf_data->RecordEdgeData(args_->call_path, args_->call_path_len, (baguatool::type::addr_t *)nullptr, 0, 0, 0,
+                              main_thread_gid, thread_gid, -2);
   }
   sampler->AddThread();
   sampler->SetOverflow(&RecordCallPath);
@@ -161,8 +157,8 @@ static void fn_wrapper(void *arg) {
   sampler->UnsetOverflow();
   sampler->RemoveThread();
 
-  //close_thread_gid();
-  LOG_INFO("Thread Finish, thread_gid = %d\n", thread_gid);
+  // close_thread_gid();
+  // LOG_INFO("Thread Finish, thread_gid = %d\n", thread_gid);
 
   return;
 }

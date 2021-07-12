@@ -53,7 +53,7 @@ template <class keyType, class valueType>
 void ReadMap(std::map<keyType, valueType> &m, std::string &file_name) {
   char file_name_str[MAX_STR_LEN];
   strcpy(file_name_str, file_name.c_str());
-  //dbg(file_name_str);
+  // dbg(file_name_str);
   std::ifstream fin;
   fin.open(file_name_str);
   if (!fin.is_open()) {
@@ -67,11 +67,11 @@ void ReadMap(std::map<keyType, valueType> &m, std::string &file_name) {
   while (getline(fin, line)) {
     std::stringstream ss(line);
     ss >> key >> value;
-    //dbg(key, value);
+    // dbg(key, value);
     m[key] = value;
   }
 
-  //dbg(m.size());
+  // dbg(m.size());
 
   fin.close();
 }

@@ -1,6 +1,8 @@
 #include <cstring>
 #include "graph_perf.h"
 
+#define MAX_NUM_CORE 24
+
 int main(int argc, char** argv) {
   const char* bin_name = argv[1];
   char pag_dir_name[20] = {0};
@@ -20,20 +22,18 @@ int main(int argc, char** argv) {
   gperf->ReadFunctionAbstractionGraphs(pag_dir_name);
   // gperf->ReadStaticProgramCallGraph(bin_name);
   gperf->GenerateProgramCallGraph(bin_name, perf_data);
-  //gperf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
+  // gperf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 
   gperf->GenerateProgramAbstractionGraph(perf_data);
 
   baguatool::core::ProgramAbstractionGraph* pag = gperf->GetProgramAbstractionGraph();
 
-  // pag->DumpGraphGML("root_1.gml");
-
-  // pag->PreOrderTraversal(0);
-
-  // pag->DumpGraphDot("root_1.dot");
-
   gperf->DataEmbedding(perf_data);
+
   std::string metric("TOT_CYC");
+
+  gperf->OpenMPGroupThreadPerfData(metric, MAX_NUM_CORE);
+
   std::string op("SUM");
   baguatool::type::perf_data_t total = pag->ReduceVertexPerfData(metric, op);
   std::string avg_metric("TOT_CYC_SUM");
@@ -47,8 +47,25 @@ int main(int argc, char** argv) {
   pag->DeleteExtraTailVertices();
   // gperf->GetProgramAbstractionGraph()->PreserveHotVertices("CYCAVGPERCENT");
 
+  /** MPAG */
   int num_threads = atoi(argv[3]);
-  gperf->GenerateOpenMPProgramAbstractionGraph(num_threads);
 
-  gperf->GetMultiProgramAbstractionGraph()->DumpGraphGML("multi_thread_pag.gml");
+  gperf->GenerateOpenMPProgramAbstractionGraph(num_threads);
+  auto mpag = gperf->GetMultiProgramAbstractionGraph();
+
+  auto mpag_graph_perf_data = mpag->GetGraphPerfData();
+  std::string mpag_output_file_name_str("mpag_gpd.json");
+  mpag_graph_perf_data->Dump(mpag_output_file_name_str);
+
+
+  total = 0;
+  total = mpag->ReduceVertexPerfData(metric, op);
+  printf("%lf\n", total);
+  mpag->ConvertVertexReducedDataToPercent(avg_metric, total / num_threads, new_metric);
+  
+
+  mpag->DumpGraphGML("multi_thread_pag.gml");
+  
+
+
 }

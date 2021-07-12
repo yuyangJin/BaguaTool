@@ -160,6 +160,8 @@ class GPerf {
 
   void GenerateMultiThreadProgramAbstractionGraph();
 
+  void OpenMPGroupThreadPerfData(std::string& metric, type::thread_t num_groups);
+
   void GenerateOpenMPProgramAbstractionGraph(int num_threads);
 
   void GenerateMultiProcessProgramAbstractionGraph(int num_procs);

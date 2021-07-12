@@ -112,6 +112,7 @@ class GraphPerfData {
   void SetProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id,
                         std::map<type::thread_t, type::perf_data_t>& proc_perf_data);
 
+  void EraseProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id);
 };  // class GraphPerfData
 
 /** @brief Wrapper class of igraph. Provide basic graph operations.

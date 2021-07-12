@@ -168,4 +168,15 @@ void GraphPerfData::SetProcsPerfData(type::vertex_t vertex_id, std::string& metr
   return;
 }
 
+void GraphPerfData::EraseProcsPerfData(type::vertex_t vertex_id, std::string& metric, int procs_id) {
+  std::string vertex_id_str = std::to_string(vertex_id);
+  std::string metric_str = std::string(metric);
+  std::string process_id_str = std::to_string(procs_id);
+  std::string thread_id_str;
+
+  this->j_perf_data[vertex_id_str][metric_str][process_id_str].clear();
+
+  return;
+}
+
 }  // namespace baguatool::core

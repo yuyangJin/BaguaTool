@@ -183,7 +183,7 @@ void GPerf::ReadFunctionAbstractionGraphs(const char *dir_name) {
 
   // Traverse the files
   for (const auto &hash_str : file_names) {
-    dbg(hash_str);
+    // dbg(hash_str);
 
     // Read a ProgramAbstractionGraph from each file
     core::ProgramAbstractionGraph *new_pag = new core::ProgramAbstractionGraph();
@@ -196,16 +196,16 @@ void GPerf::ReadFunctionAbstractionGraphs(const char *dir_name) {
 
     std::vector<std::string> split_vec, split_vec_1;
     split(hash_str, std::string("/"), split_vec);
-    dbg(split_vec.size());
+    // dbg(split_vec.size());
     split(split_vec[split_vec.size() - 1], std::string("."), split_vec_1);
     int hash = strtoull(split_vec_1[0].c_str(), NULL, 10);
 
     FREE_CONTAINER(split_vec);
     FREE_CONTAINER(split_vec_1);
-    dbg(hash);
+    // dbg(hash);
     if (this->hash_to_entry_addr.find(hash) != this->hash_to_entry_addr.end()) {
       type::addr_t entry_addr = this->hash_to_entry_addr[hash];
-      dbg(entry_addr);
+      // dbg(entry_addr);
       this->func_entry_addr_to_pag[entry_addr] = new_pag;
     }
   }
@@ -574,11 +574,11 @@ void GPerf::InterProceduralAnalysis(core::PerfData *pthread_data) {
   // std::map<std::string, ProgramAbstractionGraph *> func_entry_addr_to_pag;
 
   for (auto &kv : this->func_entry_addr_to_pag) {
-    dbg(kv.first);
+    // dbg(kv.first);
     // func_entry_addr_to_pag[std::string(pag->GetGraphAttributeString("name"))] = pag;
     auto pag = kv.second;
     pag->SetGraphAttributeFlag("scanned", false);
-    dbg(pag->GetVertexAttributeString("name", 0));
+    // dbg(pag->GetVertexAttributeString("name", 0));
     if (strcmp(pag->GetVertexAttributeString("name", 0), "main") == 0) {
       this->root_pag = pag;
       std::cout << "Find 'main'" << std::endl;
@@ -811,6 +811,59 @@ void GPerf::GenerateMultiThreadProgramAbstractionGraph() {
   delete arg;
 }
 
+struct group_thread_perf_data_arg_t {
+  core::GraphPerfData *graph_perf_data;
+  std::string metric;
+  type::thread_t num_groups;
+};
+
+void group_thread_perf_data(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
+  struct group_thread_perf_data_arg_t *arg = (struct group_thread_perf_data_arg_t *)extra;
+  core::GraphPerfData *pag_graph_perf_data = arg->graph_perf_data;
+  type::thread_t num_groups = arg->num_groups;
+
+  std::vector<type::procs_t> procs_vec;
+  pag_graph_perf_data->GetMetricsPerfDataProcsNum(vertex_id, arg->metric, procs_vec);
+  for (auto procs : procs_vec) {
+    /** Get original process performance data */
+    std::map<type::thread_t, type::perf_data_t> proc_perf_data;
+    pag_graph_perf_data->GetProcsPerfData(vertex_id, arg->metric, procs, proc_perf_data);
+
+    /** Erase original process performance data */
+    pag_graph_perf_data->EraseProcsPerfData(vertex_id, arg->metric, procs);
+
+    /** Grouping */
+    std::map<type::thread_t, type::perf_data_t> group_proc_perf_data;
+    for (auto &thread_perf_data : proc_perf_data) {
+      type::thread_t group_id = thread_perf_data.first % num_groups;
+      if (group_proc_perf_data.find(group_id) != group_proc_perf_data.end()) {
+        group_proc_perf_data[group_id] += thread_perf_data.second;
+      } else {
+        group_proc_perf_data[group_id] = thread_perf_data.second;
+      }
+    }
+
+    /** Record group process performance data */
+    pag_graph_perf_data->SetProcsPerfData(vertex_id, arg->metric, procs, group_proc_perf_data);
+
+    FREE_CONTAINER(proc_perf_data);
+    FREE_CONTAINER(group_proc_perf_data);
+  }
+  FREE_CONTAINER(procs_vec);
+}
+
+void GPerf::OpenMPGroupThreadPerfData(std::string &metric, type::thread_t num_groups) {
+  auto pag_graph_perf_data = this->root_pag->GetGraphPerfData();
+  struct group_thread_perf_data_arg_t *arg = new (struct group_thread_perf_data_arg_t)();
+  arg->metric = std::string(metric);
+  arg->num_groups = num_groups;
+  arg->graph_perf_data = pag_graph_perf_data;
+
+  this->root_pag->VertexTraversal(&group_thread_perf_data, (void *)arg);
+
+  delete arg;
+}
+
 bool openmp_seq_record_flag = false;
 std::vector<type::vertex_t> openmp_seq;
 
@@ -823,13 +876,13 @@ struct openmp_expansion_arg_t {
 void in_openmp_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   struct openmp_expansion_arg_t *arg = (struct openmp_expansion_arg_t *)extra;
   core::ProgramAbstractionGraph *mpag = arg->mpag;
-  //std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id = arg->pag_vertex_id_2_mpag_vertex_id;
+  // std::map<type::vertex_t, type::vertex_t> *pag_vertex_id_2_mpag_vertex_id = arg->pag_vertex_id_2_mpag_vertex_id;
 
   if (openmp_seq_record_flag) {
     openmp_seq.push_back(vertex_id);
-    return ;
-  } 
- 
+    return;
+  }
+
   type::vertex_t new_vertex_id = mpag->AddVertex();
   mpag->CopyVertex(new_vertex_id, pag, vertex_id);
   //(*pag_vertex_id_2_mpag_vertex_id)[vertex_id] = new_vertex_id;
@@ -852,43 +905,71 @@ void in_openmp_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void
 void out_openmp_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   struct openmp_expansion_arg_t *arg = (struct openmp_expansion_arg_t *)extra;
   core::ProgramAbstractionGraph *mpag = arg->mpag;
+  auto pag_graph_perf_data = pag->GetGraphPerfData();
+  auto mpag_graph_perf_data = mpag->GetGraphPerfData();
 
-  if (openmp_seq_record_flag){
-  type::vertex_t parent_vertex_id = pag->GetParentVertex(vertex_id);
-  if (strcmp(pag->GetVertexAttributeString("name", parent_vertex_id), "GOMP_parallel") == 0) {
-    openmp_seq_record_flag = false;
+  if (openmp_seq_record_flag) {
+    type::vertex_t parent_vertex_id = pag->GetParentVertex(vertex_id);
+    if (strcmp(pag->GetVertexAttributeString("name", parent_vertex_id), "GOMP_parallel") == 0) {
+      openmp_seq_record_flag = false;
 
-    //auto pag_graph_perf_data = this->root_pag->GetGraphPerfData();
-    //auto mpag_graph_perf_data = this->root_mpag->GetGraphPerfData();
-    type::vertex_t end_vertex_id = mpag->AddVertex();
-    mpag->CopyVertex(end_vertex_id, pag, vertex_id);
-    mpag->SetVertexAttributeString("name", end_vertex_id, "GOMP_parallel.end");
+      type::vertex_t end_vertex_id = mpag->AddVertex();
+      mpag->CopyVertex(end_vertex_id, pag, vertex_id);
+      mpag->SetVertexAttributeString("name", end_vertex_id, "GOMP_parallel.end");
 
-    for (int i = 0; i < arg->num_threads; i++) {
-      type::vertex_t last_new_vertex_id = arg->src_vertex_id;
-      for (auto vertex_id : openmp_seq) {
-        type::vertex_t new_vertex_id = mpag->AddVertex();
-        mpag->CopyVertex(new_vertex_id, pag, vertex_id);
-        if (last_new_vertex_id != -1) {
-          mpag->AddEdge(last_new_vertex_id, new_vertex_id);
+      std::vector<type::vertex_t> *new_vertex_set;
+      new_vertex_set = new std::vector<type::vertex_t>[arg->num_threads]();
+
+      for (int i = 0; i < arg->num_threads; i++) {
+        type::vertex_t last_new_vertex_id = arg->src_vertex_id;
+        for (auto vertex_id : openmp_seq) {
+          type::vertex_t new_vertex_id = mpag->AddVertex();
+          mpag->CopyVertex(new_vertex_id, pag, vertex_id);
+          if (last_new_vertex_id != -1) {
+            mpag->AddEdge(last_new_vertex_id, new_vertex_id);
+          }
+          new_vertex_set[i].push_back(new_vertex_id);
+          last_new_vertex_id = new_vertex_id;
         }
-        // Copy process i perf data of vertex in pag to process i perf data of new vertex in mpag
-        // std::vector<std::string> metrics;
-        // pag_graph_perf_data->GetVertexPerfDataMetrics(vertex_id, metrics);
-        // for (auto metric : metrics) {
-        //   std::map<type::thread_t, type::perf_data_t> proc_perf_data;
-        //   pag_graph_perf_data->GetProcsPerfData(vertex_id, metric, i, proc_perf_data);
-        //   mpag_graph_perf_data->SetProcsPerfData(new_vertex_id, metric, i, proc_perf_data);
-        // }
-        last_new_vertex_id = new_vertex_id;
+        mpag->AddEdge(last_new_vertex_id, end_vertex_id);
       }
-      mpag->AddEdge(last_new_vertex_id, end_vertex_id);
+      arg->src_vertex_id = end_vertex_id;
+
+      /** Scatter performance data */
+      int j = 0;
+      for (auto vertex_id : openmp_seq) {
+        std::vector<std::string> metrics;
+        pag_graph_perf_data->GetVertexPerfDataMetrics(vertex_id, metrics);
+        for (auto metric : metrics) {
+          std::vector<type::procs_t> procs_vec;
+          pag_graph_perf_data->GetMetricsPerfDataProcsNum(vertex_id, metric, procs_vec);
+          for (auto procs_id : procs_vec) {
+            std::map<type::thread_t, type::perf_data_t> proc_perf_data;
+            pag_graph_perf_data->GetProcsPerfData(vertex_id, metric, procs_id, proc_perf_data);
+
+            int i = 0;
+            for (auto &thread_perf_data : proc_perf_data) {
+              if (i >= arg->num_threads) {
+                break;
+              }
+              mpag_graph_perf_data->SetPerfData(new_vertex_set[i][j], metric, procs_id, thread_perf_data.first,
+                                                thread_perf_data.second);
+              i++;
+            }
+            FREE_CONTAINER(proc_perf_data);
+          }
+          FREE_CONTAINER(procs_vec);
+        }
+        FREE_CONTAINER(metrics);
+        j++;
+      }
+
+      for (int i = 0; i < arg->num_threads; i++) {
+        FREE_CONTAINER(new_vertex_set[i]);
+      }
+      delete [] new_vertex_set;
+      FREE_CONTAINER(openmp_seq);
     }
-
-    arg->src_vertex_id = end_vertex_id;
-
-    FREE_CONTAINER(openmp_seq);
-  }
   }
 }
 

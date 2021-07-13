@@ -967,7 +967,7 @@ void out_openmp_expansion(core::ProgramAbstractionGraph *pag, int vertex_id, voi
       for (int i = 0; i < arg->num_threads; i++) {
         FREE_CONTAINER(new_vertex_set[i]);
       }
-      delete [] new_vertex_set;
+      delete[] new_vertex_set;
       FREE_CONTAINER(openmp_seq);
     }
   }

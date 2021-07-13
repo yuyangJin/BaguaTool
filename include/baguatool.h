@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 #include <stack>
 #include <string>
+#include <tuple>
 #include <vector>
 #include "../src/common/common.h"
 #include "../src/common/tprintf.h"
@@ -44,6 +45,8 @@ enum vertex_type_t {
 };
 
 enum edge_type_t { STA_CALL_EDGE = -102, DYN_CALL_EDGE = -101, NONE_EDGE_TYPE = -100 };
+
+struct addr_debug_info_t;
 }
 
 namespace core {
@@ -1055,8 +1058,24 @@ class Sampler {
 };  // class Sampler
 
 // static void* resolve_symbol(const char* symbol_name, int config);
+class SharedObjAnalysis {
+ private:
+  /* data */
+  std::vector<std::tuple<type::addr_t, type::addr_t, std::string>> shared_obj_map;
 
-}  // namespace graph_sd
+ public:
+  SharedObjAnalysis(/* args */);
+  ~SharedObjAnalysis();
+  void CollectSharedObjMap();
+
+  void ReadSharedObjMap(std::string& file_name);
+  void DumpSharedObjMap(std::string& file_name);
+  void GetDebugInfo(type::addr_t addr, type::addr_debug_info_t& debug_info);
+
+  void GetDebugInfos(std::vector<type::addr_t>& addrs, std::vector<type::addr_debug_info_t>& debug_infos);
+};  // class SharedObjAnalysis
+
+}  // namespace collector
 }  // namespace baguatool
 
 #endif

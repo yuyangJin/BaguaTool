@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <string>
 #include "baguatool.h"
 #include "dbg.h"
 #include "omp_init.h"
@@ -120,7 +121,12 @@ static void fini_mock() {
   sprintf(output_file_name, "SAMPLE-%lu.TXT", gettid());
   perf_data->Dump(output_file_name);
 
-  // sampler->RecordLdLib();
+  std::unique_ptr<baguatool::collector::SharedObjAnalysis> shared_obj_analysis =
+      std::make_unique<baguatool::collector::SharedObjAnalysis>();
+  shared_obj_analysis->CollectSharedObjMap();
+  // sprintf(output_file_name, "SOMAP-%lu.TXT", gettid());
+  std::string output_file_name_str = std::string("SOMAP-") + std::to_string((int)gettid()) + std::string(".TXT");
+  shared_obj_analysis->DumpSharedObjMap(output_file_name_str);
 }
 
 /** -------------------------------------------------------------------------

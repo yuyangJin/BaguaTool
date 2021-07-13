@@ -29,8 +29,10 @@
 using namespace std;
 
 void getFiles(std::string path, std::vector<std::string> &files);
-vector<string> split(const string &str, const string &delim);
-int split(char *str, const char *delim, char dst[][MAX_STR_LEN]);
+// vector<string> split(const string &str, const string &delim);
+// int split(char *str, const char *delim, char dst[][MAX_STR_LEN]);
+void split(const string &str, const string &delim, vector<string> &res);
+void split(char *str, const char *delim, std::vector<std::string> &res);
 
 template <class keyType, class valueType>
 void DumpMap(std::map<keyType, valueType> &m, std::string &file_name) {

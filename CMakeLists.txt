@@ -47,11 +47,12 @@ add_library(
   src/core/cfg.cpp
   src/core/perf_data.cpp
   src/core/graph_perf_data.cpp
-  # src/core/hybrid_analysis.cpp
+  #src/core/hybrid_analysis.cpp
 
   #src/graph_perf/preprocessing/preprocess.cpp
   src/collector/static/dyninst/static_analysis.cpp
   src/collector/dynamic/papi/sampler.cpp
+  src/collector/dynamic/shared_obj_analysis.cpp
 
   # src/hybrid_analysis/graph_perf.cpp
 )
@@ -61,9 +62,6 @@ add_library(
 
 set_target_properties(
   baguatool
-  # binary_analyzer
-  # sequential_sampler
-  # pthread_sampler
 
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"

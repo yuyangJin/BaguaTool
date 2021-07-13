@@ -58,7 +58,8 @@ StaticAnalysisImpl::StaticAnalysisImpl(char *binary_name) {
   // Parse the binary
   this->co->parse();
 
-  auto binary_name_vec = split(binary_name, std::string("/"));
+  std::vector<std::string> binary_name_vec;
+  split(binary_name, "/", binary_name_vec);
 
   strcpy(this->binary_name, binary_name_vec[binary_name_vec.size() - 1].c_str());
 }

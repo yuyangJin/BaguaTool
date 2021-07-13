@@ -57,15 +57,10 @@ int main(int argc, char** argv) {
   std::string mpag_output_file_name_str("mpag_gpd.json");
   mpag_graph_perf_data->Dump(mpag_output_file_name_str);
 
-
   total = 0;
   total = mpag->ReduceVertexPerfData(metric, op);
   printf("%lf\n", total);
   mpag->ConvertVertexReducedDataToPercent(avg_metric, total / num_threads, new_metric);
-  
 
   mpag->DumpGraphGML("multi_thread_pag.gml");
-  
-
-
 }

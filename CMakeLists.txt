@@ -86,6 +86,7 @@ target_compile_options(
   -Wall -Wno-missing-braces
   #-fno-rtti # We cannot open it because dyninst use `typeid` in header
   -fno-omit-frame-pointer -fstack-protector-all
+  -rdynamic
 )
 
 
@@ -123,7 +124,7 @@ target_link_libraries(baguatool PRIVATE ${Boost_LIBRARIES})
 
 
 if (ENABLE_EXAMPLE)
-  #add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/example/simple)
   add_subdirectory(${PROJECT_SOURCE_DIR}/example/project/graph_perf)
 endif()
 

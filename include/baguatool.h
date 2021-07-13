@@ -46,7 +46,22 @@ enum vertex_type_t {
 
 enum edge_type_t { STA_CALL_EDGE = -102, DYN_CALL_EDGE = -101, NONE_EDGE_TYPE = -100 };
 
-struct addr_debug_info_t;
+struct addr_debug_info_t {
+  type::addr_t addr;
+  std::string file_name;
+  std::string func_name;
+  int line_num;
+
+  type::addr_t GetAddress() { return this->addr; }
+  std::string& GetFileName() { return this->file_name; }
+  std::string& GetFuncName() { return this->func_name; }
+  int GetLineNum() { return this->line_num; }
+
+  void SetAddress(type::addr_t addr) { this->addr = addr; }
+  void SetFileName(std::string& file_name) { this->file_name = std::string(file_name); }
+  void SetFuncName(std::string& func_name) { this->func_name = std::string(func_name); }
+  void SetLineNum(int line_num) { this->line_num = line_num; }
+};
 }
 
 namespace core {

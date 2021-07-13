@@ -1,24 +1,5 @@
 #include "shared_obj_analysis.h"
 
-namespace baguatool::type {
-struct addr_debug_info_t {
-  type::addr_t addr;
-  std::string file_name;
-  std::string func_name;
-  int line_num;
-
-  type::addr_t GetAddress() { return this->addr; }
-  std::string& GetFileName() { return this->file_name; }
-  std::string& GetFuncName() { return this->func_name; }
-  int GetLineNum() { return this->line_num; }
-
-  void SetAddress(type::addr_t addr) { this->addr = addr; }
-  void SetFileName(std::string& file_name) { this->file_name = std::string(file_name); }
-  void SetFuncName(std::string& func_name) { this->func_name = std::string(func_name); }
-  void SetLineNum(int line_num) { this->line_num = line_num; }
-};
-}
-
 namespace baguatool::collector {
 
 SharedObjAnalysis::SharedObjAnalysis() {}
@@ -45,7 +26,7 @@ void SharedObjAnalysis::CollectSharedObjMap() {
     if (cnt == 6) {
       auto seg_size = strtol(line_vec[4].c_str(), 0, 10);
       if (seg_size > 0) {
-        dbg(cnt, line);
+        // dbg(cnt, line);
         split(line_vec[0], "-", line_vec_1);
         type::addr_t start_addr = strtoull(line_vec_1[0].c_str(), 0, 16);
         type::addr_t end_addr = strtoull(line_vec_1[1].c_str(), 0, 16);
@@ -82,13 +63,96 @@ void SharedObjAnalysis::DumpSharedObjMap(std::string& file_name) {
   if (!fout.is_open()) {
     std::cout << "Failed to open" << file_name << std::endl;
   }
-  for (auto t : this->shared_obj_map) {
+  for (auto& t : this->shared_obj_map) {
     fout << std::get<0>(t) << " " << std::get<1>(t) << " " << std::get<2>(t) << std::endl;
   }
   fout.close();
 }
 
-void SharedObjAnalysis::GetDebugInfo(type::addr_t addr, type::addr_debug_info_t& debug_info) {}
+type::addr_t search_exe_and_section_from_map(
+    std::vector<std::tuple<type::addr_t, type::addr_t, std::string>>& shared_obj_map, type::addr_t addr, string& exe) {
+  for (auto& t : shared_obj_map) {
+    type::addr_t start_addr = std::get<0>(t);
+    type::addr_t end_addr = std::get<1>(t);
+    std::string& shared_obj = std::get<2>(t);
+    if (addr >= start_addr && addr <= end_addr) {
+      exe = std::string(shared_obj);
+      // dbg (start_addr);
+      if (addr > 0x400000000) {
+        return addr - start_addr;
+      } else {
+        return addr;
+      }
+    }
+  }
+  return 0;
+}
+
+void execute_cmd(const char* cmd, std::string& result) {
+  char buffer[128];
+  FILE* pipe = popen(cmd, "r");
+  if (!pipe) throw std::runtime_error("popen() failed!");
+  try {
+    while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+      result += buffer;
+    }
+  } catch (...) {
+    pclose(pipe);
+    throw;
+  }
+  pclose(pipe);
+  return;
+}
+
+void SharedObjAnalysis::GetDebugInfo(type::addr_t addr, type::addr_debug_info_t& debug_info) {
+  std::string exe;
+  type::addr_t offset;
+
+  /** Get offset and shared object of input address */
+  offset = search_exe_and_section_from_map(this->shared_obj_map, addr, exe);
+  dbg(offset);
+  debug_info.SetAddress(offset);
+
+  struct link_map* lm = (struct link_map*)dlopen(exe.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+  if (!lm) {
+    fputs(dlerror(), stderr);
+    exit(1);
+  }
+  type::addr_t base_addr = lm->l_addr;
+  type::addr_t new_load_addr = offset + base_addr;
+
+  Dl_info DlInfo;
+  int ret = dladdr((void*)new_load_addr, &DlInfo);
+
+  if (ret && DlInfo.dli_sname) { /** If dladdr obtains function name successfully */
+    int status = 0;
+    char* cpp_name = abi::__cxa_demangle(DlInfo.dli_sname, 0, 0, &status);
+    if (status >= 0) {
+      std::string func_name = std::string(cpp_name);
+      debug_info.SetFuncName(func_name);
+      dbg(DlInfo.dli_fname, func_name);
+    } else {
+      std::string func_name = std::string(DlInfo.dli_fname);
+      debug_info.SetFuncName(func_name);
+      dbg(DlInfo.dli_fname, func_name);
+    }
+  } else { /** If dladdr fails to obtain function name */
+    std::stringstream offset_ss;
+    offset_ss << std::hex << offset;
+    std::string result;
+    std::string cmd_line =
+        std::string("addr2line -fC -e ") + std::string(DlInfo.dli_fname) + std::string(" ") + offset_ss.str();
+    execute_cmd(cmd_line.c_str(), result);
+    // dbg(cmd_line, result);
+    std::stringstream ss(result);
+    std::string func_name;
+    ss >> func_name;
+    dbg(DlInfo.dli_fname, func_name);
+    debug_info.SetFuncName(func_name);
+  }
+
+  dlclose(lm);
+}
 
 void SharedObjAnalysis::GetDebugInfos(std::vector<type::addr_t>& addrs,
                                       std::vector<type::addr_debug_info_t>& debug_infos) {}

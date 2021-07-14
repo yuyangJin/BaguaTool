@@ -1087,7 +1087,8 @@ class SharedObjAnalysis {
   void DumpSharedObjMap(std::string& file_name);
   void GetDebugInfo(type::addr_t addr, type::addr_debug_info_t& debug_info);
 
-  void GetDebugInfos(std::vector<type::addr_t>& addrs, std::vector<type::addr_debug_info_t>& debug_infos);
+  void GetDebugInfos(std::vector<type::addr_t>& addrs,
+                     std::map<type::addr_t, type::addr_debug_info_t*>& debug_info_map);
 };  // class SharedObjAnalysis
 
 }  // namespace collector

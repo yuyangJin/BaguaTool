@@ -10,6 +10,8 @@ int main(int argc, char** argv) {
   strcpy(pcg_name, bin_name);
   strcat(pcg_name, ".pcg");
 
+  std::string shared_obj_map_file_name = std::string(argv[3]);
+
   baguatool::core::PerfData* perf_data = new baguatool::core::PerfData();
   for (int i = 3; i < argc; i++) {
     const char* perf_data_file_name = argv[i];
@@ -22,7 +24,7 @@ int main(int argc, char** argv) {
 
   graph_perf->ReadFunctionAbstractionGraphs(pag_dir_name);
   // graph_perf->ReadStaticProgramCallGraph(bin_name);
-  graph_perf->GenerateProgramCallGraph(bin_name, perf_data);
+  graph_perf->GenerateProgramCallGraph(bin_name, perf_data, shared_obj_map_file_name);
   graph_perf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 
   graph_perf->GenerateProgramAbstractionGraph(perf_data);

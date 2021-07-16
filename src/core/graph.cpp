@@ -45,6 +45,7 @@ type::vertex_t Graph::AddVertex() {
   // Add a new vertex
   // dbg("add vertex", cur_vertex_num);
   igraph_integer_t new_vertex_id = this->cur_vertex_num++;
+  this->SetVertexAttributeNum("id", new_vertex_id, new_vertex_id);
 
   // dbg(new_vertex_id, this->cur_vertex_num);
 
@@ -181,7 +182,7 @@ void Graph::DeleteEdge(type::vertex_t src_id, type::vertex_t dest_id) {
 
 void Graph::QueryVertex() { UNIMPLEMENTED(); }
 
-int Graph::QueryEdge(type::vertex_t src_id, type::vertex_t dest_id) {
+type::edge_t Graph::QueryEdge(type::vertex_t src_id, type::vertex_t dest_id) {
   type::edge_t edge_id = -1;
   int ret = igraph_get_eid(&ipag_->graph, &edge_id, src_id, dest_id, IGRAPH_DIRECTED, /**error*/ 0);
   if (ret != IGRAPH_SUCCESS) {
@@ -190,9 +191,9 @@ int Graph::QueryEdge(type::vertex_t src_id, type::vertex_t dest_id) {
   return edge_id;
 }
 
-int Graph::GetEdgeSrc(type::edge_t edge_id) { return IGRAPH_FROM(&ipag_->graph, edge_id); }
+type::vertex_t Graph::GetEdgeSrc(type::edge_t edge_id) { return IGRAPH_FROM(&ipag_->graph, edge_id); }
 
-int Graph::GetEdgeDest(type::edge_t edge_id) { return IGRAPH_TO(&ipag_->graph, edge_id); }
+type::vertex_t Graph::GetEdgeDest(type::edge_t edge_id) { return IGRAPH_TO(&ipag_->graph, edge_id); }
 
 void Graph::GetEdgeOtherSide() { UNIMPLEMENTED(); }
 
@@ -211,12 +212,14 @@ bool Graph::HasEdgeAttribute(const char *attr_name) {
 void Graph::SetGraphAttributeString(const char *attr_name, const char *value) {
   SETGAS(&ipag_->graph, attr_name, value);
 }
-void Graph::SetGraphAttributeNum(const char *attr_name, const int value) { SETGAN(&ipag_->graph, attr_name, value); }
+void Graph::SetGraphAttributeNum(const char *attr_name, const type::num_t value) {
+  SETGAN(&ipag_->graph, attr_name, value);
+}
 void Graph::SetGraphAttributeFlag(const char *attr_name, const bool value) { SETGAB(&ipag_->graph, attr_name, value); }
 void Graph::SetVertexAttributeString(const char *attr_name, type::vertex_t vertex_id, const char *value) {
   SETVAS(&ipag_->graph, attr_name, vertex_id, value);
 }
-void Graph::SetVertexAttributeNum(const char *attr_name, type::vertex_t vertex_id, const int value) {
+void Graph::SetVertexAttributeNum(const char *attr_name, type::vertex_t vertex_id, const type::num_t value) {
   SETVAN(&ipag_->graph, attr_name, vertex_id, value);
 }
 void Graph::SetVertexAttributeFlag(const char *attr_name, type::vertex_t vertex_id, const bool value) {
@@ -225,7 +228,7 @@ void Graph::SetVertexAttributeFlag(const char *attr_name, type::vertex_t vertex_
 void Graph::SetEdgeAttributeString(const char *attr_name, type::edge_t edge_id, const char *value) {
   SETEAS(&ipag_->graph, attr_name, edge_id, value);
 }
-void Graph::SetEdgeAttributeNum(const char *attr_name, type::edge_t edge_id, const int value) {
+void Graph::SetEdgeAttributeNum(const char *attr_name, type::edge_t edge_id, const type::num_t value) {
   SETEAN(&ipag_->graph, attr_name, edge_id, value);
 }
 void Graph::SetEdgeAttributeFlag(const char *attr_name, type::edge_t edge_id, const bool value) {
@@ -237,8 +240,8 @@ const char *Graph::GetGraphAttributeString(const char *attr_name) {
   return ret_str;
 }
 
-const int Graph::GetGraphAttributeNum(const char *attr_name) {
-  const int ret_num = GAN(&ipag_->graph, attr_name);
+const type::num_t Graph::GetGraphAttributeNum(const char *attr_name) {
+  const type::num_t ret_num = GAN(&ipag_->graph, attr_name);
   return ret_num;
 }
 
@@ -252,8 +255,8 @@ const char *Graph::GetVertexAttributeString(const char *attr_name, type::vertex_
   return ret_str;
 }
 
-const int Graph::GetVertexAttributeNum(const char *attr_name, type::vertex_t vertex_id) {
-  const int ret_num = VAN(&ipag_->graph, attr_name, vertex_id);
+const type::num_t Graph::GetVertexAttributeNum(const char *attr_name, type::vertex_t vertex_id) {
+  const type::num_t ret_num = VAN(&ipag_->graph, attr_name, vertex_id);
   return ret_num;
 }
 
@@ -267,8 +270,8 @@ const char *Graph::GetEdgeAttributeString(const char *attr_name, type::edge_t ed
   return ret_str;
 }
 
-const int Graph::GetEdgeAttributeNum(const char *attr_name, type::edge_t edge_id) {
-  const int ret_num = EAN(&ipag_->graph, attr_name, edge_id);
+const type::num_t Graph::GetEdgeAttributeNum(const char *attr_name, type::edge_t edge_id) {
+  const type::num_t ret_num = EAN(&ipag_->graph, attr_name, edge_id);
   return ret_num;
 }
 

@@ -1,4 +1,5 @@
 #include <cstring>
+#include <string>
 #include "baguatool.h"
 #include "graph_perf.h"
 
@@ -16,11 +17,13 @@ int main(int argc, char** argv) {
   baguatool::core::PerfData* perf_data = new baguatool::core::PerfData();
   perf_data->Read(perf_data_file_name);
 
+  std::string shared_obj_map_file_name = std::string(argv[3]);
+
   auto gperf = std::make_unique<graph_perf::GPerf>();
 
   gperf->ReadFunctionAbstractionGraphs(pag_dir_name);
   // gperf->ReadStaticProgramCallGraph(bin_name);
-  gperf->GenerateProgramCallGraph(bin_name, perf_data);
+  gperf->GenerateProgramCallGraph(bin_name, perf_data, shared_obj_map_file_name);
   gperf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 
   gperf->GenerateProgramAbstractionGraph(perf_data);

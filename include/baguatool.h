@@ -7,6 +7,7 @@
 #include <stack>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 #include "../src/common/common.h"
 #include "../src/common/tprintf.h"
@@ -18,11 +19,12 @@ using namespace nlohmann;
 namespace baguatool {
 
 namespace type {
-class graph_t;                                /**<igragh-graph wrapper */
-class vertex_set_t;                           /**<igraph_vs_t wrapper */
-typedef int vertex_t;                         /**<vertex id type (int)*/
-typedef int edge_t;                           /**<edge id type (int)*/
-typedef unsigned long long int addr_t;        /**<address type (unsigned long long int)*/
+class graph_t;                         /**<igragh-graph wrapper */
+class vertex_set_t;                    /**<igraph_vs_t wrapper */
+typedef int vertex_t;                  /**<vertex id type (int)*/
+typedef int edge_t;                    /**<edge id type (int)*/
+typedef unsigned long long int addr_t; /**<address type (unsigned long long int)*/
+typedef double num_t;
 typedef double perf_data_t;                   /**<performance data type (double) */
 typedef std::stack<type::addr_t> call_path_t; /**<call path type (need to modify)*/
 typedef int thread_t;
@@ -263,7 +265,7 @@ class Graph {
    * @param attr_name - name of the graph attribute
    * @param value - the (new) value of the graph attribute
    */
-  void SetGraphAttributeNum(const char* attr_name, const int value);
+  void SetGraphAttributeNum(const char* attr_name, const type::num_t value);
 
   /** Set a boolean graph attribute as flag
    * @param attr_name - name of the graph attribute
@@ -283,7 +285,7 @@ class Graph {
    * @param vertex_id - the vertex id
    * @param value - the (new) value of the vertex attribute
    */
-  void SetVertexAttributeNum(const char* attr_name, type::vertex_t vertex_id, const int value);
+  void SetVertexAttributeNum(const char* attr_name, type::vertex_t vertex_id, const type::num_t value);
 
   /** Set a boolean vertex attribute as flag
    * @param attr_name - name of the vertex attribute
@@ -304,7 +306,7 @@ class Graph {
    * @param type::edge_t - the edge id
    * @param value - the (new) value of the edge attribute
    */
-  void SetEdgeAttributeNum(const char* attr_name, type::edge_t edge_id, const int value);
+  void SetEdgeAttributeNum(const char* attr_name, type::edge_t edge_id, const type::num_t value);
 
   /** Set a boolean edge attribute as flag
    * @param attr_name - name of the edge attribute
@@ -323,7 +325,7 @@ class Graph {
    * @param attr_name - name of the graph attribute
    * @return the (new) value of the graph attribute
    */
-  const int GetGraphAttributeNum(const char* attr_name);
+  const type::num_t GetGraphAttributeNum(const char* attr_name);
 
   /** Get a flag graph attribute
    * @param attr_name - name of the graph attribute
@@ -343,7 +345,7 @@ class Graph {
    * @param vertex_id - the vertex id
    * @return value - the (new) value of the vertex attribute
    */
-  const int GetVertexAttributeNum(const char* attr_name, type::vertex_t vertex_id);
+  const type::num_t GetVertexAttributeNum(const char* attr_name, type::vertex_t vertex_id);
 
   /** Get a flag vertex attribute
    * @param attr_name - name of the vertex attribute
@@ -364,7 +366,7 @@ class Graph {
    * @param type::edge_t - the edge id
    * @return value - the (new) value of the edge attribute
    */
-  const int GetEdgeAttributeNum(const char* attr_name, type::edge_t edge_id);
+  const type::num_t GetEdgeAttributeNum(const char* attr_name, type::edge_t edge_id);
 
   /** Get a flag edge attribute
    * @param attr_name - name of the edge attribute
@@ -517,7 +519,7 @@ class ProgramGraph : public Graph {
    * @param exit_addr - exit address of the target vertex
    * @return 0 is success
    */
-  int SetVertexDebugInfo(const type::vertex_t vertex_id, const int entry_addr, const int exit_addr);
+  int SetVertexDebugInfo(const type::vertex_t vertex_id, const type::addr_t entry_addr, const type::addr_t exit_addr);
 
   /** Get the type of a vertex.
    * @param vertex_id - id of the target vertex
@@ -575,20 +577,20 @@ class ProgramGraph : public Graph {
    * @param addr - address
    * @return id of the identified vertex
    */
-  type::vertex_t GetCallVertexWithAddr(unsigned long long addr);
+  type::vertex_t GetCallVertexWithAddr(type::addr_t addr);
 
   /** Identify the function vertex corresponding to the address from all vertices.
    * @param addr - address
    * @return id of the identified vertex
    */
-  type::vertex_t GetFuncVertexWithAddr(unsigned long long addr);
+  type::vertex_t GetFuncVertexWithAddr(type::addr_t addr);
 
   /** Add a new edge between call vertex and callee function vertex through their addresses.
    * @param call_addr - address of the call instruction
    * @param callee_addr - address of the callee function
    * @return
    */
-  int AddEdgeWithAddr(unsigned long long call_addr, unsigned long long callee_addr);
+  int AddEdgeWithAddr(type::addr_t call_addr, type::addr_t callee_addr);
 
   /** Get name of a vertex's callee vertex
    * @param vertex_id - id of vertex
@@ -1087,7 +1089,7 @@ class SharedObjAnalysis {
   void DumpSharedObjMap(std::string& file_name);
   void GetDebugInfo(type::addr_t addr, type::addr_debug_info_t& debug_info);
 
-  void GetDebugInfos(std::vector<type::addr_t>& addrs,
+  void GetDebugInfos(std::unordered_set<type::addr_t>& addrs,
                      std::map<type::addr_t, type::addr_debug_info_t*>& debug_info_map);
 };  // class SharedObjAnalysis
 

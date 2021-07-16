@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <tuple>
+#include <unordered_set>
 #include "baguatool.h"
 #include "common/utils.h"
 

@@ -2,7 +2,9 @@
 #define GRAPHPERF_H_
 #include <stdlib.h>
 #include <map>
+#include <set>
 #include <string>
+#include <unordered_set>
 #include "baguatool.h"
 #include "common.h"
 #include "utils.h"
@@ -62,14 +64,17 @@ class GPerf {
   /** Read dynamic program call graph. This function includes two phases: indirect call relationship analysis, as well
    * as pthread_create and its created function.
    * @param perf_data - performance data
+   * @param shared_obj_map_file_name - file name of shared object map
   */
-  void ReadDynamicProgramCallGraph(core::PerfData* perf_data);
+  void ReadDynamicProgramCallGraph(core::PerfData* perf_data, std::string& shared_obj_map_file_name);
 
   /** Generate complete program call graph through hybrid static-dynamic analysis.
    * @param binary_name - binary name
    * @param perf_data - performance data
+   * @param shared_obj_map_file_name - file name of shared object map
    */
-  void GenerateProgramCallGraph(const char* binary_name, core::PerfData* perf_data);
+  void GenerateProgramCallGraph(const char* binary_name, core::PerfData* perf_data,
+                                std::string& shared_obj_map_file_name);
 
   /** Get complete program call graph.
    * @return complete program call graph

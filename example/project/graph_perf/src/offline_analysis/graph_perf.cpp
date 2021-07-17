@@ -21,26 +21,6 @@ using namespace baguatool;
 
 std::map<type::thread_t, std::pair<type::call_path_t, type::thread_t>> created_tid_2_callpath_and_tid;
 
-bool build_create_tid_to_callpath_and_tid_flag = false;
-void build_create_tid_to_callpath_and_tid(core::PerfData *perf_data) {
-  // Build created_tid_2_callpath_and_tid
-  auto edge_data_size = perf_data->GetEdgeDataSize();
-  for (unsigned long int i = 0; i < edge_data_size; i++) {
-    // Value of pthread_create is recorded as (-1), Value of GOMP_parallel is recorded as (-2)
-    auto value = perf_data->GetEdgeDataValue(i);
-    if (value <= (type::perf_data_t)(-1)) {
-      type::call_path_t src_call_path;
-      perf_data->GetEdgeDataSrcCallPath(i, src_call_path);
-      auto create_thread_id = perf_data->GetEdgeDataDestThreadId(i);
-      auto thread_id = perf_data->GetEdgeDataSrcThreadId(i);
-      std::pair<type::call_path_t, int> tmp(src_call_path, thread_id);
-      created_tid_2_callpath_and_tid[create_thread_id] = tmp;
-      // printf("map[%d] = < %llx , %d > \n", create_thread_id, src_call_path.top(), thread_id);
-    }
-  }
-  build_create_tid_to_callpath_and_tid_flag = true;
-}
-
 void preprocess_call_path(std::stack<type::addr_t> &call_path) {
   std::stack<type::addr_t> tmp;
   while (!call_path.empty()) {
@@ -80,6 +60,27 @@ void delete_all_so_addr(std::stack<type::addr_t> &call_path) {
     call_path.push(addr);
   }
   FREE_CONTAINER(tmp);
+}
+
+bool build_create_tid_to_callpath_and_tid_flag = false;
+void build_create_tid_to_callpath_and_tid(core::PerfData *perf_data) {
+  // Build created_tid_2_callpath_and_tid
+  auto edge_data_size = perf_data->GetEdgeDataSize();
+  for (unsigned long int i = 0; i < edge_data_size; i++) {
+    // Value of pthread_create is recorded as (-1), Value of GOMP_parallel is recorded as (-2)
+    auto value = perf_data->GetEdgeDataValue(i);
+    if (value <= (type::perf_data_t)(-1)) {
+      type::call_path_t src_call_path;
+      perf_data->GetEdgeDataSrcCallPath(i, src_call_path);
+      delete_all_so_addr(src_call_path);
+      auto create_thread_id = perf_data->GetEdgeDataDestThreadId(i);
+      auto thread_id = perf_data->GetEdgeDataSrcThreadId(i);
+      std::pair<type::call_path_t, int> tmp(src_call_path, thread_id);
+      created_tid_2_callpath_and_tid[create_thread_id] = tmp;
+      // printf("map[%d] = < %llx , %d > \n", create_thread_id, src_call_path.top(), thread_id);
+    }
+  }
+  build_create_tid_to_callpath_and_tid_flag = true;
 }
 
 GPerf::GPerf() { this->root_mpag = new core::ProgramAbstractionGraph(); }
@@ -269,13 +270,20 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
       while (!call_path.empty()) {
         callee_addr = call_path.top();
 
-        if (type::IsValidAddr(call_addr)) {
-          if (!(type::IsDynAddr(call_addr) &&
-                dyn_addr_to_debug_info.find(callee_addr) == dyn_addr_to_debug_info.end())) {
+        if (type::IsTextAddr(callee_addr)) {
+          dbg(callee_addr);
+          break;
+        } else if (type::IsDynAddr(callee_addr)) {
+          if (dyn_addr_to_debug_info.find(callee_addr) != dyn_addr_to_debug_info.end()) {
+            dbg(callee_addr);
             break;
           }
         }
         call_path.pop();
+      }
+      /** For cases that all addresses are popped. Test whether the last address has debug info */
+      if (type::IsDynAddr(callee_addr) && dyn_addr_to_debug_info.find(callee_addr) == dyn_addr_to_debug_info.end()) {
+        continue;
       }
 
       std::pair<type::addr_t, type::addr_t> call_callee_pair = std::make_pair(call_addr, callee_addr);
@@ -295,7 +303,10 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
           dbg("find call vertex", call_vertex);
 
           std::string &func_name = dyn_addr_to_debug_info[callee_addr]->GetFuncName();
-
+          if (func_name.empty()) {
+            continue;
+          }
+          dbg(func_name);
           type::vertex_t new_func_vertex_id = this->pcg->AddVertex();
           this->pcg->SetVertexBasicInfo(new_func_vertex_id, type::FUNC_NODE, func_name.c_str());
           this->pcg->SetVertexDebugInfo(new_func_vertex_id, callee_addr, callee_addr);
@@ -308,8 +319,8 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
           this->pcg->SetVertexDebugInfo(new_call_vertex_id, callee_addr, callee_addr);
 
           type::edge_t new_call_edge_id = this->pcg->AddEdge(new_func_vertex_id, new_call_vertex_id);
+          dbg(new_func_vertex_id);
 
-          dbg(func_name, new_func_vertex_id);
           this->pcg->SetEdgeType(new_call_edge_id, type::DYN_CALL_EDGE);  // dynamic
 
           /** Build a program abstraction graph in the func_entry_addr_to_pag*/
@@ -838,12 +849,9 @@ type::vertex_t GPerf::GetVertexWithInterThreadAnalysis(type::thread_t thread_id,
     if (call_path.empty()) {
       return 0;
     }
-    //
     auto vertex_id = this->root_pag->GetVertexWithCallPath(0, call_path);
     // dbg(vertex_id);
     return vertex_id;
-  } else {
-    delete_all_so_addr(call_path);
   }
 
   // Get the parent thread and its id and call path

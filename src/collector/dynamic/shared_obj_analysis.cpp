@@ -169,9 +169,8 @@ void SharedObjAnalysis::GetDebugInfos(std::unordered_set<type::addr_t>& addrs,
 
   /** Get debug infos */
   for (auto& kv : shared_obj_to_addrs) {
-    if (kv.first.find(".so") == std::string::npos) {  // || kv.first.find("sampler.so") != std::string::npos ||
-                                                      // kv.first.find("baguatool") != std::string::npos ||
-                                                      // kv.first.find("papi") != std::string::npos) {
+    if (kv.first.find(".so") == std::string::npos || kv.first.find("sampler.so") != std::string::npos ||
+        kv.first.find("baguatool") != std::string::npos || kv.first.find("papi") != std::string::npos) {
       continue;
     }
     struct link_map* lm = (struct link_map*)dlopen(kv.first.c_str(), RTLD_LAZY | RTLD_GLOBAL);
@@ -213,7 +212,7 @@ void SharedObjAnalysis::GetDebugInfos(std::unordered_set<type::addr_t>& addrs,
         ss >> func_name;
       }
 
-      // dbg(raw_addr, DlInfo.dli_fname, func_name);
+      dbg(raw_addr, DlInfo.dli_fname, func_name);
       type::addr_debug_info_t* debug_info = new type::addr_debug_info_t();
       debug_info->SetAddress(offset);
       debug_info->SetFuncName(func_name);

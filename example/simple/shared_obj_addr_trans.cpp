@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <unordered_set>
 #include "baguatool.h"
@@ -19,9 +20,13 @@ int main(int argc, char** argv) {
   std::map<baguatool::type::addr_t, baguatool::type::addr_debug_info_t*> debug_info_map;
   shared_obj_analysis->GetDebugInfos(addrs, debug_info_map);
 
+  for (auto& kv : debug_info_map) {
+    printf("%lx, ", kv.first);
+    std::cout << kv.second->GetFuncName() << std::endl;
+  }
+
   std::unique_ptr<baguatool::collector::SharedObjAnalysis> shared_obj_analysis_self =
       std::make_unique<baguatool::collector::SharedObjAnalysis>();
-
   shared_obj_analysis_self->CollectSharedObjMap();
   file_name = std::string("test_self.map");
   shared_obj_analysis_self->DumpSharedObjMap(file_name);

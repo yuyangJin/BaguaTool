@@ -64,6 +64,24 @@ struct addr_debug_info_t {
   void SetFuncName(std::string& func_name) { this->func_name = std::string(func_name); }
   void SetLineNum(int line_num) { this->line_num = line_num; }
 };
+
+/** Determine whether an address is in .text segment.
+ * @param addr - input address.
+ * @return true stands for the input address is in .text segment while false means it is not.
+*/
+bool IsTextAddr(type::addr_t addr);
+
+/** Determine whether an address is in .dynamic segment.
+ * @param addr - input address.
+ * @return true stands for the input address is in .dynamic segment while false means it is not.
+*/
+bool IsDynAddr(type::addr_t addr);
+
+/** Determine whether an address is a valid address.
+ * @param addr - input address.
+ * @return true stands for the input address is a valid address while false means it is not.
+*/
+bool IsValidAddr(type::addr_t addr);
 }
 
 namespace core {

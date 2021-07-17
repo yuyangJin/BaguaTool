@@ -46,7 +46,7 @@ void preprocess_call_path(std::stack<type::addr_t> &call_path) {
   while (!call_path.empty()) {
     type::addr_t addr = call_path.top();
     call_path.pop();
-    if (addr > 0x400000) {
+    if (type::IsValidAddr(addr)) {
       tmp.push(addr);
     }
   }
@@ -54,7 +54,7 @@ void preprocess_call_path(std::stack<type::addr_t> &call_path) {
   while (!tmp.empty()) {
     type::addr_t addr = tmp.top();
     tmp.pop();
-    if (addr > 0x400000 && addr < 0x400000000) {
+    if (type::IsTextAddr(addr)) {
       call_path.push(addr);
       exe_addr_exist = true;
     } else if (exe_addr_exist == false) {
@@ -69,7 +69,7 @@ void delete_all_so_addr(std::stack<type::addr_t> &call_path) {
   while (!call_path.empty()) {
     type::addr_t addr = call_path.top();
     call_path.pop();
-    if (addr > 0x400000 && addr < 0x400000000) {
+    if (type::IsTextAddr(addr)) {
       tmp.push(addr);
     }
   }
@@ -182,14 +182,14 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
       while (!call_path.empty()) {
         call_addr = call_path.top();
         call_path.pop();
-        if (0x400000 < call_addr && call_addr < 0x4000000) {
+        if (type::IsTextAddr(call_addr)) {
           break;
         }
       }
       // Get callee function address
       while (!call_path.empty()) {
         callee_addr = call_path.top();
-        if (0x400000 < callee_addr && callee_addr < 0x4000000) {
+        if (type::IsTextAddr(callee_addr)) {
           break;
         } else {
           call_path.pop();
@@ -228,7 +228,7 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
     while (!call_path.empty()) {
       type::addr_t call_addr = call_path.top();
       call_path.pop();
-      if (0x400000000 < call_addr) {
+      if (type::IsDynAddr(call_addr)) {
         addrs.insert(call_addr);
       }
     }
@@ -252,20 +252,20 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
     while (!call_path.empty()) {
       type::addr_t call_addr, callee_addr;
 
-      // Get call fucntion address
+      /** Get call fucntion address */
       while (!call_path.empty()) {
         call_addr = call_path.top();
         call_path.pop();
-        if (0x400000 < call_addr) {
+        if (type::IsValidAddr(call_addr)) {
           break;
         }
       }
-      // Get callee function address
+      /** Get callee function address */
       while (!call_path.empty()) {
         callee_addr = call_path.top();
 
-        if (0x400000 < callee_addr) {
-          if (!(0x4000000000 < callee_addr && debug_info_map.find(callee_addr) == debug_info_map.end())) {
+        if (type::IsValidAddr(call_addr)) {
+          if (!(type::IsDynAddr(call_addr) && debug_info_map.find(callee_addr) == debug_info_map.end())) {
             break;
           }
         }
@@ -443,9 +443,9 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
   int type = pag->GetVertexType(vertex_id);
   if (type == type::CALL_NODE || type == type::CALL_IND_NODE || type == type::CALL_REC_NODE) {
     type::addr_t addr = pag->GetVertexAttributeNum("saddr", vertex_id);
-    dbg("call_addr", vertex_id, addr);
+    // dbg("call_addr", vertex_id, addr);
     type::vertex_t call_vertex_id = pcg->GetCallVertexWithAddr(addr);
-    dbg(call_vertex_id);
+    // dbg(call_vertex_id);
 
     if (call_vertex_id == -1) {
       return;
@@ -456,21 +456,21 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
     if (!callee_func_entry_addr) {
       return;
     }
-    printf("callee_func_entry_addr: %llu ", callee_func_entry_addr);
+    // printf("callee_func_entry_addr: %llu ", callee_func_entry_addr);
 
     // if (callee_func_entry_addr) {
     for (type::addr_t entry_addr = callee_func_entry_addr - 4; entry_addr <= callee_func_entry_addr + 4; entry_addr++) {
       if (func_entry_addr_to_pag->find(entry_addr) != func_entry_addr_to_pag->end()) {
         core::ProgramAbstractionGraph *callee_pag = (*func_entry_addr_to_pag)[entry_addr];
-        printf("%s \n", callee_pag->GetGraphAttributeString("name"));
+        // printf("%s \n", callee_pag->GetGraphAttributeString("name"));
 
         if (!callee_pag->GetGraphAttributeFlag("scanned")) {
           void (*ConnectCallerCalleePointer)(core::ProgramAbstractionGraph *, int, void *) = &(ConnectCallerCallee);
           // dbg(callee_pag->GetGraphAttributeString("name"));
           callee_pag->SetGraphAttributeFlag("scanned", true);
-          printf("Enter %s\n", callee_pag->GetGraphAttributeString("name"));
+          // printf("Enter %s\n", callee_pag->GetGraphAttributeString("name"));
           callee_pag->VertexTraversal(ConnectCallerCalleePointer, extra);
-          printf("Exit %s\n", callee_pag->GetGraphAttributeString("name"));
+          // printf("Exit %s\n", callee_pag->GetGraphAttributeString("name"));
         }
 
         // Add Vertex to

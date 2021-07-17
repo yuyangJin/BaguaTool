@@ -7,6 +7,7 @@
 #include <LineInformation.h>
 #include <Symtab.h>
 
+#include <cxxabi.h>  // needed for abi::__cxa_demangle
 #include <map>
 #include <unordered_map>
 

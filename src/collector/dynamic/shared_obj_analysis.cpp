@@ -70,15 +70,16 @@ void SharedObjAnalysis::DumpSharedObjMap(std::string& file_name) {
 }
 
 type::addr_t search_exe_and_section_from_map(
-    std::vector<std::tuple<type::addr_t, type::addr_t, std::string>>& shared_obj_map, type::addr_t addr, string& exe) {
+    std::vector<std::tuple<type::addr_t, type::addr_t, std::string>>& shared_obj_map, type::addr_t addr,
+    string& shared_obj_name) {
   for (auto& t : shared_obj_map) {
     type::addr_t start_addr = std::get<0>(t);
     type::addr_t end_addr = std::get<1>(t);
     std::string& shared_obj = std::get<2>(t);
     if (addr >= start_addr && addr <= end_addr) {
-      exe = std::string(shared_obj);
+      shared_obj_name = std::string(shared_obj);
       // dbg (start_addr);
-      if (addr > 0x400000000) {
+      if (type::IsDynAddr(addr)) {
         return addr - start_addr;
       } else {
         return addr;
@@ -105,19 +106,20 @@ void execute_cmd(const char* cmd, std::string& result) {
 }
 
 void SharedObjAnalysis::GetDebugInfo(type::addr_t addr, type::addr_debug_info_t& debug_info) {
-  std::string exe;
+  std::string shared_obj_name;
   type::addr_t offset;
+  std::string func_name;
 
   /** Get offset and shared object of input address */
-  offset = search_exe_and_section_from_map(this->shared_obj_map, addr, exe);
-  // dbg(offset);
+  offset = search_exe_and_section_from_map(this->shared_obj_map, addr, shared_obj_name);
   debug_info.SetAddress(offset);
 
-  if (exe.find(".so") == std::string::npos) {
+  /** Only deal with shared object,  */
+  if (shared_obj_name.find(".so") == std::string::npos) {
     return;
   }
 
-  struct link_map* lm = (struct link_map*)dlopen(exe.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+  struct link_map* lm = (struct link_map*)dlopen(shared_obj_name.c_str(), RTLD_LAZY | RTLD_GLOBAL);
   if (!lm) {
     fputs(dlerror(), stderr);
     exit(1);
@@ -132,13 +134,9 @@ void SharedObjAnalysis::GetDebugInfo(type::addr_t addr, type::addr_debug_info_t&
     int status = 0;
     char* cpp_name = abi::__cxa_demangle(DlInfo.dli_sname, 0, 0, &status);
     if (status >= 0) {
-      std::string func_name = std::string(cpp_name);
-      debug_info.SetFuncName(func_name);
-      // dbg(DlInfo.dli_fname, func_name);
+      func_name = std::string(cpp_name);
     } else {
-      std::string func_name = std::string(DlInfo.dli_sname);
-      debug_info.SetFuncName(func_name);
-      // dbg(DlInfo.dli_fname, func_name);
+      func_name = std::string(DlInfo.dli_sname);
     }
   } else { /** If dladdr fails to obtain function name */
     std::stringstream offset_ss;
@@ -147,33 +145,30 @@ void SharedObjAnalysis::GetDebugInfo(type::addr_t addr, type::addr_debug_info_t&
     std::string cmd_line =
         std::string("addr2line -fC -e ") + std::string(DlInfo.dli_fname) + std::string(" ") + offset_ss.str();
     execute_cmd(cmd_line.c_str(), result);
-    // dbg(cmd_line, result);
     std::stringstream ss(result);
-    std::string func_name;
     ss >> func_name;
-    // dbg(DlInfo.dli_fname, func_name);
-    debug_info.SetFuncName(func_name);
   }
+  debug_info.SetFuncName(func_name);
 
   dlclose(lm);
 }
 
 void SharedObjAnalysis::GetDebugInfos(std::unordered_set<type::addr_t>& addrs,
                                       std::map<type::addr_t, type::addr_debug_info_t*>& debug_info_map) {
-  /** Classify addrs by exe */
+  /** Classify addrs by shared_obj_name */
   std::map<std::string, std::vector<std::pair<type::addr_t, type::addr_t>>>
-      exe_to_addrs;  // map < exe, vector < offest, address > >
+      shared_obj_to_addrs;  // map < shared_obj_name, vector < offest, address > >
   for (auto addr : addrs) {
-    std::string exe;
+    std::string shared_obj_name;
     type::addr_t offset;
 
     /** Get offset and shared object of each address */
-    offset = search_exe_and_section_from_map(this->shared_obj_map, addr, exe);
-    exe_to_addrs[exe].push_back(std::make_pair(offset, addr));
+    offset = search_exe_and_section_from_map(this->shared_obj_map, addr, shared_obj_name);
+    shared_obj_to_addrs[shared_obj_name].push_back(std::make_pair(offset, addr));
   }
 
-  for (auto& kv : exe_to_addrs) {
-    // dbg(kv.first);
+  /** Get debug infos */
+  for (auto& kv : shared_obj_to_addrs) {
     if (kv.first.find(".so") == std::string::npos) {  // || kv.first.find("sampler.so") != std::string::npos ||
                                                       // kv.first.find("baguatool") != std::string::npos ||
                                                       // kv.first.find("papi") != std::string::npos) {
@@ -191,37 +186,34 @@ void SharedObjAnalysis::GetDebugInfos(std::unordered_set<type::addr_t>& addrs,
       type::addr_t new_load_addr = offset + base_addr;
       std::string func_name;
 
+      /** Use dladdr() to get function of address */
       Dl_info DlInfo;
       int ret = dladdr((void*)new_load_addr, &DlInfo);
-      // dbg(raw_addr, offset);
 
       if (ret && DlInfo.dli_sname) { /** If dladdr obtains function name successfully */
         int status = 0;
         char* cpp_name = abi::__cxa_demangle(DlInfo.dli_sname, 0, 0, &status);
         if (status >= 0) {
           func_name = std::string(cpp_name);
-          // debug_info.SetFuncName(func_name);
-          // dbg(DlInfo.dli_fname, func_name);
         } else {
           func_name = std::string(DlInfo.dli_sname);
-          // debug_info.SetFuncName(func_name);
-          // dbg(DlInfo.dli_fname, func_name);
         }
-      } else { /** If dladdr fails to obtain function name */
+      }
+      /**
+       * TODO: use addr2line to analyze a sequence of addresses, now is one by one.
+      */
+      else { /** If dladdr fails to obtain function name */
         std::stringstream offset_ss;
         offset_ss << std::hex << offset;
         std::string result;
         std::string cmd_line =
             std::string("addr2line -fC -e ") + std::string(DlInfo.dli_fname) + std::string(" ") + offset_ss.str();
         execute_cmd(cmd_line.c_str(), result);
-        // dbg(cmd_line, result);
         std::stringstream ss(result);
-
         ss >> func_name;
-        // dbg(DlInfo.dli_fname, func_name);
       }
 
-      dbg(raw_addr, DlInfo.dli_fname, func_name);
+      // dbg(raw_addr, DlInfo.dli_fname, func_name);
       type::addr_debug_info_t* debug_info = new type::addr_debug_info_t();
       debug_info->SetAddress(offset);
       debug_info->SetFuncName(func_name);
@@ -230,10 +222,10 @@ void SharedObjAnalysis::GetDebugInfos(std::unordered_set<type::addr_t>& addrs,
     dlclose(lm);
   }
 
-  for (auto& kv : exe_to_addrs) {
+  for (auto& kv : shared_obj_to_addrs) {
     FREE_CONTAINER(kv.second);
   }
-  FREE_CONTAINER(exe_to_addrs);
+  FREE_CONTAINER(shared_obj_to_addrs);
 }
 
 }  // namespace baguatool::collector

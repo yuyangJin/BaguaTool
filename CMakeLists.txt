@@ -47,7 +47,7 @@ add_library(
   src/core/cfg.cpp
   src/core/perf_data.cpp
   src/core/graph_perf_data.cpp
-  #src/core/hybrid_analysis.cpp
+  src/core/bagua_type.cpp
 
   #src/graph_perf/preprocessing/preprocess.cpp
   src/collector/static/dyninst/static_analysis.cpp

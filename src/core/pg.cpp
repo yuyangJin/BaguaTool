@@ -142,7 +142,7 @@ void preprocess_call_path_1(std::stack<type::addr_t> &call_path) {
   while (!call_path.empty()) {
     type::addr_t addr = call_path.top();
     call_path.pop();
-    if (addr > 0x400000) {
+    if (type::IsValidAddr(addr)) {
       tmp.push(addr);
     }
   }
@@ -150,7 +150,7 @@ void preprocess_call_path_1(std::stack<type::addr_t> &call_path) {
   while (!tmp.empty()) {
     type::addr_t addr = tmp.top();
     tmp.pop();
-    if (addr > 0x400000 && addr < 0x400000000) {
+    if (type::IsTextAddr(addr)) {
       call_path.push(addr);
       exe_addr_exist = true;
     } else if (exe_addr_exist == false) {
@@ -174,7 +174,8 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
 
   // dbg(addr);
 
-  // if (addr > 0x40000000) {
+  /** Step over .dynamic address */
+  // if (type::IsDynAddr(addr)) {
   //   call_path_stack.pop();
   //   return GetVertexWithCallPath(root_vertex, call_path_stack);
   // }

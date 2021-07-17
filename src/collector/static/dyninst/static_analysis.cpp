@@ -291,7 +291,13 @@ void StaticAnalysisImpl::IntraProceduralAnalysis() {
 
     // Create root vertex in the graph
     int func_vertex_id = func_cfg->AddVertex();
-    func_cfg->SetVertexBasicInfo(func_vertex_id, type::FUNC_NODE, func_name.c_str());
+    int status = 0;
+    char *cpp_name = abi::__cxa_demangle(func_name.c_str(), 0, 0, &status);
+    if (status >= 0) {
+      func_cfg->SetVertexBasicInfo(func_vertex_id, type::FUNC_NODE, cpp_name);
+    } else {
+      func_cfg->SetVertexBasicInfo(func_vertex_id, type::FUNC_NODE, func_name.c_str());
+    }
     // Add DebugInfo attributes
     func_cfg->SetVertexDebugInfo(func_vertex_id, entry_addr, exit_addr);
 

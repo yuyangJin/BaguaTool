@@ -85,6 +85,12 @@ void delete_all_so_addr(std::stack<type::addr_t> &call_path) {
 GPerf::GPerf() { this->root_mpag = new core::ProgramAbstractionGraph(); }
 
 GPerf::~GPerf() {
+  for (auto kv : dyn_addr_to_debug_info) {
+    FREE_CONTAINER((*(kv.second)));
+    delete kv.second;
+  }
+  FREE_CONTAINER(dyn_addr_to_debug_info);
+
   for (auto &kv : created_tid_2_callpath_and_tid) {
     FREE_CONTAINER(kv.second.first);
   }
@@ -148,6 +154,37 @@ void SetCallTypeAsStatic(core::ProgramCallGraph *pcg, type::edge_t edge_id, void
   pcg->SetEdgeType(edge_id, type::STA_CALL_EDGE);  // static
 }
 
+void GPerf::GenerateDynAddrDebugInfo(core::PerfData *perf_data, collector::SharedObjAnalysis *shared_obj_analysis) {
+  /** Get debug info of shared object library addresses */
+  auto data_size = perf_data->GetVertexDataSize();
+  std::unordered_set<type::addr_t> addrs;
+  for (unsigned long int i = 0; i < data_size; i++) {
+    std::stack<unsigned long long> call_path;
+    perf_data->GetVertexDataCallPath(i, call_path);
+
+    while (!call_path.empty()) {
+      type::addr_t call_addr = call_path.top();
+      call_path.pop();
+      if (type::IsDynAddr(call_addr)) {
+        addrs.insert(call_addr);
+      }
+    }
+  }
+  shared_obj_analysis->GetDebugInfos(addrs, this->dyn_addr_to_debug_info);
+
+}  // GPerf::GenerateDynAddrDebugInfo
+
+void GPerf::GenerateDynAddrDebugInfo(core::PerfData *perf_data, std::string &shared_obj_map_file_name) {
+  collector::SharedObjAnalysis *shared_obj_analysis = new baguatool::collector::SharedObjAnalysis();
+  shared_obj_analysis->ReadSharedObjMap(shared_obj_map_file_name);
+
+  GenerateDynAddrDebugInfo(perf_data, shared_obj_analysis);
+}  // GPerf::GenerateDynAddrDebugInfo
+
+std::map<type::addr_t, type::addr_debug_info_t *> &GPerf::GetDynAddrDebugInfo() {
+  return dyn_addr_to_debug_info;
+}  // GPerf::GetDynAddrDebugInfo
+
 void GPerf::ReadStaticProgramCallGraph(const char *binary_name) {
   // Get name of static program call graph's file
   std::string static_pcg_file_name = std::string(binary_name) + std::string(".pcg");
@@ -158,7 +195,7 @@ void GPerf::ReadStaticProgramCallGraph(const char *binary_name) {
   this->pcg->EdgeTraversal(&SetCallTypeAsStatic, nullptr);
 }
 
-void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &shared_obj_map_file_name) {
+void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
 #ifdef IGNORE_SHARED_OBJ
   auto data_size = perf_data->GetVertexDataSize();
   // dbg(data_size);
@@ -176,7 +213,6 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
     }
 
     while (!call_path.empty()) {
-      // dbg(i, call_path.top());
       type::addr_t call_addr, callee_addr;
       // Get call fucntion address
       while (!call_path.empty()) {
@@ -196,9 +232,6 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
         }
       }
 
-      // if (call_addr == 0x408037 || callee_addr == 0x408b59) {
-      //   dbg(call_addr, callee_addr);
-      // }
       auto edge_id = this->pcg->AddEdgeWithAddr(call_addr, callee_addr);
       if (edge_id != -1) {
         this->pcg->SetEdgeType(edge_id, type::DYN_CALL_EDGE);  // dynamic
@@ -208,37 +241,9 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
 #else
   auto data_size = perf_data->GetVertexDataSize();
   std::set<std::pair<type::addr_t, type::addr_t>> visited_call_callee;
-  auto shared_obj_analysis = std::make_unique<baguatool::collector::SharedObjAnalysis>();
-  // std::string somap_file_name = std::string("SOMAP-123729.TXT");
-  shared_obj_analysis->ReadSharedObjMap(shared_obj_map_file_name);
-  std::unordered_set<type::addr_t> addrs;
-
-  /** Get debug info of shared object library addresses */
-
-  for (unsigned long int i = 0; i < data_size; i++) {
-    std::stack<unsigned long long> call_path;
-    perf_data->GetVertexDataCallPath(i, call_path);
-
-    if (!call_path.empty()) {
-      call_path.pop();
-    }
-
-    preprocess_call_path(call_path);
-
-    while (!call_path.empty()) {
-      type::addr_t call_addr = call_path.top();
-      call_path.pop();
-      if (type::IsDynAddr(call_addr)) {
-        addrs.insert(call_addr);
-      }
-    }
-  }
-  std::map<type::addr_t, type::addr_debug_info_t *> debug_info_map;
-  shared_obj_analysis->GetDebugInfos(addrs, debug_info_map);
 
   /** Traverse all call-callee in the sampled data */
 
-  int j = 0;
   for (unsigned long int i = 0; i < data_size; i++) {
     std::stack<type::addr_t> call_path;
     perf_data->GetVertexDataCallPath(i, call_path);
@@ -265,13 +270,13 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
         callee_addr = call_path.top();
 
         if (type::IsValidAddr(call_addr)) {
-          if (!(type::IsDynAddr(call_addr) && debug_info_map.find(callee_addr) == debug_info_map.end())) {
+          if (!(type::IsDynAddr(call_addr) &&
+                dyn_addr_to_debug_info.find(callee_addr) == dyn_addr_to_debug_info.end())) {
             break;
           }
         }
         call_path.pop();
       }
-      j++;
 
       std::pair<type::addr_t, type::addr_t> call_callee_pair = std::make_pair(call_addr, callee_addr);
       if (visited_call_callee.find(call_callee_pair) != visited_call_callee.end()) {
@@ -289,7 +294,7 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
         if (call_vertex != -1) {
           dbg("find call vertex", call_vertex);
 
-          std::string &func_name = debug_info_map[callee_addr]->GetFuncName();
+          std::string &func_name = dyn_addr_to_debug_info[callee_addr]->GetFuncName();
 
           type::vertex_t new_func_vertex_id = this->pcg->AddVertex();
           this->pcg->SetVertexBasicInfo(new_func_vertex_id, type::FUNC_NODE, func_name.c_str());
@@ -330,21 +335,14 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data, std::string &
       visited_call_callee.insert(std::make_pair(call_addr, callee_addr));
     }
   }
-  dbg(j, visited_call_callee.size());
 
-  for (auto kv : debug_info_map) {
-    FREE_CONTAINER((*(kv.second)));
-    delete kv.second;
-  }
-  FREE_CONTAINER(debug_info_map);
   FREE_CONTAINER(visited_call_callee);
 #endif
 }
 
-void GPerf::GenerateProgramCallGraph(const char *binary_name, core::PerfData *perf_data,
-                                     std::string &shared_obj_map_file_name) {
+void GPerf::GenerateProgramCallGraph(const char *binary_name, core::PerfData *perf_data) {
   this->ReadStaticProgramCallGraph(binary_name);
-  this->ReadDynamicProgramCallGraph(perf_data, shared_obj_map_file_name);
+  this->ReadDynamicProgramCallGraph(perf_data);
 }
 
 core::ProgramCallGraph *GPerf::GetProgramCallGraph() { return this->pcg; }

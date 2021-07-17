@@ -23,8 +23,8 @@ int main(int argc, char** argv) {
   auto graph_perf = std::make_unique<graph_perf::GPerf>();
 
   graph_perf->ReadFunctionAbstractionGraphs(pag_dir_name);
-  // graph_perf->ReadStaticProgramCallGraph(bin_name);
-  graph_perf->GenerateProgramCallGraph(bin_name, perf_data, shared_obj_map_file_name);
+  graph_perf->GenerateDynAddrDebugInfo(perf_data, shared_obj_map_file_name);
+  graph_perf->GenerateProgramCallGraph(bin_name, perf_data);
   graph_perf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 
   graph_perf->GenerateProgramAbstractionGraph(perf_data);

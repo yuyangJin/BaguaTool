@@ -20,6 +20,7 @@ class GPerf {
   std::map<type::addr_t, core::ProgramAbstractionGraph*>
       func_entry_addr_to_pag; /**<program abstraction graph extracted from control-flow graph (CFG) for each function */
   std::map<int, type::addr_t> hash_to_entry_addr;
+  std::map<type::addr_t, type::addr_debug_info_t*> dyn_addr_to_debug_info;
   core::ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
   core::ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
 
@@ -56,6 +57,14 @@ class GPerf {
 
   /** Program Call Graph **/
 
+  void GenerateDynAddrDebugInfo(core::PerfData* perf_data, collector::SharedObjAnalysis* shared_obj_analysis);
+  /** Get debug infos of dynamic
+   *
+  */
+  void GenerateDynAddrDebugInfo(core::PerfData* perf_data, std::string& shared_obj_map_file_name);
+
+  std::map<type::addr_t, type::addr_debug_info_t*>& GetDynAddrDebugInfo();
+
   /** Read static program call graph from an input file.
    * @param file_name - file name of static program call graph
    */
@@ -64,17 +73,15 @@ class GPerf {
   /** Read dynamic program call graph. This function includes two phases: indirect call relationship analysis, as well
    * as pthread_create and its created function.
    * @param perf_data - performance data
-   * @param shared_obj_map_file_name - file name of shared object map
   */
-  void ReadDynamicProgramCallGraph(core::PerfData* perf_data, std::string& shared_obj_map_file_name);
+  void ReadDynamicProgramCallGraph(core::PerfData* perf_data);
 
   /** Generate complete program call graph through hybrid static-dynamic analysis.
    * @param binary_name - binary name
    * @param perf_data - performance data
    * @param shared_obj_map_file_name - file name of shared object map
    */
-  void GenerateProgramCallGraph(const char* binary_name, core::PerfData* perf_data,
-                                std::string& shared_obj_map_file_name);
+  void GenerateProgramCallGraph(const char* binary_name, core::PerfData* perf_data);
 
   /** Get complete program call graph.
    * @return complete program call graph

@@ -19,8 +19,9 @@ int Sampler::GetOverflowEvent(LongLongVec* overflow_vector) { return sa->GetOver
 int Sampler::GetBacktrace(type::addr_t* call_path, int max_call_path_depth) {
   return sa->GetBacktrace(call_path, max_call_path_depth);
 }
-// int Sampler::my_backtrace(unw_word_t *buffer, int max_depth) {my_backtrace(buffer, max_depth); }
-// static void Sampler:: papi_handler(int EventSet, void *address, long_long overflow_vector, void *context) {}
+int Sampler::GetBacktrace(type::addr_t* call_path, int max_call_path_depth, int start_depth) {
+  return sa->GetBacktrace(call_path, max_call_path_depth, start_depth);
+}
 
 static __thread void (*func_at_overflow_1)(int) = nullptr;
 static __thread int EventSet;
@@ -129,46 +130,57 @@ int SamplerImpl::GetBacktrace(type::addr_t* call_path, int max_call_path_depth) 
 #endif
   unsigned int addr_log_pointer = 0;
 
-// #ifdef MY_BT
-//   unw_word_t address_log[MAX_STACK_DEPTH] = {0};
-// #else
-//   void* address_log[MAX_STACK_DEPTH] = {0};
-// #endif
-//  int offset = 0;
-
 #ifdef MY_BT
   for (i = 1; i < depth; ++i) {
-    // if( (void*)buffer[i] != NULL && (char*)buffer[i] < addr_threshold ){
+    if (buffer[i] != 0) {
+      call_path[addr_log_pointer] = (type::addr_t)(buffer[i]) - 2;
+      addr_log_pointer++;
+    }
+  }
+#else
+  for (i = 1; i < depth; ++i) {
+    if ((void*)buffer[i] != NULL) {
+      call_path[addr_log_pointer] = (type::addr_t)(buffer[i]) - 2;
+      addr_log_pointer++;
+    }
+  }
+#endif
+
+  return addr_log_pointer;
+}
+
+int SamplerImpl::GetBacktrace(type::addr_t* call_path, int max_call_path_depth, int start_depth) {
+#ifdef MY_BT
+  unw_word_t buffer[MAX_STACK_DEPTH] = {0};
+#else
+  void* buffer[MAX_STACK_DEPTH];
+  memset(buffer, 0, sizeof(buffer));
+#endif
+  unsigned int i, depth = 0;
+
+#ifdef MY_BT
+  depth = my_backtrace(buffer, max_call_path_depth);
+#else
+  depth = unw_backtrace(buffer, max_call_path_depth);
+#endif
+  unsigned int addr_log_pointer = 0;
+
+#ifdef MY_BT
+  for (i = start_depth; i < depth; ++i) {
     if (buffer[i] != 0) {
       call_path[addr_log_pointer] = (type::addr_t)(buffer[i]) - 2;
       addr_log_pointer++;
     }
   }
 
-// if (addr_log_pointer > 0) {
-//   for (i = 0; i < addr_log_pointer; ++i) {
-//     offset += snprintf(call_path_str + offset, max_call_path_str_len - offset - 4, "%lx ",
-//                        (long unsigned int)address_log[i]);
-//     // LOG_INFO("%08x\n",address_log[i]);
-//   }
-// }
 #else
-  for (i = 1; i < depth; ++i) {
-    // if( (void*)buffer[i] != NULL && (char*)buffer[i] < addr_threshold ){
+  for (i = start_depth; i < depth; ++i) {
     if ((void*)buffer[i] != NULL) {
       call_path[addr_log_pointer] = (type::addr_t)(buffer[i]) - 2;
       addr_log_pointer++;
-      // LOG_INFO("%08x\n",buffer[i]);
     }
   }
 
-// if (addr_log_pointer > 0) {
-//   for (i = 0; i < addr_log_pointer; ++i) {
-//     offset += snprintf(call_path_str + offset, max_call_path_str_len - offset - 4, "%lx ",
-//                        (long unsigned int)address_log[i]);
-//     // LOG_INFO("%08x\n",address_log[i]);
-//   }
-// }
 #endif
 
   return addr_log_pointer;

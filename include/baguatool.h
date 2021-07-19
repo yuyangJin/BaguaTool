@@ -1096,6 +1096,14 @@ class Sampler {
    * @return depth of call path
   */
   int GetBacktrace(baguatool::type::addr_t* call_path, int max_call_path_depth);
+
+  /** backtrace.
+   * @param call_path - call path (output)
+   * @param max_call_path_depth - max depth of call path
+   * @param start_depth - (input) starting depth of recorded call path
+   * @return depth of call path
+  */
+  int GetBacktrace(type::addr_t* call_path, int max_call_path_depth, int start_depth);
 };  // class Sampler
 
 // static void* resolve_symbol(const char* symbol_name, int config);

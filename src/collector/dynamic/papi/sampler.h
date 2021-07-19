@@ -90,6 +90,7 @@ class SamplerImpl {
   void Stop();
   int GetOverflowEvent(LongLongVec* overflow_vector);
   int GetBacktrace(type::addr_t* call_path, int max_call_path_depth);
+  int GetBacktrace(type::addr_t* call_path, int max_call_path_depth, int start_depth);
 };
 
 int my_backtrace(unw_word_t* buffer, int max_depth);

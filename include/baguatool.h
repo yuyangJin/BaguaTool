@@ -622,6 +622,12 @@ class ProgramGraph : public Graph {
    */
   type::addr_t GetCalleeEntryAddr(type::vertex_t vertex_id);
 
+  /** Get entry address of a vertex's callee vertex
+   * @param vertex_id - id of vertex
+   * @param entry_addrs - (output) entry addresses of the callee vertex
+   */
+  void GetCalleeEntryAddrs(type::vertex_t vertex_id, std::vector<type::addr_t>& entry_addrs);
+
   /** Sort vertices by entry addresses
    */
   void VertexSortChild();

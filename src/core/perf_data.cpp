@@ -3,6 +3,48 @@
 
 namespace baguatool::core {
 
+/** TODO: need to rename these two functions */
+void preserve_call_path_tail_so_addr(std::stack<type::addr_t>& call_path) {
+  std::stack<type::addr_t> tmp;
+  while (!call_path.empty()) {
+    type::addr_t addr = call_path.top();
+    call_path.pop();
+    if (type::IsValidAddr(addr)) {
+      tmp.push(addr);
+    }
+  }
+  bool exe_addr_exist = false;
+  while (!tmp.empty()) {
+    type::addr_t addr = tmp.top();
+    tmp.pop();
+    if (type::IsTextAddr(addr)) {
+      call_path.push(addr);
+      exe_addr_exist = true;
+    } else if (exe_addr_exist == false) {
+      call_path.push(addr);
+    }
+  }
+  FREE_CONTAINER(tmp);
+}
+
+void delete_all_so_addr(std::stack<type::addr_t>& call_path) {
+  std::stack<type::addr_t> tmp;
+  while (!call_path.empty()) {
+    type::addr_t addr = call_path.top();
+    call_path.pop();
+    if (type::IsTextAddr(addr)) {
+      tmp.push(addr);
+    }
+  }
+
+  while (!tmp.empty()) {
+    type::addr_t addr = tmp.top();
+    tmp.pop();
+    call_path.push(addr);
+  }
+  FREE_CONTAINER(tmp);
+}
+
 PerfData::PerfData() {
   this->vertex_perf_data_space_size = MAX_TRACE_MEM / sizeof(VDS);
   // dbg(this->vertex_perf_data_space_size);
@@ -298,7 +340,7 @@ void PerfData::GetVertexDataCallPath(unsigned long int data_index, std::stack<ty
   for (int i = 0; i < data->call_path_len; i++) {
     call_path_stack.push(data->call_path[i]);
   }
-
+  preserve_call_path_tail_so_addr(call_path_stack);
   return;
 }
 
@@ -307,7 +349,7 @@ void PerfData::GetEdgeDataSrcCallPath(unsigned long int data_index, std::stack<t
   for (int i = 0; i < data->call_path_len; i++) {
     call_path_stack.push(data->call_path[i]);
   }
-
+  delete_all_so_addr(call_path_stack);
   return;
 }
 
@@ -316,7 +358,7 @@ void PerfData::GetEdgeDataDestCallPath(unsigned long int data_index, std::stack<
   for (int i = 0; i < data->out_call_path_len; i++) {
     call_path_stack.push(data->out_call_path[i]);
   }
-
+  delete_all_so_addr(call_path_stack);
   return;
 }
 

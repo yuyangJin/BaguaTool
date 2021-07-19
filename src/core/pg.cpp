@@ -137,29 +137,6 @@ type::vertex_t ProgramGraph::GetChildVertexWithAddr(type::vertex_t root_vertex, 
   return -1;
 }  // function GetChildVertexWithAddr
 
-void preprocess_call_path_1(std::stack<type::addr_t> &call_path) {
-  std::stack<type::addr_t> tmp;
-  while (!call_path.empty()) {
-    type::addr_t addr = call_path.top();
-    call_path.pop();
-    if (type::IsValidAddr(addr)) {
-      tmp.push(addr);
-    }
-  }
-  bool exe_addr_exist = false;
-  while (!tmp.empty()) {
-    type::addr_t addr = tmp.top();
-    tmp.pop();
-    if (type::IsTextAddr(addr)) {
-      call_path.push(addr);
-      exe_addr_exist = true;
-    } else if (exe_addr_exist == false) {
-      call_path.push(addr);
-    }
-  }
-  FREE_CONTAINER(tmp);
-}
-
 type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
                                                    std::stack<unsigned long long> &call_path_stack) {
   // if call path stack is empty, it means the call path points to current vertex, so return it.
@@ -167,18 +144,18 @@ type::vertex_t ProgramGraph::GetVertexWithCallPath(type::vertex_t root_vertex,
     return root_vertex;
   }
 
-  preprocess_call_path_1(call_path_stack);
-
   // Get the top addr of the stack
   type::addr_t addr = call_path_stack.top();
 
-  // dbg(addr);
+// dbg(addr);
 
+#ifdef IGNORE_SHARED_OBJ
   /** Step over .dynamic address */
-  // if (type::IsDynAddr(addr)) {
-  //   call_path_stack.pop();
-  //   return GetVertexWithCallPath(root_vertex, call_path_stack);
-  // }
+  if (type::IsDynAddr(addr)) {
+    call_path_stack.pop();
+    return GetVertexWithCallPath(root_vertex, call_path_stack);
+  }
+#endif
 
   // Find the CALL vertex of current addr, addr is from calling context
   type::vertex_t found_vertex = root_vertex;
@@ -344,6 +321,30 @@ type::addr_t ProgramGraph::GetCalleeEntryAddr(type::vertex_t vertex_id) {
 
   // Not found
   return 0;
+}
+
+void ProgramGraph::GetCalleeEntryAddrs(type::vertex_t vertex_id, std::vector<type::addr_t> &entry_addrs) {
+  // dbg(GetVertexAttributeString("name", vertex_id));
+  std::vector<type::vertex_t> children;
+  GetChildVertexSet(vertex_id, children);
+  if (0 == children.size()) {
+    return;
+  }
+
+  for (auto &child : children) {
+    if (GetVertexType(child) == type::FUNC_NODE) {
+      if (GetEdgeType(vertex_id, child) != type::DYN_CALL_EDGE) {
+        continue;
+      }
+      // dbg(GetVertexAttributeString("name", child));
+      type::addr_t entry_addr = (type::addr_t)GetVertexAttributeNum("saddr", child);
+      entry_addrs.push_back(entry_addr);
+    }
+  }
+
+  FREE_CONTAINER(children);
+
+  return;
 }
 
 struct compare_addr {

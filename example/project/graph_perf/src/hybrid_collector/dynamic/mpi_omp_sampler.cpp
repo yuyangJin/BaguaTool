@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <string>
 #include "baguatool.h"
 #include "dbg.h"
 #include "mpi_init.h"
@@ -18,6 +19,7 @@
 #define NUM_EVENTS 1
 #define MAX_CALL_PATH_DEPTH 100
 #define MAX_THREAD_PER_PROCS 65530  // cat /proc/sys/vm/max_map_count
+#define MAX_NUM_CORE 24
 
 #define gettid() syscall(__NR_gettid)
 
@@ -28,16 +30,21 @@ static void (*original_GOMP_parallel)(void (*fn)(void *), void *data, unsigned n
 static int CYC_SAMPLE_COUNT = 0;
 static int module_init = 0;
 
-int mpi_rank = 0;
+int mpi_rank = -1;
 static __thread int thread_gid;
+static __thread int record_thread_gid;
+static __thread bool record_perf_data_flag = false;
 static int main_thread_gid;
 static int main_tid;
 static int thread_global_id;
 
 int new_thread_gid() {
   thread_gid = __sync_fetch_and_add(&thread_global_id, 1);
+
+  baguatool::type::thread_t tid = thread_gid * MAX_NUM_CORE + gettid() % MAX_NUM_CORE;
+  // dbg(thread_gid, gettid(), tid);
   // LOG_INFO("GET thread_gid = %d\n", thread_gid);
-  return thread_gid;
+  return tid;
 }
 void close_thread_gid() {
   thread_gid = __sync_sub_and_fetch(&thread_global_id, 1);
@@ -47,10 +54,12 @@ void close_thread_gid() {
 int get_thread_gid() { return thread_global_id; }
 
 void RecordCallPath(int y) {
+  record_perf_data_flag = true;
   baguatool::type::addr_t call_path[MAX_CALL_PATH_DEPTH] = {0};
-  int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH);
+  int call_path_len = sampler->GetBacktrace(call_path, MAX_CALL_PATH_DEPTH, 7);
   if (main_tid != gettid()) {
-    perf_data->RecordVertexData(call_path, call_path_len, mpi_rank /* process_id */, thread_gid /* thread_id */, 1);
+    perf_data->RecordVertexData(call_path, call_path_len, mpi_rank /* process_id */, record_thread_gid /* thread_id */,
+                                1);
   } else {
     perf_data->RecordVertexData(call_path, call_path_len, mpi_rank /* process_id */, main_thread_gid /* thread_id */,
                                 1);
@@ -95,7 +104,8 @@ static void init_mock() {
   module_init = MODULE_INITED;
 
   thread_global_id = 0;
-  main_thread_gid = new_thread_gid();
+  new_thread_gid();
+  main_thread_gid = 0;
   main_tid = gettid();
 
   sampler->Setup();
@@ -109,9 +119,18 @@ static void init_mock() {
 /** User-defined what to do at destructor */
 static void fini_mock() {
   sampler->Stop();
-  perf_data->Dump("SAMPLE.TXT");
+  dbg(perf_data->GetEdgeDataSize(), perf_data->GetVertexDataSize());
+  // std::string output_file_name = std::string("SAMPLE") + std::to_string(mpi_rank) + std::string(".TXT");
+  char output_file_name[MAX_LINE_LEN] = {0};
+  sprintf(output_file_name, "SAMPLE+%d.TXT", mpi_rank);
+  perf_data->Dump(output_file_name);
 
-  // sampler->RecordLdLib();
+  std::unique_ptr<baguatool::collector::SharedObjAnalysis> shared_obj_analysis =
+      std::make_unique<baguatool::collector::SharedObjAnalysis>();
+  shared_obj_analysis->CollectSharedObjMap();
+  // sprintf(output_file_name, "SOMAP-%lu.TXT", gettid());
+  std::string output_file_name_str = std::string("SOMAP+") + std::to_string(mpi_rank) + std::string(".TXT");
+  shared_obj_analysis->DumpSharedObjMap(output_file_name_str);
 }
 
 /** -------------------------------------------------------------------------
@@ -134,15 +153,10 @@ static void fn_wrapper(void *arg) {
   void (*fn)(void *) = args_->fn;
   void *data = args_->data;
 
-  thread_gid = new_thread_gid();
-  LOG_INFO("Thread Start, thread_gid = %d\n", thread_gid);
+  record_thread_gid = new_thread_gid();
+  // LOG_INFO("Thread Start, thread_gid = %d\n", thread_gid);
 
-  /** recording which GOMP_parallel create which threads */
-  if (main_tid != gettid()) {
-    dbg(thread_gid);
-    perf_data->RecordEdgeData(args_->call_path, args_->call_path_len, (baguatool::type::addr_t *)nullptr, 0, mpi_rank,
-                              mpi_rank, main_thread_gid, thread_gid, -2);
-  }
+  record_perf_data_flag = false;
   sampler->AddThread();
   sampler->SetOverflow(&RecordCallPath);
   sampler->Start();
@@ -157,7 +171,16 @@ static void fn_wrapper(void *arg) {
   sampler->RemoveThread();
 
   // close_thread_gid();
-  LOG_INFO("Thread Finish, thread_gid = %d\n", thread_gid);
+  // LOG_INFO("Thread Finish, thread_gid = %d\n", thread_gid);
+
+  /** recording which GOMP_parallel create which threads */
+  if (main_tid != gettid()) {
+    if (record_perf_data_flag == true) {
+      // dbg(thread_gid);
+      perf_data->RecordEdgeData(args_->call_path, args_->call_path_len, (baguatool::type::addr_t *)nullptr, 0, mpi_rank,
+                                mpi_rank, main_thread_gid, record_thread_gid, -2);
+    }
+  }
 
   return;
 }
@@ -173,7 +196,7 @@ void GOMP_parallel(void (*fn)(void *), void *data, unsigned num_threads, unsigne
   struct fn_wrapper_arg *arg = new (struct fn_wrapper_arg)();
   arg->fn = fn;
   arg->data = data;
-  arg->call_path_len = sampler->GetBacktrace(arg->call_path, MAX_CALL_PATH_DEPTH);
+  arg->call_path_len = sampler->GetBacktrace(arg->call_path, MAX_CALL_PATH_DEPTH, 3);
   /** execute real GOMP_parallel */
   (*original_GOMP_parallel)(fn_wrapper, arg, num_threads, flags);
   /** ------------------------------------------------------------------------- */

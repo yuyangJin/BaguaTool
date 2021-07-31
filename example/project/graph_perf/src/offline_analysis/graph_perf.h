@@ -23,6 +23,7 @@ class GPerf {
   std::map<type::addr_t, type::addr_debug_info_t*> dyn_addr_to_debug_info;
   core::ProgramAbstractionGraph* root_pag;  /**<an overall program abstraction graph for a program */
   core::ProgramAbstractionGraph* root_mpag; /**<an overall multi-* program abstraction graph for a parallel program*/
+  bool has_dyn_addr_debug_info;
 
  public:
   /** Constructor.

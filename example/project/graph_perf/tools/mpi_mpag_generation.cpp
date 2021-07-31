@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
   strcpy(pcg_name, bin_name);
   strcat(pcg_name, ".pcg");
 
-  std::string shared_obj_map_file_name = std::string(argv[3]);
+  // std::string shared_obj_map_file_name = std::string(argv[3]);
 
   baguatool::core::PerfData* perf_data = new baguatool::core::PerfData();
   for (int i = 3; i < argc; i++) {
@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
   auto graph_perf = std::make_unique<graph_perf::GPerf>();
 
   graph_perf->ReadFunctionAbstractionGraphs(pag_dir_name);
-  graph_perf->GenerateDynAddrDebugInfo(perf_data, shared_obj_map_file_name);
+  // graph_perf->GenerateDynAddrDebugInfo(perf_data, shared_obj_map_file_name);
   graph_perf->GenerateProgramCallGraph(bin_name, perf_data);
   graph_perf->GetProgramCallGraph()->DumpGraphGML("hy_pcg.gml");
 

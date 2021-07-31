@@ -633,6 +633,9 @@ void SortChildren(Graph *g, int vertex_id, void *extra) {
 
   /** ---------- Start swaping vertices ---------- */
   /** vector children_id is original sequence, vector sorted_children_id is sorted sequence */
+  Graph *tmp_g = new Graph();  // store tempory swap vertices
+  tmp_g->GraphInit("tmp");
+
   int num_children = children_id.size();
   std::map<type::vertex_t, type::vertex_t> vertex_id_to_tmp_vertex_id;
   std::map<type::vertex_t, std::vector<type::edge_t>> vertex_id_to_tmp_edge_dest_id_vec;
@@ -653,14 +656,14 @@ void SortChildren(Graph *g, int vertex_id, void *extra) {
       /** TODO: store temporary vertex in a new graph which will not inflect original graph */
 
       /** Copy attributes except "id" from children_id[i] to a new temporary vertex */
-      type::vertex_t tmp_vertex_id = g->AddVertex();
-      g->CopyVertex(tmp_vertex_id, g, children_id[i]);
+      type::vertex_t tmp_vertex_id = tmp_g->AddVertex();
+      tmp_g->CopyVertex(tmp_vertex_id, g, children_id[i]);
 
       /** If sorted_children_id[i] is covered, use corresponding temporary vertex in vertex_id_to_tmp_vertex_id,
        * otherwise, original vertex is used for copy.
       */
       if (vertex_id_to_tmp_vertex_id.count(sorted_children_id[i]) > 0) {
-        g->CopyVertex(children_id[i], g, vertex_id_to_tmp_vertex_id[sorted_children_id[i]]);
+        g->CopyVertex(children_id[i], tmp_g, vertex_id_to_tmp_vertex_id[sorted_children_id[i]]);
         // g->SetVertexAttributeNum("id", children_id[i], sorted_children_id[i]);
       } else {
         g->CopyVertex(children_id[i], g, sorted_children_id[i]);
@@ -703,12 +706,14 @@ void SortChildren(Graph *g, int vertex_id, void *extra) {
   //   g->DeleteVertex(g->GetCurVertexNum() - 1);
   // }
 
-  for (auto &v_pair : vertex_id_to_tmp_vertex_id) {
-    // dbg(v_pair.second);
-    g->DeleteVertex(v_pair.second);
-  }
+  // for (auto &v_pair : vertex_id_to_tmp_vertex_id) {
+  //   // dbg(v_pair.second);
+  //   tmp_g->DeleteVertex(v_pair.second);
+  // }
+
   /** ---------- Swaping vertices complete ---------- */
 
+  delete tmp_g;
   FREE_CONTAINER(children_id);
   FREE_CONTAINER(children_id_value_pair);
   FREE_CONTAINER(sorted_children_id);

@@ -109,6 +109,10 @@ target_include_directories(baguatool PRIVATE ${DYNINST_INCLUDE_DIR})
 target_include_directories(baguatool PRIVATE ${PAPI_INCLUDE_DIRS})
 target_include_directories(baguatool PRIVATE ${Boost_INCLUDE_DIRS})
 
+# if(OpenMP_CXX_FOUND)
+#     target_link_libraries(baguatool PUBLIC OpenMP::OpenMP_CXX)
+# endif()
+
 target_link_libraries(baguatool PRIVATE igraph)
 target_link_libraries(
   baguatool

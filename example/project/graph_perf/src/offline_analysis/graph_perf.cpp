@@ -268,7 +268,7 @@ void GPerf::ReadDynamicProgramCallGraph(core::PerfData *perf_data) {
 
           this->pcg->SetEdgeType(new_call_edge_id, type::DYN_CALL_EDGE);  // dynamic
 
-          /** Build a program abstraction graph in the func_entry_addr_to_pag*/
+          /** Build a program abstraction graph in the func_entry_addr_to_pag */
           core::ProgramAbstractionGraph *new_pag = new core::ProgramAbstractionGraph();
           new_pag->GraphInit(func_name.c_str());
           new_func_vertex_id = new_pag->AddVertex();
@@ -426,7 +426,7 @@ void ConnectCallerCallee(core::ProgramAbstractionGraph *pag, int vertex_id, void
 
           pag->AddEdge(vertex_id, vertex_count);
 
-          pag->SetVertexAttributeString("name", vertex_id, callee_pag->GetGraphAttributeString("name"));
+          // pag->SetVertexAttributeString("name", vertex_id, callee_pag->GetGraphAttributeString("name"));
         }
       }
     }

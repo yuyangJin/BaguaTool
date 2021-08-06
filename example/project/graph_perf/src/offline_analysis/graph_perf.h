@@ -177,6 +177,8 @@ class GPerf {
 
   void GenerateOpenMPProgramAbstractionGraph(int num_threads);
 
+  void AddCommEdgesToMPAG(core::PerfData* comm_data);
+
   void GenerateMultiProcessProgramAbstractionGraph(int num_procs);
 
   /** Generate multi-thread or multi-process program abstraction graph.

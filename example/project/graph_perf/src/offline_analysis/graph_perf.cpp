@@ -1036,6 +1036,49 @@ void GPerf::GenerateOpenMPProgramAbstractionGraph(int num_threads) {
   delete arg;
 }
 
+std::map<type::vertex_t, type::vertex_t> pag_vid_to_pre_order_seq_id;
+
+void GPerf::AddCommEdgesToMPAG(core::PerfData *comm_data) {
+  dbg("here");
+  int pag_num_vertex = pag_vid_to_pre_order_seq_id.size();
+  auto edge_data_size = comm_data->GetEdgeDataSize();
+  for (unsigned long int i = 0; i < edge_data_size; i++) {
+    auto value = comm_data->GetEdgeDataValue(i);
+    if (value > 10000) {  // 10ms
+      std::stack<unsigned long long> src_call_path;
+
+      std::stack<unsigned long long> dest_call_path;
+      comm_data->GetEdgeDataSrcCallPath(i, src_call_path);
+      comm_data->GetEdgeDataDestCallPath(i, dest_call_path);
+      type::procs_t src_pid = comm_data->GetEdgeDataSrcProcsId(i);
+      type::procs_t dest_pid = comm_data->GetEdgeDataDestProcsId(i);
+      type::vertex_t queried_vertex_id_src = GetVertexWithInterThreadAnalysis(0, src_call_path);
+      type::vertex_t queried_vertex_id_dest = GetVertexWithInterThreadAnalysis(0, dest_call_path);
+
+      dbg(queried_vertex_id_src, queried_vertex_id_dest);
+      if (queried_vertex_id_dest == -1 || queried_vertex_id_src == -1) {
+        continue;
+      }
+      dbg(pag_vid_to_pre_order_seq_id[queried_vertex_id_src], pag_vid_to_pre_order_seq_id[queried_vertex_id_dest],
+          src_pid, dest_pid, pag_num_vertex);
+      type::vertex_t mpag_src_vertex_id =
+          pag_vid_to_pre_order_seq_id[queried_vertex_id_src] + src_pid * pag_num_vertex + 1;
+      type::vertex_t mpag_dest_vertex_id =
+          pag_vid_to_pre_order_seq_id[queried_vertex_id_dest] + dest_pid * pag_num_vertex + 1;
+      dbg(mpag_src_vertex_id, mpag_dest_vertex_id);
+
+      type::edge_t edge_id = this->root_mpag->AddEdge(mpag_src_vertex_id, mpag_dest_vertex_id);
+      dbg(edge_id);
+      if (edge_id != -1) {
+        this->root_mpag->SetEdgeAttributeNum("time", edge_id, value);
+      }
+
+      FREE_CONTAINER(src_call_path);
+      FREE_CONTAINER(dest_call_path);
+    }
+  }
+}
+
 struct pre_order_traversal_t {
   std::vector<type::vertex_t> *seq;
 };
@@ -1043,7 +1086,7 @@ struct pre_order_traversal_t {
 void in_pre_order_traversal(core::ProgramAbstractionGraph *pag, int vertex_id, void *extra) {
   struct pre_order_traversal_t *arg = (struct pre_order_traversal_t *)extra;
   std::vector<type::vertex_t> *seq = arg->seq;
-
+  pag_vid_to_pre_order_seq_id[vertex_id] = seq->size();
   seq->push_back(vertex_id);
 }
 
@@ -1082,6 +1125,7 @@ void GPerf::GenerateMultiProcessProgramAbstractionGraph(int num_procs) {
         std::map<type::thread_t, type::perf_data_t> proc_perf_data;
         pag_graph_perf_data->GetProcsPerfData(vertex_id, metric, i, proc_perf_data);
         mpag_graph_perf_data->SetProcsPerfData(new_vertex_id, metric, i, proc_perf_data);
+        FREE_CONTAINER(proc_perf_data);
       }
       last_new_vertex_id = new_vertex_id;
     }
